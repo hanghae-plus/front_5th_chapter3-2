@@ -10,6 +10,7 @@ import {
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
+import { AppProviders } from '../AppProviders';
 import { server } from '../setupTests';
 import { Event } from '../types';
 
