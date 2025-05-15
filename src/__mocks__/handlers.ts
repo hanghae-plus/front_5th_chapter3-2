@@ -1,7 +1,11 @@
 import { http, HttpResponse } from 'msw';
 
+<<<<<<< HEAD
 import { events } from '../__mocks__/response/events.json' assert { type: 'json' };
 import { Event } from '../types';
+=======
+import { events } from './response/events.json' assert { type: 'json' };
+>>>>>>> 7c1ef68 (fix: disable no unused var rule)
 
 export const handlers = [
   http.get('/api/events', () => {
