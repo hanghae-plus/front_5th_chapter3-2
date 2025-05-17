@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
@@ -318,7 +318,7 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 
   expect(screen.queryByText('10분 후 기존 회의 일정이 시작됩니다.')).not.toBeInTheDocument();
 
-  act(() => {
+  await act(async () => {
     vi.advanceTimersByTime(1000);
   });
 
