@@ -4,19 +4,18 @@ import {
   FormControl,
   FormLabel,
   Heading,
-  HStack,
   Input,
-  Select,
-  Tooltip,
   useToast,
   VStack,
 } from '@chakra-ui/react';
 
-import { CATEGORIES, NOTIFICATION_OPTIONS } from '@/config/constants';
+import { CategorySelect } from '@/components/event-manage-form/category-select';
+import { NotificationSelect } from '@/components/event-manage-form/notification-select';
+import { RepeatSelectInput } from '@/components/event-manage-form/repeat-select-input';
+import { TimeInput } from '@/components/event-manage-form/time-input';
 import { useDialogContext, useEventFormContext, useEventOperationsContext } from '@/hooks/contexts';
-import { Event, EventForm, RepeatType } from '@/types';
+import { Event, EventForm } from '@/types';
 import { findOverlappingEvents } from '@/utils/eventOverlap';
-import { getTimeErrorMessage } from '@/utils/timeValidation';
 
 export const EventManageForm = () => {
   const {
@@ -31,22 +30,15 @@ export const EventManageForm = () => {
     location,
     setLocation,
     category,
-    setCategory,
     isRepeating,
     setIsRepeating,
     repeatType,
-    setRepeatType,
     repeatInterval,
-    setRepeatInterval,
     repeatEndDate,
-    setRepeatEndDate,
     notificationTime,
-    setNotificationTime,
     startTimeError,
     endTimeError,
     editingEvent,
-    handleStartTimeChange,
-    handleEndTimeChange,
     resetForm,
   } = useEventFormContext();
 
@@ -117,32 +109,7 @@ export const EventManageForm = () => {
         <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </FormControl>
 
-      <HStack width="100%">
-        <FormControl>
-          <FormLabel>시작 시간</FormLabel>
-          <Tooltip label={startTimeError} isOpen={!!startTimeError} placement="top">
-            <Input
-              type="time"
-              value={startTime}
-              onChange={handleStartTimeChange}
-              onBlur={() => getTimeErrorMessage(startTime, endTime)}
-              isInvalid={!!startTimeError}
-            />
-          </Tooltip>
-        </FormControl>
-        <FormControl>
-          <FormLabel>종료 시간</FormLabel>
-          <Tooltip label={endTimeError} isOpen={!!endTimeError} placement="top">
-            <Input
-              type="time"
-              value={endTime}
-              onChange={handleEndTimeChange}
-              onBlur={() => getTimeErrorMessage(startTime, endTime)}
-              isInvalid={!!endTimeError}
-            />
-          </Tooltip>
-        </FormControl>
-      </HStack>
+      <TimeInput />
 
       <FormControl>
         <FormLabel>설명</FormLabel>
@@ -154,17 +121,7 @@ export const EventManageForm = () => {
         <Input value={location} onChange={(e) => setLocation(e.target.value)} />
       </FormControl>
 
-      <FormControl>
-        <FormLabel>카테고리</FormLabel>
-        <Select value={category} onChange={(e) => setCategory(e.target.value)}>
-          <option value="">카테고리 선택</option>
-          {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </Select>
-      </FormControl>
+      <CategorySelect />
 
       <FormControl>
         <FormLabel>반복 설정</FormLabel>
@@ -173,55 +130,9 @@ export const EventManageForm = () => {
         </Checkbox>
       </FormControl>
 
-      <FormControl>
-        <FormLabel>알림 설정</FormLabel>
-        <Select
-          value={notificationTime}
-          onChange={(e) => setNotificationTime(Number(e.target.value))}
-        >
-          {NOTIFICATION_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
-      </FormControl>
+      <NotificationSelect />
 
-      {isRepeating && (
-        <VStack width="100%">
-          <FormControl>
-            <FormLabel>반복 유형</FormLabel>
-            <Select
-              value={repeatType}
-              onChange={(e) => setRepeatType(e.target.value as RepeatType)}
-            >
-              <option value="daily">매일</option>
-              <option value="weekly">매주</option>
-              <option value="monthly">매월</option>
-              <option value="yearly">매년</option>
-            </Select>
-          </FormControl>
-          <HStack width="100%">
-            <FormControl>
-              <FormLabel>반복 간격</FormLabel>
-              <Input
-                type="number"
-                value={repeatInterval}
-                onChange={(e) => setRepeatInterval(Number(e.target.value))}
-                min={1}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>반복 종료일</FormLabel>
-              <Input
-                type="date"
-                value={repeatEndDate}
-                onChange={(e) => setRepeatEndDate(e.target.value)}
-              />
-            </FormControl>
-          </HStack>
-        </VStack>
-      )}
+      {isRepeating && <RepeatSelectInput />}
 
       <Button data-testid="event-submit-button" onClick={addOrUpdateEvent} colorScheme="blue">
         {editingEvent ? '일정 수정' : '일정 추가'}
