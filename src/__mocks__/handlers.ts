@@ -11,6 +11,7 @@ export const handlers = [
   http.post('/api/events', async ({ request }) => {
     const newEvent = (await request.json()) as Event;
     newEvent.id = String(events.length + 1);
+
     return HttpResponse.json(newEvent, { status: 201 });
   }),
 
@@ -35,5 +36,34 @@ export const handlers = [
     }
 
     return new HttpResponse(null, { status: 404 });
+  }),
+
+  http.post('/api/events-list', async ({ request }) => {
+    const newEvents = (await request.json()) as Event[];
+
+    const startNumId = events.length + 1;
+    const repeatNumId =
+      events.reduce((maxId, event) => {
+        if (event.repeat.type !== 'none') {
+          return Math.max(maxId, Number(event.repeat.id));
+        }
+
+        return maxId;
+      }, 0) + 1;
+
+    const newEventsWithId = newEvents.map((event, i) => {
+      const isRepeatEvent = event.repeat.type !== 'none';
+
+      return {
+        ...event,
+        id: String(startNumId + i),
+        repeat: {
+          ...event.repeat,
+          id: isRepeatEvent ? String(repeatNumId) : undefined,
+        },
+      };
+    });
+
+    return HttpResponse.json(newEventsWithId, { status: 201 });
   }),
 ];
