@@ -335,7 +335,7 @@ it('반복 일정을 수정하면 선택한 일정에 대한 정보만 수정되
     description: '기존 반복 일정',
     location: '회의실 B',
     category: '업무',
-    repeat: { type: 'none', interval: 0, endDate: '2025-10-16' },
+    repeat: { type: 'none', interval: 0 },
     notificationTime: 10,
   };
   const otherRepeatEvent: Event = {
