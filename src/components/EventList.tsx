@@ -44,6 +44,7 @@ export function EventList({
       ) : (
         filteredEvents.map((event) => (
           <EventCard
+            key={event.id}
             event={event}
             notifiedEvents={notifiedEvents}
             onEdit={() => editEvent(event)}

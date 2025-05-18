@@ -21,12 +21,10 @@ export function CalendarViewController({
       <IconButton aria-label="Previous" icon={<ChevronLeftIcon />} onClick={onPrevClick} />
       <Select aria-label="view" value={view} onChange={(e) => onViewChange(e.target.value as View)}>
         {viewOptions.map((view) => (
-          <option value={view} style={{ textTransform: 'capitalize' }}>
+          <option key={view} value={view} style={{ textTransform: 'capitalize' }}>
             {view}
           </option>
         ))}
-        <option value="week">Week</option>
-        <option value="month">Month</option>
       </Select>
       <IconButton aria-label="Next" icon={<ChevronRightIcon />} onClick={onNextClick} />
     </HStack>
