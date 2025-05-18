@@ -325,4 +325,105 @@ describe('반복 이벤트 저장', () => {
 
     expect(result.current.events).toEqual(expectedEvents);
   });
+
+  it('주 반복 이벤트에서 interval을 3으로 설정한 경우 3주마다 이벤트가 반복된다.', async () => {
+    setupMockHandlerEventsListCreation();
+
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-02-19',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 3, endDate: '2025-03-23' },
+      notificationTime: 5,
+    };
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newRepeatEvent);
+    });
+
+    const expectedEvents = [
+      { ...newRepeatEvent, id: '1', date: '2025-02-19' },
+      { ...newRepeatEvent, id: '2', date: '2025-03-12' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+
+  it('일 반복 이벤트에서 interval을 2으로 설정한 경우 이틀마다 이벤트가 반복된다.', async () => {
+    setupMockHandlerEventsListCreation();
+
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-02-19',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 2, endDate: '2025-03-03' },
+      notificationTime: 5,
+    };
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newRepeatEvent);
+    });
+
+    const expectedEvents = [
+      { ...newRepeatEvent, id: '1', date: '2025-02-19' },
+      { ...newRepeatEvent, id: '2', date: '2025-02-21' },
+      { ...newRepeatEvent, id: '3', date: '2025-02-23' },
+      { ...newRepeatEvent, id: '4', date: '2025-02-25' },
+      { ...newRepeatEvent, id: '5', date: '2025-02-27' },
+      { ...newRepeatEvent, id: '6', date: '2025-03-01' },
+      { ...newRepeatEvent, id: '7', date: '2025-03-03' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+
+  it('월 반복 이벤트에서 interval을 2으로 설정한 경우 2달마다 이벤트가 반복된다.', async () => {
+    setupMockHandlerEventsListCreation();
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-02-19',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 2, endDate: '2025-08-03' },
+      notificationTime: 5,
+    };
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newRepeatEvent);
+    });
+
+    const expectedEvents = [
+      { ...newRepeatEvent, id: '1', date: '2025-02-19' },
+      { ...newRepeatEvent, id: '2', date: '2025-04-19' },
+      { ...newRepeatEvent, id: '3', date: '2025-06-19' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
 });
