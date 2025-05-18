@@ -29,17 +29,33 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
       let response;
+      const isRepeating = 'repeat' in eventData && eventData.repeat?.type !== 'none';
+      const id = 'id' in eventData ? eventData.id : undefined;
+
       if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
+        if (isRepeating) {
+          // 반복 일정 수정: PUT /api/events-list
+          response = await fetch('/api/events-list', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ events: [eventData] }),
+          });
+          console.log(response);
+        } else {
+          // 일반 일정 수정: PUT /api/events/:id
+          response = await fetch(`/api/events/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        }
       } else {
-        response = await fetch('/api/events', {
+        const endpoint = isRepeating ? '/api/events-list' : '/api/events';
+        const payload = isRepeating ? { events: [eventData] } : eventData;
+        response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
+          body: JSON.stringify(payload),
         });
       }
 
@@ -66,9 +82,21 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const deleteEvent = async (id: string) => {
+  const deleteEvent = async (id: string, type: string = 'none') => {
     try {
-      const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      const isRepeating = type !== 'none';
+      const endpoint = isRepeating ? '/api/events-list' : `/api/events/${id}`;
+      const options = {
+        body: '',
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      };
+
+      if (isRepeating) {
+        options.body = JSON.stringify({ id });
+      }
+
+      const response = await fetch(endpoint, options);
 
       if (!response.ok) {
         throw new Error('Failed to delete event');
