@@ -16,6 +16,38 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
       newEvent.id = String(mockEvents.length + 1); // 간단한 ID 생성
       mockEvents.push(newEvent);
       return HttpResponse.json(newEvent, { status: 201 });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const data = (await request.json()) as { events: Event[] };
+      const newEvents = data.events;
+
+      const startNumId = mockEvents.length + 1;
+      const repeatNumId =
+        mockEvents.reduce((maxId, event) => {
+          const repeatInfo = event.repeat;
+          if (repeatInfo.type !== 'none') {
+            return Math.max(maxId, Number(repeatInfo.id as string));
+          }
+
+          return maxId;
+        }, 0) + 1;
+
+      const newEventsWithId = newEvents.map((event, i) => {
+        const isRepeatEvent = event.repeat.type !== 'none';
+
+        return {
+          ...event,
+          id: String(startNumId + i),
+          repeat: {
+            ...event.repeat,
+            id: isRepeatEvent ? String(repeatNumId) : undefined,
+          },
+        };
+      });
+
+      mockEvents.push(...newEventsWithId);
+
+      return HttpResponse.json(newEventsWithId, { status: 201 });
     })
   );
 };

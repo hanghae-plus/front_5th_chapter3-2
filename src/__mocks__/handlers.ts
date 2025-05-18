@@ -1,11 +1,14 @@
 import { http, HttpResponse } from 'msw';
 
+// TODO: import 하면서 json 파일 타입 지정 방법 찾아보기
 import { events } from '../__mocks__/response/events.json' assert { type: 'json' };
-import { Event } from '../types';
+import type { Event } from '../types';
+
+const typedEvents = events as Event[];
 
 export const handlers = [
   http.get('/api/events', () => {
-    return HttpResponse.json({ events });
+    return HttpResponse.json({ events: typedEvents });
   }),
 
   http.post('/api/events', async ({ request }) => {
@@ -39,13 +42,15 @@ export const handlers = [
   }),
 
   http.post('/api/events-list', async ({ request }) => {
-    const newEvents = (await request.json()) as Event[];
+    const data = (await request.json()) as { events: Event[] };
+    const newEvents = data.events;
 
     const startNumId = events.length + 1;
     const repeatNumId =
-      events.reduce((maxId, event) => {
-        if (event.repeat.type !== 'none') {
-          return Math.max(maxId, Number(event.repeat.id));
+      typedEvents.reduce((maxId, event) => {
+        const repeatInfo = event.repeat;
+        if (repeatInfo.type !== 'none') {
+          return Math.max(maxId, Number(repeatInfo.id as string));
         }
 
         return maxId;
