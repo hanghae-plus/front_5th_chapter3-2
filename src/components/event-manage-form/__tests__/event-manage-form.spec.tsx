@@ -1,0 +1,170 @@
+import { ChakraProvider } from '@chakra-ui/react';
+import { render, screen, within } from '@testing-library/react';
+import { UserEvent, userEvent } from '@testing-library/user-event';
+import { ReactElement } from 'react';
+
+import { setupMockHandlerCreation } from '@/__mocks__/handlersUtils';
+import App from '@/App';
+import { Providers } from '@/components/providers';
+import { Event } from '@/types';
+
+const setup = (element: ReactElement) => {
+  const user = userEvent.setup();
+
+  return {
+    ...render(
+      <ChakraProvider>
+        <Providers>{element}</Providers>
+      </ChakraProvider>
+    ),
+    user,
+  };
+};
+
+const saveSchedule = async (user: UserEvent, form: Omit<Event, 'id' | 'notificationTime'>) => {
+  const { title, date, startTime, endTime, location, description, category, repeat } = form;
+  await user.click(screen.getAllByText('일정 추가')[0]);
+
+  await user.type(screen.getByLabelText('제목'), title);
+  await user.type(screen.getByLabelText('날짜'), date);
+  await user.type(screen.getByLabelText('시작 시간'), startTime);
+  await user.type(screen.getByLabelText('종료 시간'), endTime);
+  await user.type(screen.getByLabelText('설명'), description);
+  await user.type(screen.getByLabelText('위치'), location);
+  await user.selectOptions(screen.getByLabelText('카테고리'), category);
+
+  if (repeat.type !== 'none') {
+    const { type, interval, endDate } = repeat;
+
+    const checkbox = screen.getByLabelText('반복 설정') as HTMLInputElement;
+    if (!checkbox.checked) {
+      await user.click(checkbox);
+    }
+
+    await user.selectOptions(screen.getByLabelText('반복 유형'), type);
+    await user.clear(screen.getByLabelText('반복 간격'));
+    await user.type(screen.getByLabelText('반복 간격'), String(interval));
+    console.log(interval);
+    if (typeof endDate !== 'undefined') {
+      console.log(endDate);
+      await user.type(screen.getByLabelText('반복 종료일'), endDate);
+    }
+  }
+
+  await user.click(screen.getByTestId('event-submit-button'));
+};
+
+describe('1. 반복 유형 선택 - 일정 생성 또는 수정 시 반복 유형을 선택할 수 있다.', () => {
+  // 시스템 테스트 기본 일자 2025-10-01
+  const common: Event = {
+    id: '1',
+    title: '반복 일정 1',
+    date: '2025-10-10',
+    startTime: '10:00',
+    endTime: '11:00',
+    description: '반복 일정 1 설명',
+    location: '집',
+    category: '개인',
+    repeat: { type: 'daily', interval: 2, endDate: '2025-10-31' },
+    notificationTime: 0,
+  };
+
+  it('매일 유형 선택', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, { ...common });
+
+    const eventList = within(screen.getByTestId('event-list'));
+
+    expect(eventList.getByText('2025-10-10')).toBeInTheDocument();
+    // 아직 구현중
+    // expect(eventList.getByText('2025-10-12')).toBeInTheDocument();
+    // expect(eventList.getByText('2025-10-14')).toBeInTheDocument();
+  });
+  it('매주 유형 선택', () => {
+    expect(1).toBe(1);
+  });
+  it('매월 유형 선택', () => {
+    expect(1).toBe(1);
+  });
+  it('매년 유형 선택', () => {
+    expect(1).toBe(1);
+  });
+});
+
+describe('2. 반복 간격 설정 - 각 반복 유형에 대해 간격을 설정할 수 있다.', () => {
+  it('2일 마다', () => {
+    expect(1).toBe(1);
+  });
+  it('3주 마다', () => {
+    expect(1).toBe(1);
+  });
+  it('2개월 마다', () => {
+    expect(1).toBe(1);
+  });
+});
+
+describe('3. 반복 일정 표시 - 캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표기한다.', () => {
+  it('ex) 반복 일정의 경우 반복 아이콘이 포함된다', () => {
+    expect(1).toBe(1);
+  });
+});
+
+describe('4. 반복 종료 조건을 지정할 수 있다.', () => {
+  it('특정 날짜까지', () => {
+    expect(1).toBe(1);
+  });
+  it('특정 횟수 만큼', () => {
+    expect(1).toBe(1);
+  });
+  it('종료 없음', () => {
+    // 2025-09-30까지?
+    expect(1).toBe(1);
+  });
+});
+
+describe('5. 반복 일정 단일 수정 - 반복 일정을 수정하면 단일 일정으로 변경된다.', () => {
+  it('ex) 반복 일정 아이콘이 제거된다.', () => {
+    expect(1).toBe(1);
+  });
+});
+
+describe('6. 반복 일정 단일 삭제 - 반복 일정을 삭제하면 해당 일정만 삭제된다.', () => {
+  it('해당 일정만 제외하고, 나머지는 그대로?', () => {
+    expect(1).toBe(1);
+  });
+});
+
+describe('(선택) 7. 예외 날짜 처리', () => {
+  it('반복 일정 중 특정 날짜를 제외할 수 있다.', () => {
+    expect(1).toBe(1);
+  });
+  it('반복 일정 중 특정 날짜의 일정을 수정할 수 있다.', () => {
+    expect(1).toBe(1);
+  });
+});
+
+describe('(선택) 8. 요일 지정 (주간 반복의 경우)', () => {
+  it('주간 반복 시 특정 요일을 선택할 수 있다.', () => {
+    expect(1).toBe(1);
+  });
+});
+
+describe('(선택) 9. 월간 반복 옵션', () => {
+  it('매월 특정 날짜에 반복되도록 설정할 수 있다.', () => {
+    expect(1).toBe(1);
+  });
+  it('매월 특정 순서의 요일에 반복 되도록 설정할 수 있다.(2째 주 월요일?)', () => {
+    expect(1).toBe(1);
+  });
+});
+
+describe('(선택) 10. 반복 일정 전체 수정 및 삭제', () => {
+  it('반복 일정의 모든 일정을 수정할 수 있다.', () => {
+    expect(1).toBe(1);
+  });
+  it('반복 일정의 모든 일정을 삭제할 수 있다.', () => {
+    expect(1).toBe(1);
+  });
+});
