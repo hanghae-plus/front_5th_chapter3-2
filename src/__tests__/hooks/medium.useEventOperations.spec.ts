@@ -280,6 +280,85 @@ it("새로 정의된 'title', 'endTime' 기준으로 적절하게 일정이 업�
   expect(result.current.events[0]).toEqual(updatedEvent);
 });
 
+it('반복 일정을 수정하면 선택한 일정에 대한 정보만 수정되고, 해당 일정만 반복에서 빠진다.', async () => {
+  const initialEvents: Event[] = [
+    {
+      id: '1',
+      title: '기존 반복 일정',
+      date: '2025-10-15',
+      startTime: '13:00',
+      endTime: '14:00',
+      description: '기존 반복 일정',
+      location: '회의실 D',
+      category: '업무 회의',
+      repeat: { id: '1', type: 'daily', interval: 1, endDate: '2025-10-16' },
+      notificationTime: 10,
+    },
+    {
+      id: '2',
+      title: '기존 반복 일정',
+      date: '2025-10-16',
+      startTime: '13:00',
+      endTime: '14:00',
+      description: '기존 반복 일정',
+      location: '회의실 D',
+      category: '업무 회의',
+      repeat: { id: '1', type: 'daily', interval: 1, endDate: '2025-10-16' },
+      notificationTime: 10,
+    },
+  ];
+
+  setupMockHandlerUpdating(initialEvents);
+
+  const { result } = renderHook(() => useEventOperations(true));
+
+  await act(() => Promise.resolve(null));
+
+  const selectedEvent: Event = {
+    id: '1',
+    date: '2025-10-15',
+    startTime: '13:00',
+    endTime: '14:00',
+    title: '수정된 반복 일정',
+    description: '기존 반복 일정',
+    location: '회의실 B',
+    category: '업무',
+    repeat: { id: '1', type: 'daily', interval: 1, endDate: '2025-10-16' },
+    notificationTime: 10,
+  };
+  const updatedEvent: Event = {
+    id: '1',
+    date: '2025-10-15',
+    startTime: '13:00',
+    endTime: '14:00',
+    title: '수정된 반복 일정',
+    description: '기존 반복 일정',
+    location: '회의실 B',
+    category: '업무',
+    repeat: { type: 'none', interval: 0, endDate: '2025-10-16' },
+    notificationTime: 10,
+  };
+  const otherRepeatEvent: Event = {
+    id: '2',
+    title: '기존 반복 일정',
+    date: '2025-10-16',
+    startTime: '13:00',
+    endTime: '14:00',
+    description: '기존 반복 일정',
+    location: '회의실 D',
+    category: '업무 회의',
+    repeat: { id: '1', type: 'daily', interval: 1, endDate: '2025-10-16' },
+    notificationTime: 10,
+  };
+
+  await act(async () => {
+    await result.current.saveEvent(selectedEvent);
+  });
+
+  expect(result.current.events[0]).toEqual(updatedEvent);
+  expect(result.current.events[1]).toEqual(otherRepeatEvent);
+});
+
 it('존재하는 이벤트 삭제 시 에러없이 아이템이 삭제된다.', async () => {
   setupMockHandlerDeletion();
 
