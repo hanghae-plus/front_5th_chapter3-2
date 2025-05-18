@@ -161,7 +161,7 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      if (isRepeating) {
+      if (eventData.repeat.type !== 'none') {
         await saveRepeatEvent(eventData);
       } else {
         await saveEvent(eventData);
@@ -172,7 +172,7 @@ function App() {
 
   const handleOverlapConfirm = () => {
     setIsOverlapDialogOpen(false);
-    if (isRepeating) {
+    if (repeatType) {
       saveRepeatEvent({
         id: editingEvent ? editingEvent.id : undefined,
         title,
@@ -201,8 +201,7 @@ function App() {
         category,
         repeat: {
           type: 'none',
-          interval: repeatInterval,
-          endDate: repeatEndDate || undefined,
+          interval: 0,
         },
         notificationTime,
       });
