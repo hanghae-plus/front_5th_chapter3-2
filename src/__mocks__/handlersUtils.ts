@@ -93,6 +93,20 @@ export const setupMockHandlerUpdating = (
 
       mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
       return HttpResponse.json(mockEvents[index]);
+    }),
+    http.put('/api/events-list', async ({ request }) => {
+      const data = (await request.json()) as { events: Event[] };
+      const updatedEvents = data.events;
+
+      mockEvents.forEach((event, index) => {
+        const updatedEvent = updatedEvents.find((target) => target.id === event.id);
+
+        if (updatedEvent) {
+          mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
+        }
+      });
+
+      return HttpResponse.json(mockEvents);
     })
   );
 };
