@@ -29,20 +29,28 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
       let response;
-      const isRepeating = 'repeat' in eventData && eventData.repeat?.type !== 'none';
-      const id = 'id' in eventData ? eventData.id : undefined;
+      const isRepeating = eventData.repeat.type !== 'none';
 
       if (editing) {
-        if (isRepeating) {
-          // 반복 일정 수정: PUT /api/events-list
+        const id = 'id' in eventData ? eventData.id : undefined;
+
+        if (!isRepeating) {
+          // 기존 반복 일정 삭제
+          await deleteEvent(id as string);
+
+          // 단일 일정 추가
+          response = await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        } else if (isRepeating) {
           response = await fetch('/api/events-list', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ events: [eventData] }),
           });
-          console.log(response);
         } else {
-          // 일반 일정 수정: PUT /api/events/:id
           response = await fetch(`/api/events/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -85,7 +93,8 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const deleteEvent = async (id: string, type: string = 'none') => {
     try {
       const isRepeating = type !== 'none';
-      const endpoint = isRepeating ? '/api/events-list' : `/api/events/${id}`;
+      const baseId = id.includes('_') ? id.split('_')[0] : id;
+      const endpoint = isRepeating ? '/api/events-list' : `/api/events/${baseId}`;
       const options = {
         body: '',
         method: 'DELETE',
@@ -93,7 +102,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       };
 
       if (isRepeating) {
-        options.body = JSON.stringify({ id });
+        options.body = JSON.stringify({ eventIds: [baseId] });
       }
 
       const response = await fetch(endpoint, options);
