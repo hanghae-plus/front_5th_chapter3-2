@@ -71,4 +71,21 @@ export const handlers = [
 
     return HttpResponse.json(newEventsWithId, { status: 201 });
   }),
+
+  http.put('/api/events-list', async ({ request }) => {
+    const data = (await request.json()) as { events: Event[] };
+    const updatedEvents = data.events;
+
+    let newEvents = events.map((event) => {
+      const updatedEvent = updatedEvents.find((target) => target.id === event.id);
+
+      if (updatedEvent) {
+        return { ...event, ...updatedEvent };
+      }
+
+      return event;
+    });
+
+    return HttpResponse.json(newEvents);
+  }),
 ];
