@@ -32,20 +32,15 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       let response;
       if (editing) {
         const editingEvent = eventData as Event;
-        const isRepeatEvent = editingEvent.repeat.type !== 'none';
+        const originalEvent = events.find((event) => event.id === editingEvent.id);
 
-        if (!isRepeatEvent) {
-          response = await fetch(`/api/events/${(eventData as Event).id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(eventData),
-          });
-        } else {
-          const updatedRepeat: Event['repeat'] = {
-            type: 'none',
-            interval: 0,
-          };
+        const isOriginalEventRepeating = originalEvent!.repeat.type !== 'none';
+        const updatedRepeat = {
+          type: 'none',
+          interval: 0,
+        };
 
+        if (!isOriginalEventRepeating) {
           const updatedEvent = {
             ...editingEvent,
             repeat: updatedRepeat,
@@ -55,6 +50,28 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedEvent),
+          });
+        } else {
+          const updatedEvents = events
+            .filter((event) => event.repeat.id && event.repeat.id === originalEvent!.repeat.id)
+            .map((event) => {
+              if (event.id === editingEvent.id) {
+                return {
+                  ...editingEvent,
+                  repeat: updatedRepeat,
+                };
+              }
+
+              return {
+                ...event,
+                repeat: updatedRepeat,
+              };
+            });
+
+          response = await fetch('/api/events-list', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ events: updatedEvents }),
           });
         }
       } else {
