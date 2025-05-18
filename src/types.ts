@@ -1,6 +1,7 @@
 export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface RepeatInfo {
+  id?: string; // id 추가 server.js
   type: RepeatType;
   interval: number;
   endDate?: string;
