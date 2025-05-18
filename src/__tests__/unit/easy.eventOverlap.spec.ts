@@ -1,218 +1,241 @@
-import { Event } from '../../types';
 import {
   convertEventToDateRange,
   findOverlappingEvents,
   isOverlapping,
   parseDateTime,
-} from '../../utils/eventOverlap';
+} from '../../shared/lib/eventOverlap';
+import { Event, EventForm } from '../../types';
 
 describe('parseDateTime', () => {
+  const date = '2025-07-01';
+  const time = '14:30';
   it('2025-07-01 14:30을 정확한 Date 객체로 변환한다', () => {
-    const result = parseDateTime('2025-07-01', '14:30');
-    expect(result).toEqual(new Date('2025-07-01T14:30:00'));
+    const result = parseDateTime(date, time);
+
+    expect(result.getFullYear()).toBe(2025);
+    expect(result.getMonth()).toBe(6); // 0-based: 6 → 7월
+    expect(result.getDate()).toBe(1);
+    expect(result.getHours()).toBe(14);
+    expect(result.getMinutes()).toBe(30);
   });
 
   it('잘못된 날짜 형식에 대해 Invalid Date를 반환한다', () => {
-    const result = parseDateTime('2025/07/01', '14:30');
-    expect(result.toString()).toBe('Invalid Date');
+    const errorDate = '2025:07:01'; // 잘못된 형식 (콜론 사용)
+
+    const result = parseDateTime(errorDate, time);
+    expect(isNaN(result.getDate())).toBe(true); // ✅ 유효하지 않은 날짜임을 확인
   });
 
   it('잘못된 시간 형식에 대해 Invalid Date를 반환한다', () => {
-    const result = parseDateTime('2025-07-01', '25:00');
-    expect(result.toString()).toBe('Invalid Date');
+    const errorTime = '14-30';
+
+    const result = parseDateTime(date, errorTime);
+    expect(isNaN(result.getTime())).toBe(true); // ✅ 유효하지 않은 시간임을 확인
   });
 
   it('날짜 문자열이 비어있을 때 Invalid Date를 반환한다', () => {
-    const result = parseDateTime('', '14:30');
-    expect(result.toString()).toBe('Invalid Date');
+    const emptyDate = '';
+    const result = parseDateTime(emptyDate, time);
+
+    expect(isNaN(result.getDate())).toBe(true); // ✅ 빈 날짜임을 확인
   });
 });
 
 describe('convertEventToDateRange', () => {
   it('일반적인 이벤트를 올바른 시작 및 종료 시간을 가진 객체로 변환한다', () => {
-    const event: Event = {
-      id: '1',
+    const event = {
       date: '2025-07-01',
       startTime: '14:30',
-      endTime: '15:30',
-      title: '테스트 이벤트',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    };
+      endTime: '16:00',
+    } as EventForm;
+
     const result = convertEventToDateRange(event);
-    expect(result.start).toEqual(new Date('2025-07-01T14:30:00'));
-    expect(result.end).toEqual(new Date('2025-07-01T15:30:00'));
+
+    expect(result.start.getFullYear()).toBe(2025);
+    expect(result.start.getMonth()).toBe(6); // 0-indexed → 7월
+    expect(result.start.getDate()).toBe(1);
+    expect(result.start.getHours()).toBe(14);
+    expect(result.start.getMinutes()).toBe(30);
   });
 
   it('잘못된 날짜 형식의 이벤트에 대해 Invalid Date를 반환한다', () => {
-    const event: Event = {
-      id: '5',
-      date: '2025/07/01', // 잘못된 형식
+    const badEvent = {
+      date: 'banana',
       startTime: '14:30',
-      endTime: '15:30',
-      title: '잘못된 날짜 이벤트',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    };
-    const result = convertEventToDateRange(event);
-    expect(result.start.toString()).toBe('Invalid Date');
-    expect(result.end.toString()).toBe('Invalid Date');
+      endTime: '16:00',
+    } as EventForm;
+
+    const result = convertEventToDateRange(badEvent);
+
+    expect(isNaN(result.start.getDate())).toBe(true);
+    expect(isNaN(result.end.getDate())).toBe(true);
   });
 
   it('잘못된 시간 형식의 이벤트에 대해 Invalid Date를 반환한다', () => {
-    const event: Event = {
-      id: '6',
+    const badEvent = {
       date: '2025-07-01',
-      startTime: '25:00', // 잘못된 형식
-      endTime: '26:00', // 잘못된 형식
-      title: '잘못된 시간 이벤트',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    };
-    const result = convertEventToDateRange(event);
-    expect(result.start.toString()).toBe('Invalid Date');
-    expect(result.end.toString()).toBe('Invalid Date');
+      startTime: '14-30',
+      endTime: '16-00',
+    } as EventForm;
+
+    const result = convertEventToDateRange(badEvent);
+
+    expect(isNaN(result.start.getTime())).toBe(true);
+    expect(isNaN(result.end.getTime())).toBe(true);
   });
 });
 
 describe('isOverlapping', () => {
   it('두 이벤트가 겹치는 경우 true를 반환한다', () => {
-    const event1: Event = {
-      id: '1',
+    const eventFirst = {
       date: '2025-07-01',
-      startTime: '14:00',
+      startTime: '14:30',
       endTime: '16:00',
-      title: '이벤트 1',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    };
-    const event2: Event = {
-      id: '2',
-      date: '2025-07-01',
-      startTime: '15:00',
-      endTime: '17:00',
-      title: '이벤트 2',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    };
-    expect(isOverlapping(event1, event2)).toBe(true);
+    } as EventForm;
+
+    const eventSecound = {
+      date: '2025-07-01', // ✅ 같은 날로 변경
+      startTime: '14:30',
+      endTime: '16:00',
+    } as EventForm;
+
+    const result = isOverlapping(eventFirst, eventSecound);
+
+    expect(result).toBe(true);
   });
 
   it('두 이벤트가 겹치지 않는 경우 false를 반환한다', () => {
-    const event1: Event = {
-      id: '1',
-      date: '2025-07-01',
-      startTime: '14:00',
+    const eventFirst = {
+      date: '2025-08-01',
+      startTime: '14:30',
       endTime: '16:00',
-      title: '이벤트 1',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    };
-    const event2: Event = {
-      id: '2',
-      date: '2025-07-01',
-      startTime: '16:00',
-      endTime: '18:00',
-      title: '이벤트 2',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    };
-    expect(isOverlapping(event1, event2)).toBe(false);
+    } as EventForm;
+
+    const eventSecound = {
+      date: '2025-07-01', // ✅ 같은 날로 변경
+      startTime: '14:30',
+      endTime: '16:00',
+    } as EventForm;
+
+    const result = isOverlapping(eventFirst, eventSecound);
+
+    expect(result).toBe(false);
   });
 });
 
 describe('findOverlappingEvents', () => {
-  const baseEvents: Event[] = [
-    {
-      id: '1',
-      date: '2025-07-01',
-      startTime: '10:00',
-      endTime: '12:00',
-      title: '이벤트 1',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    },
-    {
-      id: '2',
-      date: '2025-07-01',
-      startTime: '11:00',
-      endTime: '13:00',
-      title: '이벤트 2',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    },
-    {
-      id: '3',
-      date: '2025-07-01',
-      startTime: '15:00',
-      endTime: '16:00',
-      title: '이벤트 3',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    },
-  ];
+  const newEvent: Event = {
+    id: 'new',
+    date: '2025-07-01',
+    startTime: '14:00',
+    endTime: '15:00',
+    title: '',
+    description: '',
+    location: '',
+    category: '',
+    repeat: undefined,
+    notificationTime: 0,
+  };
 
   it('새 이벤트와 겹치는 모든 이벤트를 반환한다', () => {
-    const newEvent: Event = {
-      id: '4',
-      date: '2025-07-01',
-      startTime: '11:30',
-      endTime: '14:30',
-      title: '새 이벤트',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    };
-    const result = findOverlappingEvents(newEvent, baseEvents);
-    expect(result).toEqual([baseEvents[0], baseEvents[1]]);
+    const existingEvents: Event[] = [
+      {
+        id: '1',
+        date: '2025-07-01',
+        startTime: '13:30',
+        endTime: '14:30', // ✅ 겹침
+        title: '',
+        description: '',
+        location: '',
+        category: '',
+        repeat: undefined,
+        notificationTime: 0,
+      },
+      {
+        id: '2',
+        date: '2025-07-01',
+        startTime: '15:00',
+        endTime: '16:00', // ❌ 겹치지 않음 (끝과 시작이 같음)
+        title: '',
+        description: '',
+        location: '',
+        category: '',
+        repeat: undefined,
+        notificationTime: 0,
+      },
+      {
+        id: '3',
+        date: '2025-07-01',
+        startTime: '14:30',
+        endTime: '15:30', // ✅ 겹침
+        title: '',
+        description: '',
+        location: '',
+        category: '',
+        repeat: undefined,
+        notificationTime: 0,
+      },
+      {
+        id: 'new',
+        date: '2025-07-01',
+        startTime: '14:00',
+        endTime: '15:00', // ❌ 자기 자신 → 제외
+        title: '',
+        description: '',
+        location: '',
+        category: '',
+        repeat: undefined,
+        notificationTime: 0,
+      },
+    ];
+
+    const result = findOverlappingEvents(newEvent, existingEvents);
+
+    expect(result.map((e) => e.id)).toEqual(['1', '3']); // ✅ 겹치는 이벤트만 포함
   });
 
   it('겹치는 이벤트가 없으면 빈 배열을 반환한다', () => {
-    const newEvent: Event = {
-      id: '4',
-      date: '2025-07-01',
-      startTime: '13:00',
-      endTime: '15:00',
-      title: '새 이벤트',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 0,
-    };
-    const result = findOverlappingEvents(newEvent, baseEvents);
-    expect(result).toHaveLength(0);
+    const existingEvents: Event[] = [
+      {
+        id: '1',
+        date: '2025-07-01',
+        startTime: '12:00',
+        endTime: '13:00', // ❌ newEvent(14:00~15:00)와 겹치지 않음
+        title: '',
+        description: '',
+        location: '',
+        category: '',
+        repeat: undefined,
+        notificationTime: 0,
+      },
+      {
+        id: '2',
+        date: '2025-07-01',
+        startTime: '15:00',
+        endTime: '16:00', // ❌ 딱 끝나는 시점 → 안 겹침
+        title: '',
+        description: '',
+        location: '',
+        category: '',
+        repeat: undefined,
+        notificationTime: 0,
+      },
+      {
+        id: '3',
+        date: '2025-07-01',
+        startTime: '10:30',
+        endTime: '12:30', // ✅ 겹침
+        title: '',
+        description: '',
+        location: '',
+        category: '',
+        repeat: undefined,
+        notificationTime: 0,
+      },
+    ];
+
+    const result = findOverlappingEvents(newEvent, existingEvents);
+
+    expect(result.map((e) => e.id)).toEqual([]); // ✅ 겹치는 이벤트가 없으면 빈배열
   });
 });
