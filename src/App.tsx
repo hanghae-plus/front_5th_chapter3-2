@@ -202,6 +202,7 @@ function App() {
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
                             <Text fontSize="sm" noOfLines={1}>
+                              {event.repeat.type !== 'none' ? '🍎 ' : ''}
                               {event.title}
                             </Text>
                           </HStack>
@@ -271,6 +272,7 @@ function App() {
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
+                                    {event.repeat.type !== 'none' ? '🍎 ' : ''}
                                     {event.title}
                                   </Text>
                                 </HStack>
