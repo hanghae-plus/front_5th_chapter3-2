@@ -1,12 +1,11 @@
-import { RepeatInfo, RepeatType } from '../types';
+import { RepeatType, BaseRepeatInfo } from '../types';
 
+// TODO: app config 쪽으로 이동할 수 있도록 변경
 const END_DATE_LIMIT = new Date('2025-09-30');
 
-export type GetRepeatingDatesOptions = {
+export interface GetRepeatingDatesOptions extends BaseRepeatInfo {
   type: Exclude<RepeatType, 'none'>;
-  interval: RepeatInfo['interval'];
-  endDate?: string;
-};
+}
 
 export function getRepeatingDates(date: string, repeat: GetRepeatingDatesOptions) {
   const dates = [];
@@ -35,8 +34,11 @@ function* repeatingDateGenerator(
 ) {
   let i = 0;
   let nextDate = startDate;
+  const maxCount = options.count ?? Infinity;
+  console.log('maxCount', maxCount);
+  let currentCount = 0;
 
-  while (nextDate <= endDate) {
+  while (nextDate <= endDate && currentCount < maxCount) {
     nextDate = getPossibleRepeatingDate(startDate, {
       type: options.type,
       interval: options.interval * i,
@@ -56,6 +58,7 @@ function* repeatingDateGenerator(
 
     yield nextDate;
     i += 1;
+    currentCount += 1;
   }
 }
 

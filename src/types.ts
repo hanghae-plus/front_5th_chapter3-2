@@ -1,14 +1,10 @@
 export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
-export interface NoneRepeatInfo {
-  type: 'none';
-  interval: number;
-}
-
 export interface BaseRepeatInfo {
   type: RepeatType;
   interval: number;
   endDate?: string;
+  count?: number;
 }
 
 export interface RepeatInfo extends BaseRepeatInfo {
