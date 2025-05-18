@@ -404,4 +404,18 @@ describe('getRepeatingDates', () => {
 
     expect(result).toEqual(['2025-05-18', '2025-05-19', '2025-05-20']);
   });
+
+  it('반복 횟수에 따라 반복 일정을 반환한다.', () => {
+    const date = '2025-05-18';
+
+    const repeat: GetRepeatingDatesOptions = {
+      type: 'daily',
+      interval: 1,
+      count: 3,
+    };
+
+    const result = getRepeatingDates(date, repeat);
+
+    expect(result).toEqual(['2025-05-18', '2025-05-19', '2025-05-20']);
+  });
 });
