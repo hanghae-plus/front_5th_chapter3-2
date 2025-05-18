@@ -184,3 +184,142 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 
   expect(result.current.events).toHaveLength(1);
 });
+
+describe('반복 이벤트 저장', () => {
+  it('반복 이벤트 저장 시 반복 주기와 일정에 따라 반복 이벤트가 올바르게 저장된다', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-11-23' },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newRepeatEvent);
+    });
+
+    const expectedEvents = [
+      { ...newRepeatEvent, date: '2025-10-16' },
+      { ...newRepeatEvent, date: '2025-10-23' },
+      { ...newRepeatEvent, date: '2025-10-30' },
+      { ...newRepeatEvent, date: '2025-11-06' },
+      { ...newRepeatEvent, date: '2025-11-13' },
+      { ...newRepeatEvent, date: '2025-11-20' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+
+  it('윤년 29일에 매년 반복 일정을 설정한 경우 종료 시점까지 윤년 29일에 반복 일정이 저장된다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2024-02-29',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1, endDate: '2030-02-28' },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newRepeatEvent);
+    });
+
+    const expectedEvents = [
+      { ...newRepeatEvent, date: '2024-02-29' },
+      { ...newRepeatEvent, date: '2028-02-29' },
+    ];
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+
+  it('해당 해의 31일에 매일 반복을 설정한 경우 종료 시점까지 매일 반복 일정이 저장된다', async () => {
+    setupMockHandlerCreation();
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-12-31',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2026-01-03' },
+      notificationTime: 5,
+    };
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const expectedEvents = [
+      { ...newEvent, date: '2025-12-31' },
+      { ...newEvent, date: '2026-01-01' },
+      { ...newEvent, date: '2026-01-02' },
+      { ...newEvent, date: '2026-01-03' },
+    ];
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newEvent);
+    });
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+
+  it('종료 시점이 없는 경우 2025-09-30까지 반복 일정이 저장된다', async () => {
+    setupMockHandlerCreation();
+
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2024-02-19',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+      notificationTime: 5,
+    };
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newRepeatEvent);
+    });
+
+    const expectedEvents = [
+      { ...newRepeatEvent, date: '2024-02-19' },
+      { ...newRepeatEvent, date: '2024-03-19' },
+      { ...newRepeatEvent, date: '2024-04-19' },
+      { ...newRepeatEvent, date: '2024-05-19' },
+      { ...newRepeatEvent, date: '2024-06-19' },
+      { ...newRepeatEvent, date: '2024-07-19' },
+      { ...newRepeatEvent, date: '2024-08-19' },
+      { ...newRepeatEvent, date: '2024-09-19' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+});
