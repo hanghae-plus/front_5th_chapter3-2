@@ -8,16 +8,24 @@ import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
-} from '../__mocks__/handlersUtils';
-import App from '../App';
-import { server } from '../setupTests';
-import { Event } from '../types';
+} from '@/__mocks__/handlersUtils';
+import App from '@/App';
+import { Providers } from '@/components/providers';
+import { server } from '@/setupTests';
+import { Event } from '@/types';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
   const user = userEvent.setup();
 
-  return { ...render(<ChakraProvider>{element}</ChakraProvider>), user }; // ? Med: 왜 ChakraProvider로 감싸는지 물어보자
+  return {
+    ...render(
+      <ChakraProvider>
+        <Providers>{element}</Providers>
+      </ChakraProvider>
+    ),
+    user,
+  }; // ? Med: 왜 ChakraProvider로 감싸는지 물어보자
 };
 
 // ! Hard 여기 제공 안함

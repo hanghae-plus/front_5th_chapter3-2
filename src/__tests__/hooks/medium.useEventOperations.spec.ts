@@ -5,10 +5,10 @@ import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
-} from '../../__mocks__/handlersUtils.ts';
-import { useEventOperations } from '../../hooks/useEventOperations.ts';
-import { server } from '../../setupTests.ts';
-import { Event } from '../../types.ts';
+} from '@/__mocks__/handlersUtils.ts';
+import { useEventOperations } from '@/hooks/useEventOperations.ts';
+import { server } from '@/setupTests.ts';
+import { Event } from '@/types.ts';
 
 const toastFn = vi.fn();
 
