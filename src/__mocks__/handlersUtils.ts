@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { server } from '../setupTests';
-import { Event } from '../types';
+import { Event, EventForm } from '../types';
 
 // ! Hard 여기 제공 안함
 export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
@@ -16,6 +16,24 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
       newEvent.id = String(mockEvents.length + 1); // 간단한 ID 생성
       mockEvents.push(newEvent);
       return HttpResponse.json(newEvent, { status: 201 });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const repeatId = String(mockEvents.length + 1);
+      const { events: eventsToCreate } = (await request.json()) as { events: EventForm[] };
+      const newEvents = eventsToCreate.map((event, index) => {
+        const isRepeatEvent = event.repeat.type !== 'none';
+        return {
+          id: String(mockEvents.length + 1 + index),
+          ...event,
+          repeat: {
+            ...event.repeat,
+            id: isRepeatEvent ? repeatId : undefined,
+          },
+        };
+      });
+
+      mockEvents.push(...newEvents);
+      return HttpResponse.json(newEvents, { status: 201 });
     })
   );
 };
@@ -59,6 +77,16 @@ export const setupMockHandlerUpdating = () => {
 
       mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
       return HttpResponse.json(mockEvents[index]);
+    }),
+    http.put('/api/events-list', async ({ request }) => {
+      const { events: eventsToUpdate } = (await request.json()) as { events: Event[] };
+
+      eventsToUpdate.forEach((event) => {
+        const index = mockEvents.findIndex((target) => target.id === event.id);
+        mockEvents[index] = { ...mockEvents[index], ...event };
+      });
+
+      return HttpResponse.json(mockEvents);
     })
   );
 };
@@ -88,6 +116,16 @@ export const setupMockHandlerDeletion = () => {
       const index = mockEvents.findIndex((event) => event.id === id);
 
       mockEvents.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.delete('api/events-list', async ({ request }) => {
+      const { eventIds: eventIdsToDelete } = (await request.json()) as { eventIds: string[] };
+      const deletedEvents = mockEvents.filter((event) => eventIdsToDelete.includes(event.id));
+
+      deletedEvents.forEach((deletedEvent) => {
+        const index = mockEvents.findIndex((mockEvent) => mockEvent.id === deletedEvent.id);
+        mockEvents.splice(index, 1);
+      });
       return new HttpResponse(null, { status: 204 });
     })
   );
