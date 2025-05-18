@@ -38,12 +38,12 @@ export const handlers = [
   }),
 
   http.post('/api/events-list', async ({ request }) => {
-    const repeatId = events.length + 1;
+    const repeatId = String(events.length + 1);
     const { events: eventsToCreate } = (await request.json()) as { events: EventForm[] };
     const newEvents = eventsToCreate.map((event, index) => {
       const isRepeatEvent = event.repeat.type !== 'none';
       return {
-        id: events.length + 1 + index,
+        id: String(events.length + 1 + index),
         ...event,
         repeat: {
           ...event.repeat,
@@ -77,8 +77,8 @@ export const handlers = [
 
   http.delete('api/events-list', async ({ request }) => {
     const { eventIds: eventIdsToDelete } = (await request.json()) as { eventIds: string[] };
-    const deletedEventIds = events.filter((event) => eventIdsToDelete.includes(event.id));
-    const isDeleted = deletedEventIds.length === eventIdsToDelete.length;
+    const deletedEvents = events.filter((event) => eventIdsToDelete.includes(event.id));
+    const isDeleted = deletedEvents.length === eventIdsToDelete.length;
 
     if (isDeleted) {
       return new HttpResponse(null, { status: 204 });
