@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
+import { ReactNode } from 'react';
 
 import {
   setupMockHandlerCreation,
@@ -22,8 +23,20 @@ vi.mock('@chakra-ui/react', async () => {
   };
 });
 
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <EventProvider>
+    <EventFormProvider>{children}</EventFormProvider>
+  </EventProvider>
+);
+
+const useEventTest = (isEditing?: boolean) => {
+  const eventContext = useEvents();
+  const operations = useEventOperations(isEditing);
+  return { ...eventContext, ...operations };
+};
+
 it('저장되어있는 초기 이벤트 데이터를 적절하게 불러온다', async () => {
-  const { result } = renderHook(() => useEventOperations(false));
+  const { result } = renderHook(() => useEventTest(false), { wrapper });
 
   await act(() => Promise.resolve(null));
 
@@ -100,7 +113,7 @@ it("새로 정의된 'title', 'endTime' 기준으로 적절하게 일정이 업�
 it('존재하는 이벤트 삭제 시 에러없이 아이템이 삭제된다.', async () => {
   setupMockHandlerDeletion();
 
-  const { result } = renderHook(() => useEventOperations(false));
+  const { result } = renderHook(() => useEventTest(false), { wrapper });
 
   await act(async () => {
     await result.current.deleteEvent('1');
@@ -118,7 +131,7 @@ it("이벤트 로딩 실패 시 '이벤트 로딩 실패'라는 텍스트와 함
     })
   );
 
-  renderHook(() => useEventOperations(true));
+  renderHook(() => useEventTest(true), { wrapper });
 
   await act(() => Promise.resolve(null));
 
@@ -133,7 +146,7 @@ it("이벤트 로딩 실패 시 '이벤트 로딩 실패'라는 텍스트와 함
 });
 
 it("존재하지 않는 이벤트 수정 시 '일정 저장 실패'라는 토스트가 노출되며 에러 처리가 되어야 한다", async () => {
-  const { result } = renderHook(() => useEventOperations(true));
+  const { result } = renderHook(() => useEventTest(true), { wrapper });
 
   await act(() => Promise.resolve(null));
 
@@ -169,7 +182,7 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
     })
   );
 
-  const { result } = renderHook(() => useEventOperations(false));
+  const { result } = renderHook(() => useEventTest(false), { wrapper });
 
   await act(() => Promise.resolve(null));
 
