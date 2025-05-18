@@ -1,11 +1,10 @@
-import { getRepeatingDates } from '../../utils/repeatEvent';
-import { RepeatInfo } from '../../types';
+import { getRepeatingDates, GetRepeatingDatesOptions } from '../../utils/repeatEvent';
 
 // 2025-09-30 까지 날짜를 반환한다.
 describe('getRepeatingDates', () => {
   it('매일 반복 일정에 대한 날짜를 반환한다.', () => {
     const date = '2025-05-18';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'daily',
       interval: 1,
     };
@@ -154,7 +153,7 @@ describe('getRepeatingDates', () => {
 
   it('매일 반복 간격을 2일로 설정하면 2일 간격으로 날짜를 반환한다.', () => {
     const date = '2025-05-18';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'daily',
       interval: 2,
     };
@@ -199,43 +198,43 @@ describe('getRepeatingDates', () => {
       '2025-07-25',
       '2025-07-27',
       '2025-07-29',
-      '2025-08-01',
-      '2025-08-03',
-      '2025-08-05',
-      '2025-08-07',
-      '2025-08-09',
-      '2025-08-11',
-      '2025-08-13',
-      '2025-08-15',
-      '2025-08-17',
-      '2025-08-19',
-      '2025-08-21',
-      '2025-08-23',
-      '2025-08-25',
-      '2025-08-27',
-      '2025-08-29',
-      '2025-08-31',
-      '2025-09-02',
-      '2025-09-04',
-      '2025-09-06',
-      '2025-09-08',
-      '2025-09-10',
-      '2025-09-12',
-      '2025-09-14',
-      '2025-09-16',
-      '2025-09-18',
-      '2025-09-20',
-      '2025-09-22',
-      '2025-09-24',
-      '2025-09-26',
-      '2025-09-28',
-      '2025-09-30',
+      '2025-07-31',
+      '2025-08-02',
+      '2025-08-04',
+      '2025-08-06',
+      '2025-08-08',
+      '2025-08-10',
+      '2025-08-12',
+      '2025-08-14',
+      '2025-08-16',
+      '2025-08-18',
+      '2025-08-20',
+      '2025-08-22',
+      '2025-08-24',
+      '2025-08-26',
+      '2025-08-28',
+      '2025-08-30',
+      '2025-09-01',
+      '2025-09-03',
+      '2025-09-05',
+      '2025-09-07',
+      '2025-09-09',
+      '2025-09-11',
+      '2025-09-13',
+      '2025-09-15',
+      '2025-09-17',
+      '2025-09-19',
+      '2025-09-21',
+      '2025-09-23',
+      '2025-09-25',
+      '2025-09-27',
+      '2025-09-29',
     ]);
   });
 
   it('매주 반복 일정에 대한 날짜를 반환한다.', () => {
     const date = '2025-05-18';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'weekly',
       interval: 1,
     };
@@ -268,7 +267,7 @@ describe('getRepeatingDates', () => {
 
   it('매주 반복 간격을 2주로 설정하면 2주 간격으로 날짜를 반환한다.', () => {
     const date = '2025-05-18';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'weekly',
       interval: 2,
     };
@@ -300,7 +299,7 @@ describe('getRepeatingDates', () => {
 
   it('매월 반복 일정에 대한 날짜를 반환한다.', () => {
     const date = '2025-05-18';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'monthly',
       interval: 1,
     };
@@ -312,7 +311,7 @@ describe('getRepeatingDates', () => {
 
   it('31일에 반복 유형이 매월인 경우 31일이 없는 달의 날짜는 반환하지 않는다.', () => {
     const date = '2025-05-31';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'monthly',
       interval: 1,
     };
@@ -324,7 +323,7 @@ describe('getRepeatingDates', () => {
 
   it('2월 29일에 반복 유형을 매월인 경우 윤년이 아닌 2월은 포함시키지 않는다.', () => {
     const date = '2024-02-29';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'monthly',
       interval: 1,
     };
@@ -356,7 +355,7 @@ describe('getRepeatingDates', () => {
 
   it('매월 반복 간격을 2개월로 설정하면 2개월 간격으로 날짜를 반환한다.', () => {
     const date = '2025-05-18';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'monthly',
       interval: 2,
     };
@@ -368,7 +367,7 @@ describe('getRepeatingDates', () => {
 
   it('매년 반복 일정에 대한 날짜를 반환한다.', () => {
     const date = '2024-05-18';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'yearly',
       interval: 1,
     };
@@ -380,7 +379,7 @@ describe('getRepeatingDates', () => {
 
   it('2월 29일에 반복 유형을 매년인 경우 윤년이 아닌 2월은 포함시키지 않는다.', () => {
     const date = '2024-02-29';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'yearly',
       interval: 1,
     };
@@ -392,7 +391,7 @@ describe('getRepeatingDates', () => {
 
   it('매년 반복 간격을 2년으로 설정하면 2년 간격으로 날짜를 반환한다.', () => {
     const date = '2021-05-18';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'yearly',
       interval: 2,
     };
@@ -404,7 +403,7 @@ describe('getRepeatingDates', () => {
 
   it('종료일이 있다면 종료일 이전의 날짜만 포함된다.', () => {
     const date = '2025-05-18';
-    const repeat: RepeatInfo = {
+    const repeat: GetRepeatingDatesOptions = {
       type: 'daily',
       interval: 1,
       endDate: '2025-05-20',
