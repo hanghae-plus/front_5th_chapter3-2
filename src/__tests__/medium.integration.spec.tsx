@@ -324,3 +324,28 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
+
+it('반복 일정 입력 시 캘린더에 반복 횟수만큼 일정이 렌더링된다', async () => {
+  setupMockHandlerUpdating();
+
+  const { user } = setup(<App />);
+
+  await saveSchedule(user, {
+    title: '매주 스크럼',
+    date: '2025-04-28',
+    startTime: '09:30',
+    endTime: '10:30',
+    description: '설명',
+    location: '회의실 A',
+    category: '업무',
+    repeat: {
+      type: 'weekly',
+      interval: 1,
+    },
+  } as any);
+
+  const calendarCells = screen.getAllByTestId('calendar-cell');
+  const meetingCells = calendarCells.filter((cell) => within(cell).queryByText('매주 스크럼'));
+
+  expect(meetingCells).toHaveLength(4);
+});
