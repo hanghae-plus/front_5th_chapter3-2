@@ -2,6 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import { getRepeatingDates, GetRepeatingDatesOptions } from '../utils/repeatEvent';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -36,11 +37,30 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           body: JSON.stringify(eventData),
         });
       } else {
-        response = await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
+        if (eventData.repeat.type === 'none') {
+          response = await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        } else {
+          const repeatingDates = getRepeatingDates(
+            eventData.date,
+            // TODO: 조건에 따른 타입 추론되도록 변경
+            eventData.repeat as GetRepeatingDatesOptions
+          );
+
+          const events = repeatingDates.map((date) => ({
+            ...eventData,
+            date,
+          }));
+
+          response = await fetch('/api/events-list', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ events }),
+          });
+        }
       }
 
       if (!response.ok) {
