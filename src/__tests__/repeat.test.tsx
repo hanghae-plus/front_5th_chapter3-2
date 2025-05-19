@@ -79,7 +79,40 @@ it(
 it('31일에 매월 반복일정을 설정하면, 31일이 없는 달에는 30일 또는 말일에 생성되는지 확인한다.');
 
 // 반복 간격 설정
-it('반복 유형별로 반복 간격(예: 2일마다, 3주마다, 2개월마다 등)을 설정할 수 있다.');
+it.only('반복 유형별로 반복 간격(예: 2일마다, 3주마다, 2개월마다 등)을 설정할 수 있다.', async () => {
+  const { user } = setup(<App />);
+
+  const repeatTypeSelect = screen.getByTestId('repeat-type-select');
+  expect(repeatTypeSelect).toBeInTheDocument();
+
+  await user.selectOptions(repeatTypeSelect, '매일');
+  expect(repeatTypeSelect).toHaveValue('daily');
+
+  const repeatIntervalInput = screen.getByTestId('repeat-interval-input');
+  expect(repeatIntervalInput).toBeInTheDocument();
+
+  await user.clear(repeatIntervalInput);
+  await user.type(repeatIntervalInput, '2');
+  expect(repeatIntervalInput).toHaveValue(2);
+
+  await user.selectOptions(repeatTypeSelect, '매일');
+  expect(repeatTypeSelect).toHaveValue('daily');
+
+  await user.clear(repeatIntervalInput);
+  await user.type(repeatIntervalInput, '3');
+  expect(repeatIntervalInput).toHaveValue(3);
+
+  await user.selectOptions(repeatTypeSelect, '매주');
+  expect(repeatTypeSelect).toHaveValue('weekly');
+
+  await user.clear(repeatIntervalInput);
+  await user.type(repeatIntervalInput, '2');
+  expect(repeatIntervalInput).toHaveValue(2);
+
+  await user.selectOptions(repeatTypeSelect, '매월');
+  expect(repeatTypeSelect).toHaveValue('monthly');
+});
+
 it('설정한 반복 간격에 따라 일정이 올바른 날짜에 생성되는지 확인한다.');
 
 // 반복 종료
