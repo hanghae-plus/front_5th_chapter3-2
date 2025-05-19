@@ -20,7 +20,7 @@ describe('반복 유형 선택', () => {
     const startDate = new Date('2025-1-31');
     const endDate = new Date('2025-06-30');
 
-    const result = generateMonthlyRepeats(startDate, endDate);
+    const result = generateMonthlyRepeats(startDate, endDate, 1);
     const dates = result.map((d) => d.toISOString().slice(0, 10));
 
     expect(dates).toEqual(['2025-01-31', '2025-03-31', '2025-05-31']);

@@ -26,8 +26,8 @@ const isValidRepeatDay = (year: number, month: number, targetDay: number): boole
   return date.getDate() === targetDay;
 };
 
-/** 매월 반복되는 일정 */
-export function generateMonthlyRepeats(startDate: Date, endDate: Date): Date[] {
+/** n개월마다 반복되는 일정 생성 */
+export function generateMonthlyRepeats(startDate: Date, endDate: Date, interval: number): Date[] {
   const result: Date[] = [];
 
   const day = startDate.getDate();
@@ -44,8 +44,8 @@ export function generateMonthlyRepeats(startDate: Date, endDate: Date): Date[] {
         result.push(date);
       }
     }
-
-    currentStartDate.setMonth(month + 1); // 다음 달로 이동시킴
+    // interval(월 단위)만큼 증가
+    currentStartDate.setMonth(month + interval);
   }
   return result;
 }
