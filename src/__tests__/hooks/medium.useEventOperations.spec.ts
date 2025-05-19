@@ -215,4 +215,31 @@ describe('반복 유형 선택', () => {
     expect(result.current.events[0].repeat.type).toBe('daily');
     expect(result.current.events[0].repeat.interval).toBe(1);
   });
+
+  it('일정 수정시 반복 유형 정보를 변경하면 변경된 정보가 반영된다.', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const updatedEvent: Event = {
+      id: '1',
+      title: '수정된 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '수정된 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1 },
+      notificationTime: 1,
+    };
+
+    await act(async () => {
+      await result.current.updateEventList(updatedEvent);
+    });
+
+    expect(result.current.events).toHaveLength(1);
+    expect(result.current.events[0].repeat.type).toBe('weekly');
+    expect(result.current.events[0].repeat.interval).toBe(1);
+  });
 });
