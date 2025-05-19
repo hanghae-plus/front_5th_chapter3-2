@@ -56,7 +56,7 @@ describe('generateRepeatedEvents', () => {
       ...baseEvent,
       date: '2025-01-01',
       repeat: {
-        type: 'daily',
+        type: 'daily' as const,
         interval: 1,
         endDate: '2025-01-03',
       },
@@ -71,7 +71,7 @@ describe('generateRepeatedEvents', () => {
       ...baseEvent,
       date: '2025-01-01',
       repeat: {
-        type: 'weekly',
+        type: 'weekly' as const,
         interval: 1,
         count: 3,
       },
@@ -86,14 +86,14 @@ describe('generateRepeatedEvents', () => {
       ...baseEvent,
       date: '2025-01-01',
       repeat: {
-        type: 'monthly',
+        type: 'monthly' as const,
         interval: 1,
         // 종료 조건 없음
       },
     };
     const results = generateRepeatedEvents(event);
     const last = results.at(-1);
-    expect(last?.date <= '2025-09-30').toBe(true);
+    expect(last!.date <= '2025-09-30').toBe(true);
   });
 });
 
