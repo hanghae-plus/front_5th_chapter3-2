@@ -564,4 +564,62 @@ describe('반복 일정 추가', () => {
     expect(eventList.queryByText('2025-09-30')).not.toBeInTheDocument();
     expect(eventList.queryByText('2025-09-31')).not.toBeInTheDocument();
   });
+
+  it('날짜를 기준으로 반복 일정 종료를 설정할 수 있다.', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+    const repeatDates = ['2025-09-15', '2025-09-16', '2025-09-17', '2025-09-18'];
+
+    await saveSchedule(user, {
+      title: '새로운 반복 일정 타이틀',
+      date: '2025-09-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 반복 일정 설명',
+      location: '회의실 A',
+      category: '업무',
+      isRepeating: true,
+      repeatType: 'daily',
+      repeatInterval: 1,
+      repeatEndDate: '2025-09-18',
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getAllByText('새로운 반복 일정 타이틀')).toHaveLength(repeatDates.length);
+    expect(eventList.getAllByText('반복: 매일')).toHaveLength(repeatDates.length);
+
+    repeatDates.forEach((date) => {
+      expect(eventList.getByText(date)).toBeInTheDocument();
+    });
+  });
+
+  it('횟수를 기준으로 반복 일정 종료를 설정할 수 있다.', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+    const repeatDates = ['2025-09-15', '2025-09-16', '2025-09-17'];
+
+    await saveSchedule(user, {
+      title: '새로운 반복 일정 타이틀',
+      date: '2025-09-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 반복 일정 설명',
+      location: '회의실 A',
+      category: '업무',
+      isRepeating: true,
+      repeatType: 'daily',
+      repeatInterval: 1,
+      repeatCount: 3,
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getAllByText('새로운 반복 일정 타이틀')).toHaveLength(repeatDates.length);
+    expect(eventList.getAllByText('반복: 매일')).toHaveLength(repeatDates.length);
+
+    repeatDates.forEach((date) => {
+      expect(eventList.getByText(date)).toBeInTheDocument();
+    });
+  });
 });
