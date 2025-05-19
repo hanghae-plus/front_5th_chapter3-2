@@ -92,3 +92,50 @@ export const setupMockHandlerDeletion = () => {
     })
   );
 };
+
+export const setupMockHandlerList = (initEvents = [] as Event[]) => {
+  const mockEvents: Event[] = [...initEvents];
+
+  server.use(
+    http.get('/api/events', () => HttpResponse.json({ events: mockEvents })),
+
+    // server.js에 추가된 API 목록
+
+    // POST /api/events-list
+    // PUT /api/events-list
+    // DELETE /api/events-list
+    http.post('/api/events-list', async ({ request }) => {
+      const { events: newEvents } = (await request.json()) as { events: Event[] };
+      newEvents.forEach((_, index) => {
+        newEvents[index].id = String(mockEvents.length + 1 + index);
+      });
+      return HttpResponse.json(newEvents, { status: 201 });
+    }),
+
+    http.put('/api/events-list', async ({ request }) => {
+      let isUpdated = false;
+      const newEvents = [...mockEvents];
+
+      const { events: updatedEvents } = (await request.json()) as { events: Event[] };
+
+      updatedEvents.forEach((event) => {
+        const index = mockEvents.findIndex((target) => target.id === event.id);
+        if (index > -1) {
+          isUpdated = true;
+          newEvents[index] = { ...mockEvents[index], ...event };
+        }
+      });
+
+      if (isUpdated) return HttpResponse.json(newEvents);
+      return new HttpResponse(null, { status: 404 });
+    }),
+    http.delete('/api/events-list', async ({ request }) => {
+      const { eventIds } = (await request.json()) as { eventIds: Event['id'][] };
+
+      const newEvents = mockEvents.filter((event) => !eventIds.includes(event.id));
+
+      if (newEvents.length !== mockEvents.length) return new HttpResponse(null, { status: 204 });
+      return new HttpResponse(null, { status: 404 });
+    })
+  );
+};
