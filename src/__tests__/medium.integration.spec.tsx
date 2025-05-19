@@ -7,6 +7,7 @@ import { ReactElement } from 'react';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
+  setupMockHandlerEventsListCreation,
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
@@ -323,4 +324,44 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('반복 일정 테스트', () => {
+  it('반복 일정을 추가하면 캘린더 뷰에서 반복 일정에 반복 아이콘이 표시된다.', async () => {
+    setupMockHandlerEventsListCreation([
+      {
+        id: '1',
+        title: '새 회의',
+        date: '2025-10-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+      {
+        id: '2',
+        title: '새 회의',
+        date: '2025-12-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+    ]);
+
+    setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const monthView = within(screen.getByTestId('month-view'));
+
+    const repeatIcon = monthView.getByLabelText('반복 일정 아이콘');
+    expect(within(repeatIcon).getByText('새 회의')).toBeInTheDocument();
+  });
 });
