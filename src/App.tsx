@@ -413,6 +413,7 @@ function App() {
                   <Input
                     type="date"
                     value={repeatEndDate}
+                    max={'2025-09-30'}
                     onChange={(e) => setRepeatEndDate(e.target.value)}
                   />
                 </FormControl>
@@ -425,6 +426,14 @@ function App() {
                   value={repeatEndCount}
                   onChange={(e) => setRepeatEndCount(Number(e.target.value))}
                   min={1}
+                />
+              </HStack>
+              <HStack>
+                <FormLabel>종료 없음</FormLabel>
+                <Checkbox
+                  type="checkbox"
+                  data-testid="repeat-no-repeat-checkbox"
+                  onChange={(e) => e.target.checked && setRepeatEndDate('')}
                 />
               </HStack>
             </VStack>

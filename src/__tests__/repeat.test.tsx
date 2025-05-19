@@ -139,7 +139,18 @@ it("반복 종료 조건으로 '특정 횟수만큼'을 지정할 수 있다.", 
   expect(repeatEndCountInput).toHaveValue(10);
 });
 
-it("반복 종료 조건으로 '종료 없음'을 지정할 수 있다.");
+it.only("반복 종료 조건으로 '종료 없음'을 지정할 수 있다.", async () => {
+  const { user } = setup(<App />);
+
+  const repeatNoRepeatCheckbox = screen
+    .getByTestId('repeat-no-repeat-checkbox')
+    .querySelector('input')!;
+  expect(repeatNoRepeatCheckbox).toBeInTheDocument();
+
+  await user.click(repeatNoRepeatCheckbox);
+  expect(repeatNoRepeatCheckbox).toBeChecked();
+});
+
 it(
   "반복 종료 조건이 '2025-09-30까지'로 설정된 경우, 해당 날짜 이후에는 반복 일정이 생성되지 않는다."
 );
