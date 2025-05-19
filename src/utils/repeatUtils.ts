@@ -10,6 +10,13 @@ import {
 
 import { EventForm } from '../types';
 
+/**
+ * 반복 설정에 따라 반복 일정을 생성하는 유틸 함수
+ * - 반복 유형: daily, weekly, monthly, yearly
+ * - 반복 간격: interval (1 이상)
+ * - 반복 종료 조건: endDate 또는 count
+ * - 특수 처리: 윤년 보정, 말일 보정
+ */
 export const generateRepeatedEvents = (base: EventForm): EventForm[] => {
   const { repeat } = base;
 
@@ -24,6 +31,11 @@ export const generateRepeatedEvents = (base: EventForm): EventForm[] => {
   const endDate = repeat.endDate ? new Date(repeat.endDate) : new Date('2025-09-30');
   let count = 0;
 
+  /**
+   * 반복 종료 조건:
+   * - 종료 날짜 전 또는 같을 때까지
+   * - count가 설정되었으면 count 이하까지만
+   */
   while (
     (isBefore(currentDate, endDate) || isEqual(currentDate, endDate)) &&
     (!repeat.count || count < repeat.count)
