@@ -147,7 +147,11 @@ const ScheduleEventForm = ({ formState, onSubmit, notificationOptions }: Props) 
 
       <FormControl>
         <FormLabel>반복 설정</FormLabel>
-        <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+        <Checkbox
+          data-testid="repeat-checkbox"
+          isChecked={isRepeating}
+          onChange={(e) => setIsRepeating(e.target.checked)}
+        >
           반복 일정
         </Checkbox>
       </FormControl>
