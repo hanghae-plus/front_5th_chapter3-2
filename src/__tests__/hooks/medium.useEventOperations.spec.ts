@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
+  setupMockHandlerEventListCreation,
   setupMockHandlerUpdating,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
@@ -183,4 +184,180 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
   });
 
   expect(result.current.events).toHaveLength(1);
+});
+
+describe('반복 일정 저장', () => {
+  it('매일 반복되는 일정이 올바르게 저장된다.', async () => {
+    setupMockHandlerEventListCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '발제 과제하기,,,힘내',
+      date: '2025-05-18',
+      startTime: '13:00',
+      endTime: '18:00',
+      description: '과제는 매일 하는 거다 이녀석아',
+      location: '우리집',
+      category: '개인',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-05-22' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(5);
+
+    expect(result.current.events).toEqual([
+      {
+        ...newEvent,
+      },
+      {
+        ...newEvent,
+        id: '2',
+        date: '2025-05-19',
+      },
+      {
+        ...newEvent,
+        id: '3',
+        date: '2025-05-20',
+      },
+      {
+        ...newEvent,
+        id: '4',
+        date: '2025-05-21',
+      },
+      {
+        ...newEvent,
+        id: '5',
+        date: '2025-05-22',
+      },
+    ]);
+  });
+
+  it('매주 반복되는 일정이 올바르게 저장된다.', async () => {
+    setupMockHandlerEventListCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '발제',
+      date: '2025-05-17',
+      startTime: '13:00',
+      endTime: '18:00',
+      description: '앞으로 남은 발제들,,',
+      location: '우리집',
+      category: '개인',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-06-06' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(3);
+
+    expect(result.current.events).toEqual([
+      {
+        ...newEvent,
+      },
+      {
+        ...newEvent,
+        id: '2',
+        date: '2025-05-24',
+      },
+      {
+        ...newEvent,
+        id: '3',
+        date: '2025-05-31',
+      },
+    ]);
+  });
+
+  it('매달 반복되는 일정이 올바르게 저장된다', async () => {
+    setupMockHandlerEventListCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '31일은 베라데이',
+      date: '2025-05-31',
+      startTime: '13:00',
+      endTime: '18:00',
+      description: '베라데이',
+      location: '우리집',
+      category: '개인',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-10-01' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(3);
+
+    expect(result.current.events).toEqual([
+      {
+        ...newEvent,
+      },
+      {
+        ...newEvent,
+        id: '2',
+        date: '2025-07-31',
+      },
+      {
+        ...newEvent,
+        id: '3',
+        date: '2025-08-31',
+      },
+    ]);
+  });
+
+  it('매년 반복되는 일정이 올바르게 저장된다', async () => {
+    setupMockHandlerEventListCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '윤년 계산',
+      date: '2024-02-29',
+      startTime: '13:00',
+      endTime: '18:00',
+      description: '윤년',
+      location: '우리집',
+      category: '개인',
+      repeat: { type: 'yearly', interval: 1, endDate: '2032-03-01' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(3);
+
+    expect(result.current.events).toEqual([
+      {
+        ...newEvent,
+      },
+      {
+        ...newEvent,
+        id: '2',
+        date: '2028-02-29',
+      },
+      {
+        ...newEvent,
+        id: '3',
+        date: '2032-02-29',
+      },
+    ]);
+  });
 });
