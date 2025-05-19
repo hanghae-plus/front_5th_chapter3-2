@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
@@ -96,7 +98,11 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const saveRepeatEvent = async (eventData: Event | EventForm) => {
     try {
       let response;
-      const events = createRepeatEvents(eventData);
+      const repeatInfoId = randomUUID();
+      const events = createRepeatEvents({
+        ...eventData,
+        repeat: { ...eventData.repeat, id: repeatInfoId },
+      });
       if (editing) {
         response = await fetch(`/api/events-list`, {
           method: 'PUT',

@@ -52,7 +52,7 @@ export function getFilteredEvents(
 export const createRepeatEvents = (event: Event | EventForm): EventForm[] => {
   // 최대 일자 2025-09-30 ..?
   const events: EventForm[] = [];
-  const { id, type, interval, endDate } = event.repeat;
+  const { type, interval, endDate } = event.repeat;
   if (type === 'none' || interval === 0) return [event];
   const st = new Date(event.date);
   const ed = endDate ? new Date(endDate) : new Date('2026-06-30'); // test
