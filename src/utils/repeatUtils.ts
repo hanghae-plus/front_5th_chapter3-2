@@ -31,11 +31,11 @@ export function generateMonthlyRepeats(startDate: Date, endDate: Date): Date[] {
   const result: Date[] = [];
 
   const day = startDate.getDate();
-  const currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1); //2025-05-01
+  const currentStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1); //2025-05-01
 
-  while (currentDate <= endDate) {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+  while (currentStartDate <= endDate) {
+    const year = currentStartDate.getFullYear();
+    const month = currentStartDate.getMonth();
 
     if (isValidRepeatDay(year, month, day)) {
       const date = new Date(year, month, day);
@@ -45,9 +45,20 @@ export function generateMonthlyRepeats(startDate: Date, endDate: Date): Date[] {
       }
     }
 
-    currentDate.setMonth(month + 1); // 다음 달로 이동시킴
+    currentStartDate.setMonth(month + 1); // 다음 달로 이동시킴
   }
   return result;
 }
 
-export function generateDailyRepeats(startDate: Date, endDate: Date): Date[] {}
+/**daily 반복 일정 */
+export function generateDailyRepeats(startDate: Date, endDate: Date, interval: number): Date[] {
+  const result: Date[] = [];
+  const currentDate = new Date(startDate); // 5-19
+
+  while (currentDate <= endDate) {
+    result.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + interval);
+  }
+
+  return result;
+}

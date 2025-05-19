@@ -30,7 +30,7 @@ describe('반복 간격 설정', () => {
   it('2일마다 반복 주기의 간격을 지정할 수 있다.', () => {
     const startDate = new Date('2025-05-19');
     const endDate = new Date('2025-05-30');
-    const result = generateDailyRepeats(startDate, endDate);
+    const result = generateDailyRepeats(startDate, endDate, 2);
     const dates = result.map((d) => d.toISOString().slice(0, 10));
 
     expect(dates.length).toBe(6);
