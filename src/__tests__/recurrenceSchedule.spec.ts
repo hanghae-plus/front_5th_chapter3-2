@@ -1,3 +1,5 @@
+import { generateYearlyRepeats } from '../utils/repeatUtils';
+
 describe('반복 유형 선택', () => {
   it('29일에 매년 반복 신청을 하면 윤년인 해에만 일정이 생성된다.', () => {
     // 예: 2024, 2028 포함 / 2025, 2026 제외
@@ -5,6 +7,14 @@ describe('반복 유형 선택', () => {
       given: 2024-02-29 ~ 2032-12-31
       expect: [2024-02-29, 2028-02-29, 2032-02-29]
     */
+
+    const startDate = new Date('2024-02-29');
+    const endDate = new Date('2032-12-29');
+
+    const result = generateYearlyRepeats(startDate, endDate);
+    const dates = result.map((d) => d.toISOString().slice(0, 10));
+
+    expect(dates).toEqual(['2024-02-29', '2028-02-29', '2032-02-29']);
   });
 
   it('31일에 매월 반복 신청을 하면 31일이 없는 달은 일정을 생성하지 않는다.', () => {
