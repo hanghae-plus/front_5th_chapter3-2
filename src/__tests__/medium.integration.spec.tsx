@@ -12,6 +12,7 @@ import {
 import App from '../App';
 import { server } from '../setupTests';
 import { Event } from '../types';
+import { getDaysInMonth, getWeekDates } from '../utils/dateUtils';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
@@ -36,6 +37,30 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
+
+  await user.click(screen.getByTestId('event-submit-button'));
+};
+
+const saveScheduleWithRepeat = async (
+  user: UserEvent,
+  form: Omit<Event, 'id' | 'notificationTime'>
+) => {
+  const { title, date, startTime, endTime, location, description, category, repeat } = form;
+
+  await user.click(screen.getAllByText('일정 추가')[0]);
+
+  await user.type(screen.getByLabelText('제목'), title);
+  await user.type(screen.getByLabelText('날짜'), date);
+  await user.type(screen.getByLabelText('시작 시간'), startTime);
+  await user.type(screen.getByLabelText('종료 시간'), endTime);
+  await user.type(screen.getByLabelText('설명'), description);
+  await user.type(screen.getByLabelText('위치'), location);
+  await user.selectOptions(screen.getByLabelText('카테고리'), category);
+  await user.selectOptions(screen.getByLabelText('반복 유형'), repeat.type);
+  await user.type(screen.getByLabelText('반복 간격'), String(repeat.interval));
+  if (repeat.endDate) {
+    await user.type(screen.getByLabelText('반복 종료일'), repeat.endDate);
+  }
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -330,27 +355,152 @@ describe('반복 일정 설정', () => {
     server.resetHandlers();
   });
 
-  // 반복 유형 선택
-  it(`일정을 생성할 때 '매일' 반복으로 설정하면 해당 일정이 매일 반복된다.`, async () => {});
+  it(`매일 반복되는 일정을 생성하면 해당 일정이 매일 반복되고 월간 뷰 달력에 표시된다.`, async () => {
+    setupMockHandlerCreation();
 
-  it(`일정을 생성할 때 '매주' 반복으로 설정하면 해당 일정이 매주 반복된다.`, async () => {});
+    const { user } = setup(<App />);
 
-  it(`일정을 생성할 때 '매월' 반복으로 설정하면 해당 일정이 매월 반복된다.`, async () => {});
+    await saveScheduleWithRepeat(user, {
+      title: '반복되는 회의',
+      date: '2025-10-13',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 C',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+      },
+    });
 
-  it(`일정을 생성할 때 '매년' 반복으로 설정하면 해당 일정이 매년 반복된다.`, async () => {});
+    let currentYear = 2025,
+      currentMonth = 9;
 
-  it(`2월 29일의 일정을 '매월' 반복으로 설정하면, 29일이 존재하지 않는 달에는 반복되지 않는다.`, async () => {
-    // 평년 2월 29일에는 반복되지 않는다는걸 검증 (29일은 없지)
+    // 반복 일정이 2년동안 잘 저장됐는지 확인
+    for (let month = 0; month < 24; month++) {
+      if (month !== 0) {
+        await user.click(screen.getByLabelText('Next'));
+      }
+
+      const eventList = within(screen.getByTestId('month-view'));
+      const allSchedules = eventList.getAllByText('새로 반복되는 회의');
+
+      if (month !== 0) {
+        expect(allSchedules).toHaveLength(19);
+      } else {
+        const days = getDaysInMonth(currentYear, currentMonth);
+        expect(allSchedules).toHaveLength(days);
+      }
+
+      currentMonth++;
+      if (currentMonth === 12) {
+        currentYear++;
+        currentMonth = 0;
+      }
+    }
+  });
+  it(`매일 반복되는 일정을 생성하면 해당 일정이 매일 반복되고 주간 뷰 달력에 표시된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+    await user.selectOptions(screen.getByLabelText('view'), 'week');
+
+    await saveScheduleWithRepeat(user, {
+      title: '반복되는 회의',
+      date: '2025-10-13',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 C',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+      },
+    });
+
+    // 반복 일정이 2년동안 잘 저장됐는지 확인
+    for (let week = 0; week < 120; week++) {
+      if (week !== 0) {
+        await user.click(screen.getByLabelText('Next'));
+      }
+
+      const eventList = within(screen.getByTestId('week-view'));
+      const allSchedules = eventList.getAllByText('새로 반복되는 회의');
+
+      if (week !== 0) {
+        expect(allSchedules).toHaveLength(6);
+      } else {
+        expect(allSchedules).toHaveLength(7);
+      }
+    }
+  });
+  it(`매월 반복되는 일정을 생성하면 해당 일정이 매달 반복되고 월간 뷰 달력에 표시된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await saveScheduleWithRepeat(user, {
+      title: '새로 반복되는 회의',
+      date: '2025-10-13',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 C',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+      },
+    });
+
+    // 반복 일정이 2년동안 잘 저장됐는지 확인
+    for (let month = 0; month < 24; month++) {
+      if (month !== 0) {
+        await user.click(screen.getByLabelText('Next'));
+      }
+
+      const eventList = within(screen.getByTestId('month-view'));
+      expect(eventList.getByText('새로 반복되는 회의')).toBeInTheDocument();
+    }
   });
 
-  it(`30일의 일정을 '매월' 반복으로 설정하면, 30일이 존재하지 않는 달에는 반복되지 않는다.`, async () => {
-    // 이것도 2월에는 반복되지 않는다는걸 검증
-  });
-  it(`31일의 일정을 '매월' 반복으로 설정하면, 31일이 존재하지 않는 달에는 반복되지 않는다.`, async () => {
-    // 2월, 4월 같이 30일이 없는 달에는 반복되지 않는걸 검증
+  it(`매월 반복되는 일정을 생성하면 해당 일정이 매달 반복되고 주간 뷰 달력에 표시된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+    await user.selectOptions(screen.getByLabelText('view'), 'week');
+
+    await saveScheduleWithRepeat(user, {
+      title: '반복되는 회의',
+      date: '2025-10-13',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 C',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+      },
+    });
+
+    // 반복 일정이 2년동안 잘 저장됐는지 확인
+    for (let week = 0; week < 120; week++) {
+      if (week !== 0) {
+        await user.click(screen.getByLabelText('Next'));
+      }
+
+      const eventList = within(screen.getByTestId('week-view'));
+
+      if (eventList.queryByText('13')) {
+        expect(eventList.getByText('새로 반복되는 회의')).toBeInTheDocument();
+      }
+    }
   });
 
-  it('일정을 수정할 때 반복 유형을 새로 설정하면 해당 일정은 선택한 유형에 맞춰 반복된다.', async () => {
+  it('일정을 수정할 때 반복 유형을 새로 설정하면 해당 일정은 선택한 유형에 맞춰 반복되고 달력에 표시된다.', async () => {
     // 기존 일정이 중복되지 않는지 확인 (기존 일정 제거 -> 반복 일정 추가)
   });
 });
