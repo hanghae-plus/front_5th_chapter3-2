@@ -53,7 +53,9 @@ const saveSchedule = async (
       await user.selectOptions(await screen.findByLabelText('반복 유형'), form.repeatType!);
     }
     if (form.repeatInterval) {
-      await user.type(await screen.findByLabelText('반복 간격'), form.repeatInterval!.toString());
+      const intervalInput = await screen.findByLabelText('반복 간격');
+      await user.clear(intervalInput);
+      await user.type(intervalInput, form.repeatInterval!.toString());
     }
 
     if (form.repeatEndDate) {
@@ -357,7 +359,7 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
 
-describe('반복 일정', () => {
+describe('반복 일정 추가', () => {
   beforeEach(() => {
     vi.setSystemTime(new Date('2025-09-15 08:49:59'));
   });

@@ -35,7 +35,6 @@ function* repeatingDateGenerator(
   let i = 0;
   let nextDate = startDate;
   const maxCount = options.count ?? Infinity;
-  console.log('maxCount', maxCount);
   let currentCount = 0;
 
   while (nextDate <= endDate && currentCount < maxCount) {

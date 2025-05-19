@@ -38,7 +38,7 @@ import {
   useToast,
   VStack,
 } from '@chakra-ui/react';
-import { useRef, useState } from 'react';
+import { useRef, useState, ChangeEvent } from 'react';
 
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
@@ -84,7 +84,6 @@ function App() {
     category,
     setCategory,
     isRepeating,
-    setIsRepeating,
     repeatType,
     setRepeatType,
     repeatInterval,
@@ -99,6 +98,7 @@ function App() {
     setEditingEvent,
     handleStartTimeChange,
     handleEndTimeChange,
+    handleChangeIsRepeating,
     resetForm,
     editEvent,
   } = useEventForm();
@@ -357,7 +357,7 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox isChecked={isRepeating} onChange={handleChangeIsRepeating}>
               반복 일정
             </Checkbox>
           </FormControl>
