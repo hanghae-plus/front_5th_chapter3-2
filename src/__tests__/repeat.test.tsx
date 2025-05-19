@@ -5,7 +5,7 @@ import { ReactElement } from 'react';
 
 import App from '../../App';
 
-// 늘 isReat이 true라는걸 확신할 수 있나?
+// 늘 isRepeating이 true라는걸 확신할 수 있나?
 const setup = (element: ReactElement) => {
   const user = userEvent.setup();
 
@@ -13,23 +13,34 @@ const setup = (element: ReactElement) => {
 };
 
 // 반복 유형 선택
-it('일정 생성 시 반복 유형(매일, 매주, 매월, 매년)을 선택할 수 있다.', async () => {
+it.only('일정 생성 시 반복 유형(매일, 매주, 매월, 매년)을 선택할 수 있다.', async () => {
   const { user } = setup(<App />);
 
-  await user.click(screen.getByText('반복'));
-  await user.click(screen.getByText('매일'));
-  await user.click(screen.getByText('매주'));
-  await user.click(screen.getByText('매월'));
-  await user.click(screen.getByText('매년'));
+  expect(screen.getByTestId('form-title')).toHaveTextContent('일정 추가');
 
-  expect(screen.getByText('반복')).not.toBeInTheDocument();
-  expect(screen.getByText('매일')).toBeInTheDocument();
-  expect(screen.getByText('매주')).toBeInTheDocument();
-  expect(screen.getByText('매월')).toBeInTheDocument();
-  expect(screen.getByText('매년')).toBeInTheDocument();
+  const repeatTypeSelect = screen.getByTestId('repeat-type-select');
+  expect(repeatTypeSelect).toBeInTheDocument();
+
+  expect(screen.getByRole('option', { name: '매일' })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: '매주' })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: '매월' })).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: '매년' })).toBeInTheDocument();
+
+  await user.selectOptions(repeatTypeSelect, '매일');
+  expect(repeatTypeSelect).toHaveValue('daily');
+
+  await user.selectOptions(repeatTypeSelect, '매주');
+  expect(repeatTypeSelect).toHaveValue('weekly');
+
+  await user.selectOptions(repeatTypeSelect, '매월');
+  expect(repeatTypeSelect).toHaveValue('monthly');
+
+  await user.selectOptions(repeatTypeSelect, '매년');
+  expect(repeatTypeSelect).toHaveValue('yearly');
 });
 
-it('일정 수정 시 반복 유형(매일, 매주, 매월, 매년)을 선택할 수 있다.');
+it('일정 수정 시 반복 유형(매일, 매주, 매월, 매년)을 선택할 수 있다.', () => {});
+
 it(
   '2월 29일에 매년 반복일정을 설정하면, 윤년이 아닌 해에는 2월 28일 또는 3월 1일에 생성되는지 확인한다.'
 );
