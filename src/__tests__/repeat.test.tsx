@@ -5,6 +5,7 @@ import { ReactElement } from 'react';
 
 import { setupMockHandlerUpdating } from '../__mocks__/handlersUtils';
 import App from '../App';
+import { formatDate } from '../utils/dateUtils';
 
 // 늘 isRepeating이 true라는걸 확신할 수 있나?
 const setup = (element: ReactElement) => {
@@ -116,7 +117,17 @@ it.only('반복 유형별로 반복 간격(예: 2일마다, 3주마다, 2개월�
 it('설정한 반복 간격에 따라 일정이 올바른 날짜에 생성되는지 확인한다.');
 
 // 반복 종료
-it("반복 종료 조건으로 '특정 날짜까지'를 지정할 수 있다.");
+it("반복 종료 조건으로 '특정 날짜까지'를 지정할 수 있다.", async () => {
+  const { user } = setup(<App />);
+
+  const repeatEndDateInput = screen.getByTestId('repeat-end-date-input');
+  expect(repeatEndDateInput).toBeInTheDocument();
+
+  const repeatEndDate = new Date('2025-09-30');
+  await user.type(repeatEndDateInput, formatDate(repeatEndDate));
+  expect(repeatEndDateInput).toHaveValue(formatDate(repeatEndDate));
+});
+
 it("반복 종료 조건으로 '특정 횟수만큼'을 지정할 수 있다.");
 it("반복 종료 조건으로 '종료 없음'을 지정할 수 있다.");
 it(
