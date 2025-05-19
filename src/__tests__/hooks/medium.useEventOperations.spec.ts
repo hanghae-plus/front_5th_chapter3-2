@@ -5,6 +5,7 @@ import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
   setupMockHandlerEventList,
+  setupMockHandlerEventListUpdating,
   setupMockHandlerUpdating,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
@@ -217,7 +218,9 @@ describe('반복 유형 선택', () => {
   });
 
   it('일정 수정시 반복 유형 정보를 변경하면 변경된 정보가 반영된다.', async () => {
-    const { result } = renderHook(() => useEventOperations(false));
+    setupMockHandlerEventListUpdating();
+
+    const { result } = renderHook(() => useEventOperations(true));
 
     await act(() => Promise.resolve(null));
 
