@@ -382,6 +382,7 @@ function App() {
                 <FormLabel>반복 유형</FormLabel>
                 <Select
                   value={repeatType}
+                  data-testid="repeat-type-select"
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
                   <option value="daily">매일</option>
