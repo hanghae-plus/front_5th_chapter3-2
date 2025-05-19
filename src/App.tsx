@@ -40,12 +40,13 @@ import {
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
 
+import EventRepeatSelect from './feature/events/ui/EventRepeatSelect.tsx';
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { Event, EventForm } from './types';
 import {
   formatDate,
   formatMonth,
@@ -378,18 +379,7 @@ function App() {
 
           {isRepeating && (
             <VStack width="100%">
-              <FormControl>
-                <FormLabel>반복 유형</FormLabel>
-                <Select
-                  value={repeatType}
-                  onChange={(e) => setRepeatType(e.target.value as RepeatType)}
-                >
-                  <option value="daily">매일</option>
-                  <option value="weekly">매주</option>
-                  <option value="monthly">매월</option>
-                  <option value="yearly">매년</option>
-                </Select>
-              </FormControl>
+              <EventRepeatSelect repeatType={repeatType} setRepeatType={setRepeatType} />
               <HStack width="100%">
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>

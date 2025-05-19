@@ -2,6 +2,8 @@ import { ChakraProvider } from '@chakra-ui/react';
 import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 
+import EventRepeatSelect from '../../../../feature/events/ui/EventRepeatSelect';
+
 describe('EventRepeatSelect', () => {
   it('반복 유형의 옵션은 매일, 매주, 매월, 매년이 있다.', () => {
     const mockSetRepeatType = vi.fn();
