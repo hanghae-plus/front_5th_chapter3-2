@@ -31,6 +31,7 @@ import EventList from '@/entities/event/ui/EventList.tsx';
 import ScheduleEventForm from '@/entities/eventForm/ui/ScheduleEventForm.tsx';
 import CalendarView from '@/features/calendarView/ui/CalendarView.tsx';
 import NotificationToasts from '@/shared/ui/NotificationToasts.tsx';
+import { generateRepeatEvents } from '@/shared/lib/generateRepeatEvents.ts';
 
 const notificationOptions = [
   { value: 1, label: '1분 전' },
@@ -126,12 +127,26 @@ function CalendarPage() {
       notificationTime,
     };
 
-    const overlapping = findOverlappingEvents(eventData, events);
+    const eventsToSave = generateRepeatEvents(eventData);
+
+    // const overlapping = findOverlappingEvents(eventData, events);
+    const overlapping = eventsToSave.flatMap((ev) => findOverlappingEvents(ev, events));
+
+    // if (overlapping.length > 0) {
+    //   setOverlappingEvents(overlapping);
+    //   setIsOverlapDialogOpen(true);
+    // } else {
+    //   await saveEvent(eventData);
+    //   resetForm();
+    // }
+
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      for (const ev of eventsToSave) {
+        await saveEvent(ev);
+      }
       resetForm();
     }
   };
