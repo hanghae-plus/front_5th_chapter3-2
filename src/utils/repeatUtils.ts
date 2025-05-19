@@ -64,4 +64,13 @@ export function generateDailyRepeats(startDate: Date, endDate: Date, interval: n
 }
 
 /**매주 반복되는 일정 */
-export function generateWeeklyRepeats(startDate: Date, endDate: Date, interval: number): Date[] {}
+export function generateWeeklyRepeats(startDate: Date, endDate: Date, interval: number): Date[] {
+  const result: Date[] = [];
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    result.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + interval * 7);
+  }
+  return result;
+}
