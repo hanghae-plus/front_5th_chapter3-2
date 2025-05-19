@@ -21,4 +21,31 @@ export function generateYearlyRepeats(startDate: Date, endDate: Date): Date[] {
   return result;
 }
 
-export function generateMonthlyRepeats(startDate: Date, endDate: Date): Date[] {}
+const isValidRepeatDay = (year: number, month: number, targetDay: number): boolean => {
+  const date = new Date(year, month, targetDay);
+  return date.getDate() === targetDay;
+};
+
+/** 매월 반복되는 일정 */
+export function generateMonthlyRepeats(startDate: Date, endDate: Date): Date[] {
+  const result: Date[] = [];
+
+  const day = startDate.getDate();
+  const currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1); //2025-05-01
+
+  while (currentDate <= endDate) {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    if (isValidRepeatDay(year, month, day)) {
+      const date = new Date(year, month, day);
+
+      if (isDateInRange(date, startDate, endDate)) {
+        result.push(date);
+      }
+    }
+
+    currentDate.setMonth(month + 1); // 다음 달로 이동시킴
+  }
+  return result;
+}

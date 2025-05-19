@@ -25,6 +25,6 @@ describe('반복 유형 선택', () => {
 
     const dates = result.map((d) => d.toISOString().slice(0, 10));
 
-    expect(dates).toEqual(['2025-01-31', '2025-03-31', '2032-05-31']);
+    expect(dates).toEqual(['2025-01-31', '2025-03-31', '2025-05-31']);
   });
 });
