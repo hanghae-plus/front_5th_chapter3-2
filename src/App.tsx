@@ -205,7 +205,7 @@ function App() {
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
                             <Text fontSize="sm" noOfLines={1}>
-                              {event.title}
+                              {event.repeat?.type !== 'none' ? `🔁 ${event.title}` : event.title}
                             </Text>
                           </HStack>
                         </Box>
@@ -261,6 +261,7 @@ function App() {
                           )}
                           {getEventsForDay(filteredEvents, day).map((event) => {
                             const isNotified = notifiedEvents.includes(event.id);
+
                             return (
                               <Box
                                 key={event.id}
@@ -274,7 +275,9 @@ function App() {
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
-                                    {event.title}
+                                    {event.repeat?.type !== 'none'
+                                      ? `🔁 ${event.title}`
+                                      : event.title}
                                   </Text>
                                 </HStack>
                               </Box>

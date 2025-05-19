@@ -1,3 +1,5 @@
+import { render, screen } from '@testing-library/react';
+
 import {
   generateDailyRepeats,
   generateMonthlyRepeats,
@@ -55,5 +57,53 @@ describe('반복 간격 설정', () => {
     const dates = result.map((d) => d.toISOString().slice(0, 10));
 
     expect(dates.length).toBe(3);
+  });
+});
+
+describe('반복 일정 표시', () => {
+  it('반복 일정이면 제목 앞에 🔁이 표시된다.', () => {
+    const testEvent = {
+      id: '1',
+      title: '테스트 반복 일정',
+      date: '2025-05-19',
+      startTime: '10:00',
+      endTime: '11:00',
+      repeat: { type: 'daily', interval: 2, endDate: '2025-05-30' },
+      notificationTime: 10,
+    };
+    render(
+      <MonthView
+        currentDate={new Date('2025-05-01')}
+        filteredEvents={[testEvent]}
+        holidays={{}}
+        notifiedEvents={[]}
+      />
+    );
+
+    expect(screen.getByText(/🔁 테스트 반복 일정/)).toBeInTheDocument();
+  });
+
+  it('반복 일정이 아니면 제목에 🔁이 표시되지 않는다.', () => {
+    const testEvent = {
+      id: '2',
+      title: '일반 일정',
+      date: '2025-05-20',
+      startTime: '12:00',
+      endTime: '13:00',
+      repeat: { type: 'none', interval: 1 },
+      notificationTime: 10,
+    };
+
+    render(
+      <MonthView
+        currentDate={new Date('2025-05-01')}
+        filteredEvents={[testEvent]}
+        holidays={{}}
+        notifiedEvents={[]}
+      />
+    );
+
+    expect(screen.getByText('일반 일정')).toBeInTheDocument();
+    expect(screen.queryByText(/🔁 일반 일정/)).not.toBeInTheDocument();
   });
 });
