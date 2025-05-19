@@ -355,7 +355,7 @@ describe('반복 일정 설정', () => {
     server.resetHandlers();
   });
 
-  it(`매일 반복되는 일정을 생성하면 해당 일정이 매일 반복되고 월간 뷰 달력에 표시된다.`, async () => {
+  it(`매일 반복되는 일정을 생성하면 월간 뷰 달력에 아이콘과 함께 매일 표시된다.`, async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
@@ -378,13 +378,13 @@ describe('반복 일정 설정', () => {
       currentMonth = 9;
 
     // 반복 일정이 2년동안 잘 저장됐는지 확인
-    for (let month = 0; month < 24; month++) {
+    for (let month = 0; month <= 24; month++) {
       if (month !== 0) {
         await user.click(screen.getByLabelText('Next'));
       }
 
       const eventList = within(screen.getByTestId('month-view'));
-      const allSchedules = eventList.getAllByText('새로 반복되는 회의');
+      const allSchedules = eventList.getAllByText('🔁 새로 반복되는 회의');
 
       if (month !== 0) {
         expect(allSchedules).toHaveLength(19);
@@ -400,7 +400,57 @@ describe('반복 일정 설정', () => {
       }
     }
   });
-  it(`매일 반복되는 일정을 생성하면 해당 일정이 매일 반복되고 주간 뷰 달력에 표시된다.`, async () => {
+
+  it(`5일 간격으로 반복되는 일정을 생성하면 월간 뷰 달력에 아이콘과 함께 5일마다 표시된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await saveScheduleWithRepeat(user, {
+      title: '반복되는 회의',
+      date: '2025-10-13',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 C',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 5,
+      },
+    });
+
+    let repeatDate = new Date(2025, 9, 13);
+    let viewDate = new Date(2025, 9, 1);
+
+    // 반복 일정이 2년동안 잘 저장됐는지 확인
+    for (let i = 0; i <= 24; i++) {
+      if (i !== 0) {
+        await user.click(screen.getByLabelText('Next'));
+        viewDate.setMonth(viewDate.getMonth() + 1);
+      }
+
+      const eventList = within(screen.getByTestId('month-view'));
+
+      const startOfMonth = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+      const endOfMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0);
+
+      const expectedDates: string[] = [];
+      let current = new Date(repeatDate);
+
+      while (current <= endOfMonth) {
+        if (current >= startOfMonth) {
+          expectedDates.push(current.getDate().toString());
+        }
+        current.setDate(current.getDate() + 2);
+      }
+
+      const allSchedules = eventList.getAllByText('🔁 새로 반복되는 회의');
+      expect(allSchedules).toHaveLength(expectedDates.length);
+    }
+  });
+
+  it(`매일 반복되는 일정을 생성하면 주간 뷰 달력에 아이콘과 함께 매일 표시된다.`, async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
@@ -421,13 +471,13 @@ describe('반복 일정 설정', () => {
     });
 
     // 반복 일정이 2년동안 잘 저장됐는지 확인
-    for (let week = 0; week < 120; week++) {
+    for (let week = 0; week <= 120; week++) {
       if (week !== 0) {
         await user.click(screen.getByLabelText('Next'));
       }
 
       const eventList = within(screen.getByTestId('week-view'));
-      const allSchedules = eventList.getAllByText('새로 반복되는 회의');
+      const allSchedules = eventList.getAllByText('🔁 새로 반복되는 회의');
 
       if (week !== 0) {
         expect(allSchedules).toHaveLength(6);
@@ -436,13 +486,13 @@ describe('반복 일정 설정', () => {
       }
     }
   });
-  it(`매월 반복되는 일정을 생성하면 해당 일정이 매달 반복되고 월간 뷰 달력에 표시된다.`, async () => {
+  it(`매월 반복되는 일정을 생성하면 월간 뷰 달력에 아이콘과 함께 매달 표시된다.`, async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
 
     await saveScheduleWithRepeat(user, {
-      title: '새로 반복되는 회의',
+      title: '🔁 새로 반복되는 회의',
       date: '2025-10-13',
       startTime: '14:00',
       endTime: '15:00',
@@ -456,17 +506,17 @@ describe('반복 일정 설정', () => {
     });
 
     // 반복 일정이 2년동안 잘 저장됐는지 확인
-    for (let month = 0; month < 24; month++) {
+    for (let month = 0; month <= 24; month++) {
       if (month !== 0) {
         await user.click(screen.getByLabelText('Next'));
       }
 
       const eventList = within(screen.getByTestId('month-view'));
-      expect(eventList.getByText('새로 반복되는 회의')).toBeInTheDocument();
+      expect(eventList.getByText('🔁 새로 반복되는 회의')).toBeInTheDocument();
     }
   });
 
-  it(`매월 반복되는 일정을 생성하면 해당 일정이 매달 반복되고 주간 뷰 달력에 표시된다.`, async () => {
+  it(`매월 반복되는 일정을 생성하면 주간 뷰 달력에 아이콘과 함께 매달 표시된다.`, async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
@@ -487,7 +537,7 @@ describe('반복 일정 설정', () => {
     });
 
     // 반복 일정이 2년동안 잘 저장됐는지 확인
-    for (let week = 0; week < 120; week++) {
+    for (let week = 0; week <= 120; week++) {
       if (week !== 0) {
         await user.click(screen.getByLabelText('Next'));
       }
@@ -495,12 +545,77 @@ describe('반복 일정 설정', () => {
       const eventList = within(screen.getByTestId('week-view'));
 
       if (eventList.queryByText('13')) {
-        expect(eventList.getByText('새로 반복되는 회의')).toBeInTheDocument();
+        expect(eventList.getByText('🔁 새로 반복되는 회의')).toBeInTheDocument();
       }
     }
   });
 
-  it('일정을 수정할 때 반복 유형을 새로 설정하면 해당 일정은 선택한 유형에 맞춰 반복되고 달력에 표시된다.', async () => {
+  it(`매년 반복되는 일정을 생성하면 월간 뷰 달력에 아이콘과 함께 매년 표시된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await saveScheduleWithRepeat(user, {
+      title: '🔁 새로 반복되는 회의',
+      date: '2025-10-13',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 C',
+      category: '업무',
+      repeat: {
+        type: 'yearly',
+        interval: 1,
+      },
+    });
+
+    // 반복 일정이 2년동안 잘 저장됐는지 확인
+    for (let month = 0; month <= 24; month++) {
+      if (month !== 0) {
+        await user.click(screen.getByLabelText('Next'));
+      }
+      if (month % 12 === 0) {
+        const eventList = within(screen.getByTestId('month-view'));
+        expect(eventList.getByText('🔁 새로 반복되는 회의')).toBeInTheDocument();
+      }
+    }
+  });
+
+  it(`매년 반복되는 일정을 생성하면 주간 뷰 달력에 아이콘과 함께 매년 표시된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+    await user.selectOptions(screen.getByLabelText('view'), 'week');
+
+    await saveScheduleWithRepeat(user, {
+      title: '반복되는 회의',
+      date: '2025-10-13',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 C',
+      category: '업무',
+      repeat: {
+        type: 'yearly',
+        interval: 1,
+      },
+    });
+
+    // 반복 일정이 2년동안 잘 저장됐는지 확인
+    for (let week = 0; week <= 120; week++) {
+      if (week !== 0) {
+        await user.click(screen.getByLabelText('Next'));
+      }
+
+      const eventList = within(screen.getByTestId('week-view'));
+
+      if (eventList.queryByText(/10월/) && eventList.queryByText('13')) {
+        expect(eventList.getByText('🔁 새로 반복되는 회의')).toBeInTheDocument();
+      }
+    }
+  });
+  //TODO: 종료일 지정됐을 때 케이스 추가
+  it('일정을 수정할 때 반복 유형을 새로 설정하면 해당 일정은 선택한 유형에 맞춰 반복되고 달력에 아이콘과 함께 표시된다.', async () => {
     // 기존 일정이 중복되지 않는지 확인 (기존 일정 제거 -> 반복 일정 추가)
   });
 });
