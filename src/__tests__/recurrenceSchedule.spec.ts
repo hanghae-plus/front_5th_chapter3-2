@@ -47,5 +47,13 @@ describe('반복 간격 설정', () => {
     expect(dates.length).toBe(4);
   });
 
-  it('3개월마다 반복 주기의 간격을 선택할 수 있다.');
+  it('3개월마다 반복 주기의 간격을 선택할 수 있다.', () => {
+    const startDate = new Date('2025-05-19');
+    const endDate = new Date('2025-12-30');
+
+    const result = generateMonthlyRepeats(startDate, endDate, 3);
+    const dates = result.map((d) => d.toISOString().slice(0, 10));
+
+    expect(dates.length).toBe(3);
+  });
 });
