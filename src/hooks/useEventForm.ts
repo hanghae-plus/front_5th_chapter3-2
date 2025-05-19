@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 
 import { Event, RepeatType } from '../types';
 import { getTimeErrorMessage } from '../utils/timeValidation';
@@ -68,6 +68,13 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatEndDate(event.repeat.endDate || '');
     setNotificationTime(event.notificationTime);
   };
+
+  //맨처음 daily로
+  useEffect(() => {
+    if (isRepeating) {
+      setRepeatType('daily');
+    }
+  }, []);
 
   return {
     title,

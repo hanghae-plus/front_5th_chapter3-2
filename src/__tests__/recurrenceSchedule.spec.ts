@@ -1,4 +1,8 @@
-import { generateMonthlyRepeats, generateYearlyRepeats } from '../utils/repeatUtils';
+import {
+  generateDailyRepeats,
+  generateMonthlyRepeats,
+  generateYearlyRepeats,
+} from '../utils/repeatUtils';
 
 describe('반복 유형 선택', () => {
   it('29일에 매년 반복 신청을 하면 윤년인 해에만 일정이 생성된다.', () => {
@@ -12,30 +16,26 @@ describe('반복 유형 선택', () => {
   });
 
   it('31일에 매월 반복 신청을 하면 31일이 없는 달은 일정을 생성하지 않는다.', () => {
-    // 예: 1월 31일 → 2월, 4월, 6월, 9월, 11월 제외
-    /*
-      given: 2025-01-31 ~ 2025-06-30
-      expect: [2025-01-31, 2025-03-31, 2025-05-31]
-    */
-
     const startDate = new Date('2025-1-31');
     const endDate = new Date('2025-06-30');
 
     const result = generateMonthlyRepeats(startDate, endDate);
-
     const dates = result.map((d) => d.toISOString().slice(0, 10));
 
     expect(dates).toEqual(['2025-01-31', '2025-03-31', '2025-05-31']);
   });
 });
 
-describe('반복 간격 선택', () => {
+describe('반복 간격 설정', () => {
   it('2일마다 반복 주기의 간격을 지정할 수 있다.', () => {
-    /*
-      given: 2025-01-22 ~ 2025-06-30
-      expect: [2025-01-31, 2025-03-31, 2025-05-31]
-    */
+    const startDate = new Date('2025-05-19');
+    const endDate = new Date('2025-05-30');
+    const result = generateDailyRepeats(startDate, endDate);
+    const dates = result.map((d) => d.toISOString().slice(0, 10));
+
+    expect(dates.length).toBe(6);
   });
+
   it('5주마다 반복 주기의 간격을 지정할 수 있다.');
   it('3개월마다 반복 주기의 간격을 선택할 수 있다.');
 });

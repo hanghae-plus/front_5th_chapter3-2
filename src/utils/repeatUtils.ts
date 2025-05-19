@@ -49,3 +49,5 @@ export function generateMonthlyRepeats(startDate: Date, endDate: Date): Date[] {
   }
   return result;
 }
+
+export function generateDailyRepeats(startDate: Date, endDate: Date): Date[] {}
