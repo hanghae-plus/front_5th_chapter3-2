@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
+import MonthView from '../components/MonthView';
 import {
   generateDailyRepeats,
   generateMonthlyRepeats,
@@ -97,7 +98,7 @@ describe('반복 일정 표시', () => {
     render(
       <MonthView
         currentDate={new Date('2025-05-01')}
-        filteredEvents={[testEvent]}
+        events={[testEvent]}
         holidays={{}}
         notifiedEvents={[]}
       />
