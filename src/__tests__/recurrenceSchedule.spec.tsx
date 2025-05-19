@@ -1,6 +1,5 @@
-import { render, screen } from '@testing-library/react';
-
-import MonthView from '../components/MonthView';
+import { Event } from '../types';
+import { formatEventTitle } from '../utils/eventUtils';
 import {
   generateDailyRepeats,
   generateMonthlyRepeats,
@@ -64,47 +63,42 @@ describe('반복 간격 설정', () => {
 describe('반복 일정 표시', () => {
   it('반복 일정이면 제목 앞에 🔁이 표시된다.', () => {
     const testEvent = {
-      id: '1',
+      id: '22',
       title: '테스트 반복 일정',
       date: '2025-05-19',
       startTime: '10:00',
       endTime: '11:00',
-      repeat: { type: 'daily', interval: 2, endDate: '2025-05-30' },
+      description: '반복 일정 테스트 설명',
+      location: '회의실 B',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 2,
+        endDate: '2025-05-30',
+      },
       notificationTime: 10,
-    };
-    render(
-      <MonthView
-        currentDate={new Date('2025-05-01')}
-        filteredEvents={[testEvent]}
-        holidays={{}}
-        notifiedEvents={[]}
-      />
-    );
+    } as Event;
 
-    expect(screen.getByText(/🔁 테스트 반복 일정/)).toBeInTheDocument();
+    expect(formatEventTitle(testEvent)).toBe('🔁 테스트 반복 일정');
   });
 
   it('반복 일정이 아니면 제목에 🔁이 표시되지 않는다.', () => {
     const testEvent = {
-      id: '2',
+      id: '11',
       title: '일반 일정',
       date: '2025-05-20',
       startTime: '12:00',
       endTime: '13:00',
-      repeat: { type: 'none', interval: 1 },
+      description: '테스트 일정 설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'none',
+        interval: 1,
+      },
       notificationTime: 10,
-    };
+    } as Event;
 
-    render(
-      <MonthView
-        currentDate={new Date('2025-05-01')}
-        events={[testEvent]}
-        holidays={{}}
-        notifiedEvents={[]}
-      />
-    );
-
-    expect(screen.getByText('일반 일정')).toBeInTheDocument();
-    expect(screen.queryByText(/🔁 일반 일정/)).not.toBeInTheDocument();
+    expect(formatEventTitle(testEvent)).toBe('일반 일정');
   });
 });

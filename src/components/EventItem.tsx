@@ -3,6 +3,7 @@ import { Box, HStack, Text } from '@chakra-ui/react';
 import { FC } from 'react';
 
 import { Event } from '../types';
+import { formatEventTitle } from '../utils/eventUtils';
 
 type EventItemProps = {
   event: Event;
@@ -22,7 +23,7 @@ const EventItem: FC<EventItemProps> = ({ event, isNotified }) => {
       <HStack spacing={1}>
         {isNotified && <BellIcon />}
         <Text fontSize="sm" noOfLines={1}>
-          {event.title}
+          {formatEventTitle(event)}
         </Text>
       </HStack>
     </Box>

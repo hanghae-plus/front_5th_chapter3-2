@@ -48,3 +48,7 @@ export function getFilteredEvents(
 
   return searchedEvents;
 }
+
+export function formatEventTitle(event: Event): string {
+  return event.repeat?.type !== 'none' ? `🔁 ${event.title}` : event.title;
+}
