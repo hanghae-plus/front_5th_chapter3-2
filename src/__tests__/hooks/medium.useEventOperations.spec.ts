@@ -184,3 +184,32 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 
   expect(result.current.events).toHaveLength(1);
 });
+
+describe('반복 유형 선택', () => {
+  it('일정 생성시 선택한 반복 유형 정보가 반영된다.', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+      notificationTime: 1,
+    };
+
+    await act(async () => {
+      await result.current.saveEventList(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(1);
+    expect(result.current.events[0].repeat.type).toBe('daily');
+    expect(result.current.events[0].repeat.interval).toBe(1);
+  });
+});
