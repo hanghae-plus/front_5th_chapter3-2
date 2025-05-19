@@ -1,4 +1,4 @@
-import { BellIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
+import { BellIcon, DeleteIcon, EditIcon, RepeatIcon } from '@chakra-ui/icons';
 import { Box, HStack, IconButton, Text, VStack } from '@chakra-ui/react';
 
 import { NOTIFICATION_OPTIONS } from '@/constants/notification';
@@ -28,10 +28,20 @@ export const ScheduleCard = ({
       <HStack justifyContent="space-between">
         <VStack align="start">
           <HStack>
-            {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
+            {notifiedEvents.includes(event.id) ? (
+              <BellIcon color="red.500" />
+            ) : event.repeat.type !== 'none' ? (
+              <RepeatIcon color="blue.500" />
+            ) : null}
             <Text
               fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
-              color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
+              color={
+                notifiedEvents.includes(event.id)
+                  ? 'red.500'
+                  : event.repeat.type !== 'none'
+                    ? 'blue.500'
+                    : 'inherit'
+              }
             >
               {event.title}
             </Text>
