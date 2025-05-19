@@ -103,8 +103,10 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent } = useEventOperations(
+    Boolean(editingEvent),
+    isRepeating,
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -156,6 +158,7 @@ function App() {
     };
 
     const overlapping = findOverlappingEvents(eventData, events);
+
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);

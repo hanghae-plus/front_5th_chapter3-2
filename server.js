@@ -72,28 +72,32 @@ app.delete('/api/events/:id', async (req, res) => {
 });
 
 app.post('/api/events-list', async (req, res) => {
-  const events = await getEvents();
-  const repeatId = randomUUID();
-  const newEvents = req.body.events.map((event) => {
-    const isRepeatEvent = event.repeat.type !== 'none';
-    return {
-      id: randomUUID(),
-      ...event,
-      repeat: {
-        ...event.repeat,
-        id: isRepeatEvent ? repeatId : undefined,
-      },
-    };
-  });
+  try {
+    const events = await getEvents();
+    const repeatId = randomUUID();
+    const newEvents = req.body.events.map((event) => {
+      const isRepeatEvent = event.repeat.type !== 'none';
+      return {
+        id: randomUUID(),
+        ...event,
+        repeat: {
+          ...event.repeat,
+          id: isRepeatEvent ? repeatId : undefined,
+        },
+      };
+    });
 
-  fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/realEvents.json`,
-    JSON.stringify({
-      events: [...events.events, ...newEvents],
-    })
-  );
+    fs.writeFileSync(
+      `${__dirname}/src/__mocks__/response/realEvents.json`,
+      JSON.stringify({
+        events: [...events.events, ...newEvents],
+      })
+    );
 
-  res.status(201).json(newEvents);
+    res.status(201).json(newEvents);
+  } catch (err) {
+    console.error('오류발생', err);
+  }
 });
 
 app.put('/api/events-list', async (req, res) => {
