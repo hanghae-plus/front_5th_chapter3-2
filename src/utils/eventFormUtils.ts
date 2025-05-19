@@ -26,7 +26,7 @@ export function convertFormToEventData(
     ...eventForm,
     repeat: {
       ...eventForm.repeat,
-      type: isRepeating ? eventForm.repeat.type : 'none',
+      type: editingEvent ? eventForm.repeat.type : isRepeating ? eventForm.repeat.type : 'none',
       endDate: eventForm.repeat.endDate || undefined,
     },
   };

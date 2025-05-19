@@ -25,10 +25,22 @@ export const useEventForm = (initialEvent?: Event) => {
     key: keyof Event | keyof RepeatInfo,
     value: string | number | RepeatInfo
   ) => {
-    setEventForm((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    // RepeatInfo의 키인 경우(type, interval, endDate)
+    if (key === 'type' || key === 'interval' || key === 'endDate') {
+      setEventForm((prev) => ({
+        ...prev,
+        repeat: {
+          ...prev.repeat,
+          [key]: value,
+        },
+      }));
+    } else {
+      // Event의 키인 경우(title, date, startTime 등)
+      setEventForm((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    }
   };
 
   const handleStartTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +67,7 @@ export const useEventForm = (initialEvent?: Event) => {
 
   const editEvent = (event: Event) => {
     setEditingEvent(event);
+    setIsRepeating(event.repeat.type !== 'none');
     setEventForm(convertEventToForm(event));
   };
 

@@ -23,6 +23,7 @@ export const ScheduleCardList = ({
     <Fragment>
       {filteredEvents.map((event) => (
         <ScheduleCard
+          key={event.id}
           event={event}
           notifiedEvents={notifiedEvents}
           handleEditEvent={editEvent}
