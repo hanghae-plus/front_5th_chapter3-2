@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { ReactElement } from 'react';
 
-import { setupMockHandlerCreation } from '@/__mocks__/handlersUtils';
+import { setupMockHandlerList } from '@/__mocks__/handlersUtils';
 import App from '@/App';
 import { Providers } from '@/components/providers';
 import { Event } from '@/types';
@@ -44,9 +44,8 @@ const saveSchedule = async (user: UserEvent, form: Omit<Event, 'id' | 'notificat
     await user.selectOptions(screen.getByLabelText('반복 유형'), type);
     await user.clear(screen.getByLabelText('반복 간격'));
     await user.type(screen.getByLabelText('반복 간격'), String(interval));
-    console.log(interval);
+
     if (typeof endDate !== 'undefined') {
-      console.log(endDate);
       await user.type(screen.getByLabelText('반복 종료일'), endDate);
     }
   }
@@ -54,39 +53,70 @@ const saveSchedule = async (user: UserEvent, form: Omit<Event, 'id' | 'notificat
   await user.click(screen.getByTestId('event-submit-button'));
 };
 
+beforeEach(() => {
+  vi.setSystemTime(new Date('2025-05-01'));
+});
+
 describe('1. 반복 유형 선택 - 일정 생성 또는 수정 시 반복 유형을 선택할 수 있다.', () => {
-  // 시스템 테스트 기본 일자 2025-10-01
   const common: Event = {
     id: '1',
     title: '반복 일정 1',
-    date: '2025-10-10',
+    date: '2025-05-10',
     startTime: '10:00',
     endTime: '11:00',
     description: '반복 일정 1 설명',
     location: '집',
     category: '개인',
-    repeat: { type: 'daily', interval: 2, endDate: '2025-10-31' },
+    repeat: { type: 'daily', interval: 2, endDate: '2025-06-30' },
     notificationTime: 0,
   };
 
   it('매일 유형 선택', async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerList([]);
     const { user } = setup(<App />);
 
     await saveSchedule(user, { ...common });
 
     const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('2025-05-10')).toBeInTheDocument();
+    expect(eventList.getByText('2025-05-12')).toBeInTheDocument();
+    expect(eventList.getByText('2025-05-14')).toBeInTheDocument();
+  });
 
-    expect(eventList.getByText('2025-10-10')).toBeInTheDocument();
-    // 아직 구현중
-    // expect(eventList.getByText('2025-10-12')).toBeInTheDocument();
-    // expect(eventList.getByText('2025-10-14')).toBeInTheDocument();
+  it('매주 유형 선택', async () => {
+    setupMockHandlerList([]);
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, { ...common, repeat: { ...common.repeat, type: 'weekly' } });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('2025-05-10')).toBeInTheDocument();
+    expect(eventList.getByText('2025-05-24')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(eventList.getByText('2025-06-07')).toBeInTheDocument(); // 6월 달력
   });
-  it('매주 유형 선택', () => {
-    expect(1).toBe(1);
-  });
-  it('매월 유형 선택', () => {
-    expect(1).toBe(1);
+
+  it('매월 유형 선택', async () => {
+    setupMockHandlerList([]);
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      ...common,
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-10-31' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('2025-05-10')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(eventList.getByText('2025-06-10')).toBeInTheDocument(); // 6월 달력
+
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(eventList.getByText('2025-07-10')).toBeInTheDocument(); // 7월 달력
   });
   it('매년 유형 선택', () => {
     expect(1).toBe(1);

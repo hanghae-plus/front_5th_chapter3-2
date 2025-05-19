@@ -42,7 +42,7 @@ export const EventManageForm = () => {
     resetForm,
   } = useEventFormContext();
 
-  const { events, saveEvent } = useEventOperationsContext();
+  const { events, saveEvent, saveRepeatEvent } = useEventOperationsContext();
   const { setIsOverlapDialogOpen, setOverlappingEvents } = useDialogContext();
 
   const toast = useToast();
@@ -84,6 +84,12 @@ export const EventManageForm = () => {
       },
       notificationTime,
     };
+
+    if (isRepeating && repeatType !== 'none') {
+      await saveRepeatEvent(eventData);
+      resetForm();
+      return;
+    }
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {

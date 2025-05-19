@@ -94,7 +94,7 @@ export const setupMockHandlerDeletion = () => {
 };
 
 export const setupMockHandlerList = (initEvents = [] as Event[]) => {
-  const mockEvents: Event[] = [...initEvents];
+  let mockEvents: Event[] = [...initEvents];
 
   server.use(
     http.get('/api/events', () => HttpResponse.json({ events: mockEvents })),
@@ -106,9 +106,12 @@ export const setupMockHandlerList = (initEvents = [] as Event[]) => {
     // DELETE /api/events-list
     http.post('/api/events-list', async ({ request }) => {
       const { events: newEvents } = (await request.json()) as { events: Event[] };
+
       newEvents.forEach((_, index) => {
         newEvents[index].id = String(mockEvents.length + 1 + index);
       });
+
+      mockEvents.push(...newEvents);
       return HttpResponse.json(newEvents, { status: 201 });
     }),
 
@@ -123,8 +126,10 @@ export const setupMockHandlerList = (initEvents = [] as Event[]) => {
         if (index > -1) {
           isUpdated = true;
           newEvents[index] = { ...mockEvents[index], ...event };
+          mockEvents[index] = { ...newEvents[index] };
         }
       });
+      mockEvents = [...newEvents];
 
       if (isUpdated) return HttpResponse.json(newEvents);
       return new HttpResponse(null, { status: 404 });
@@ -133,6 +138,8 @@ export const setupMockHandlerList = (initEvents = [] as Event[]) => {
       const { eventIds } = (await request.json()) as { eventIds: Event['id'][] };
 
       const newEvents = mockEvents.filter((event) => !eventIds.includes(event.id));
+
+      mockEvents = [...newEvents];
 
       if (newEvents.length !== mockEvents.length) return new HttpResponse(null, { status: 204 });
       return new HttpResponse(null, { status: 404 });
