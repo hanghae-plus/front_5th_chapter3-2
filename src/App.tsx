@@ -40,6 +40,7 @@ import {
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
 
+import { RepeatIcon } from './components/RepeatIcon.tsx';
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
@@ -201,6 +202,9 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {event.repeat.type !== 'none' && (
+                              <RepeatIcon type={event.repeat.type} />
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -270,6 +274,9 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && (
+                                    <RepeatIcon type={event.repeat.type} />
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
