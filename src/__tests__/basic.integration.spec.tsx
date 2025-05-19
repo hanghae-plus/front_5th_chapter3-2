@@ -3,7 +3,11 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
-import { setupMockHandlerCreation, setupMockHandlerUpdating } from '../__mocks__/handlersUtils';
+import {
+  setupMockHandlerCreation,
+  setupMockHandlerRepeatingEvents,
+  setupMockHandlerUpdating,
+} from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
 import { Event, EventForm } from '../types';
@@ -65,7 +69,47 @@ describe('8th basic integration test - 반복 일정', () => {
   });
 
   describe('반복 일정 기본 테스트', () => {
-    it('일정 생성 시 반복 일정들이 캘린더에 정확히 표시된다.', async () => {});
+    it.only('일정 생성 시 반복 일정들이 캘린더에 정확히 표시된다.', async () => {
+      const { handler, getHandler } = setupMockHandlerRepeatingEvents(mockEvents);
+      server.use(handler, getHandler);
+      const user = userEvent.setup();
+      renderComponent();
+
+      // * 1. 기본 정보 입력
+      await user.type(screen.getByLabelText('제목'), formData.title);
+      await user.type(screen.getByLabelText('날짜'), formData.date);
+      await user.type(screen.getByLabelText('시작 시간'), formData.startTime);
+      await user.type(screen.getByLabelText('종료 시간'), formData.endTime);
+      await user.type(screen.getByLabelText('설명'), formData.description);
+      await user.type(screen.getByLabelText('위치'), formData.location);
+      await user.selectOptions(screen.getByLabelText('카테고리'), formData.category);
+
+      // * 2. 반복 설정
+      const isRepeatingCheckbox = screen.getByLabelText('반복 설정');
+      await user.click(isRepeatingCheckbox);
+
+      // * 3. 반복 유형 선택
+      const repeatTypeSelector = screen.getByLabelText('반복 유형');
+      await user.selectOptions(repeatTypeSelector, 'weekly');
+
+      // * 4. 반복 간격 선택
+      const repeatIntervalSelector = screen.getByLabelText('반복 간격');
+      await user.type(repeatIntervalSelector, '2');
+
+      // * 종료 날짜 선택
+      const endDateSelector = screen.getByLabelText('종료 날짜');
+      await user.type(endDateSelector, '2024-02-15');
+
+      // * 5. 저장
+      const submitButton = screen.getByTestId('event-submit-button');
+      await user.click(submitButton);
+
+      // * 5. 결과 확인
+      const eventList = await screen.findByTestId('event-list');
+      expect(within(eventList).getAllByText(formData.title).length).toBe(2);
+      expect(within(eventList).getByText(formData.title)).toBeInTheDocument();
+      expect(within(eventList).getByText(/2.*일.*마다/)).toBeInTheDocument();
+    });
     it('윤달의 마지막 날 이벤트를 반복 설정할 시 확인 Modal이 표시된다.', async () => {});
     it('31일 이벤트를 반복 설정할 시 확인 Modal이 표시된다.', async () => {});
   });

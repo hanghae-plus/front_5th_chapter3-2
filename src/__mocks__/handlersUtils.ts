@@ -9,6 +9,38 @@ import { createEventStore } from './eventStoreUtils';
 // * 각 테스트에서 독립적인 이벤트 저장소를 사용하기 위한 클로저 패턴 적용
 // * 클로저를 사용하여 각 테스트 케이스마다 독립적인 이벤트 배열을 생성
 
+export const setupMockHandlerRepeatingEvents = (initEvents: Event[] = []) => {
+  const store = createEventStore(initEvents);
+
+  //* 반복 이벤트 생성 핸들러
+  const handler = http.post('/api/events-list', async ({ request }) => {
+    const { events } = (await request.json()) as { events: Omit<Event, 'id'>[] };
+    const repeatId = `repeat-${Date.now()}`;
+
+    const newEvents = events.map((event: Omit<Event, 'id'>) => {
+      const isRepeatEvent = event.repeat?.type !== 'none';
+      const newEvent = {
+        id: String(store.getEvents().length + 1),
+        ...event,
+        repeat: {
+          ...event.repeat,
+          id: isRepeatEvent ? repeatId : undefined,
+        },
+      };
+
+      store.addEvent(newEvent);
+      return newEvent;
+    });
+
+    return HttpResponse.json(newEvents);
+  });
+
+  return {
+    handler,
+    getHandler: store.getHandler,
+  };
+};
+
 export const setupMockHandlerCreation = (initEvents: Event[] = []) => {
   const store = createEventStore(initEvents);
 
