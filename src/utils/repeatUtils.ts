@@ -20,3 +20,5 @@ export function generateYearlyRepeats(startDate: Date, endDate: Date): Date[] {
   }
   return result;
 }
+
+export function generateMonthlyRepeats(startDate: Date, endDate: Date): Date[] {}
