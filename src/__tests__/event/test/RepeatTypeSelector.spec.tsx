@@ -1,9 +1,8 @@
 // 반복 유형 선택
 
-import { FormLabel } from '@chakra-ui/react';
+import { FormLabel, ChakraProvider } from '@chakra-ui/react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ChakraProvider } from '@chakra-ui/react';
 
 import ScheduleEventForm from '@/entities/eventForm/ui/ScheduleEventForm';
 import { RepeatType } from '@/types';
@@ -16,7 +15,10 @@ import { RepeatType } from '@/types';
  */
 
 describe('ScheduleEventForm - 반복 유형 선택', () => {
-  const defaultFormState = {
+  const mockSetRepeatType = vi.fn();
+  const mockSetRepeatInterval = vi.fn();
+
+  const formState = {
     title: '',
     setTitle: () => {},
     date: '2025-07-01',
@@ -35,12 +37,12 @@ describe('ScheduleEventForm - 반복 유형 선택', () => {
     setLocation: () => {},
     category: '',
     setCategory: () => {},
-    isRepeating: true, // ⬅️ 반복 옵션이 켜져 있어야 렌더링됨
+    isRepeating: true,
     setIsRepeating: () => {},
     repeatType: 'daily' as RepeatType,
-    setRepeatType: () => {},
+    setRepeatType: mockSetRepeatType, // ✅ mock 연결
     repeatInterval: 1,
-    setRepeatInterval: () => {},
+    setRepeatInterval: mockSetRepeatInterval, // ✅ mock 연결
     repeatEndDate: '',
     setRepeatEndDate: () => {},
     notificationTime: 10,
@@ -53,17 +55,17 @@ describe('ScheduleEventForm - 반복 유형 선택', () => {
     { value: 10, label: '10분 전' },
   ];
 
-  it('일정 생성 폼에 반복 유형 선택 필드가 렌더링된다', async () => {
-    render(
-      <ChakraProvider>
-        <ScheduleEventForm
-          formState={defaultFormState}
-          onSubmit={() => {}}
-          notificationOptions={notificationOptions}
-        />
-      </ChakraProvider>
-    );
+  render(
+    <ChakraProvider>
+      <ScheduleEventForm
+        formState={formState}
+        onSubmit={() => {}}
+        notificationOptions={notificationOptions}
+      />
+    </ChakraProvider>
+  );
 
+  it('일정 생성 폼에 반복 유형 선택 필드가 렌더링된다', async () => {
     // ✅ 1차: 텍스트 기반 접근
     expect(screen.getByText('반복 일정')).toBeInTheDocument();
 
@@ -72,32 +74,27 @@ describe('ScheduleEventForm - 반복 유형 선택', () => {
     expect(checkbox).toBeInTheDocument();
   });
 
-  it('사용자가 반복 유형으로 "매일"을 선택할 수 있다', async () => {
-    render(<FormLabel>반복 유형</FormLabel>);
-    const select = screen.getByLabelText('반복');
-    await userEvent.selectOptions(select, 'daily');
-    expect(select).toHaveValue('daily');
+  it('유저가 설정한 반복 주기로 등록되어야 한다.', async () => {
+    // 반복 유형 선택: monthly
+    const repeatTypeSelect = screen.getByRole('combobox', { name: '반복 유형' });
+    console.log('repeatTypeSelect', repeatTypeSelect);
+    await userEvent.selectOptions(repeatTypeSelect, 'monthly');
+    expect(mockSetRepeatType).toHaveBeenCalledWith('monthly');
+
+    // 반복 간격 입력: 3
+    const intervalInput = screen.getByLabelText('반복 간격');
+    console.log('intervalInput', intervalInput);
+    await userEvent.clear(intervalInput);
+    await userEvent.type(intervalInput, '3');
+    expect(mockSetRepeatInterval).toHaveBeenCalledWith(3);
   });
 
-  it('2월 29일에 매월 반복을 설정하면, 윤년이 아닌 해는 2월 28일로 대체된다', () => {
-    const events = generateRepeatEvents({
-      title: '특수일정',
-      date: '2024-02-29',
-      startTime: '10:00',
-      endTime: '11:00',
-      repeat: {
-        type: 'monthly',
-        interval: 1,
-        count: 3,
-      },
-    });
-
-    expect(events.map((e) => e.date)).toEqual([
-      '2024-02-29',
-      '2024-03-29', // 실제 월 말일 고려하여 구현 필요
-      '2024-04-29',
-    ]);
-  });
+  it('반복 유형을 매일로 선택하면, 매일 반복되는 일정이 생성되어야 한다.', async () => {});
+  it('반복 유형을 매주로 선택하면, 매주 반복되는 일정이 생성되어야 한다.', async () => {});
+  it('반복 유형을 매월로 선택하면, 매월 반복되는 일정이 생성되어야 한다.', async () => {});
+  it('반복 유형을 매년로 선택하면, 매년 반복되는 일정이 생성되어야 한다.', async () => {});
+  it('2월 29일에 매년 반복을 설정하면, 윤년이 아닌 해는 2월 28일로 대체된다.', async () => {});
+  it('1월 31일에 매월 반복을 설정하면, 2월은 말일로 조정된다.', async () => {});
 });
 
 /**
