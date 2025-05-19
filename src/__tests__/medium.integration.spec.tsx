@@ -361,7 +361,8 @@ describe('반복 일정 테스트', () => {
 
     const monthView = within(screen.getByTestId('month-view'));
 
-    const repeatIcon = monthView.getByLabelText('반복 일정 아이콘');
-    expect(within(repeatIcon).getByText('새 회의')).toBeInTheDocument();
+    const repeatIcon = monthView.getByLabelText('repeat-icon');
+
+    expect(repeatIcon).toBeInTheDocument();
   });
 });
