@@ -108,3 +108,7 @@ export function formatDate(currentDate: Date, day?: number) {
     fillZero(day ?? currentDate.getDate()),
   ].join('-');
 }
+
+export function isValidDate(date: string | undefined): date is string {
+  return !!date && !isNaN(new Date(date).getTime());
+}

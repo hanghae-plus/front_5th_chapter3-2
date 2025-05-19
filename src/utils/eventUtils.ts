@@ -1,5 +1,5 @@
 import { Event } from '../types';
-import { getWeekDates, isDateInRange } from './dateUtils';
+import { getWeekDates, isDateInRange, isValidDate } from './dateUtils';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
   return events.filter((event) => {
@@ -39,7 +39,7 @@ function expandRepeatingEvents(events: Event[], rangeStart: Date, rangeEnd: Date
       expanded.push(event);
     } else if (!('originalRepeatId' in event)) {
       const { type, interval, endDate } = event.repeat;
-      const repeatEnd = new Date(endDate as string);
+      const repeatEnd = isValidDate(endDate) ? new Date(endDate!) : new Date('2025-09-30');
       const start = new Date(event.date);
 
       let current = new Date(start);
@@ -77,6 +77,7 @@ function expandRepeatingEvents(events: Event[], rangeStart: Date, rangeEnd: Date
 
   return expanded;
 }
+
 export function getFilteredEvents(
   events: Event[],
   searchTerm: string,
