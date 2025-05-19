@@ -53,7 +53,7 @@ export function generateMonthlyRepeats(startDate: Date, endDate: Date): Date[] {
 /**daily 반복 일정 */
 export function generateDailyRepeats(startDate: Date, endDate: Date, interval: number): Date[] {
   const result: Date[] = [];
-  const currentDate = new Date(startDate); // 5-19
+  const currentDate = new Date(startDate);
 
   while (currentDate <= endDate) {
     result.push(new Date(currentDate));
@@ -62,3 +62,6 @@ export function generateDailyRepeats(startDate: Date, endDate: Date, interval: n
 
   return result;
 }
+
+/**매주 반복되는 일정 */
+export function generateWeeklyRepeats(startDate: Date, endDate: Date, interval: number): Date[] {}
