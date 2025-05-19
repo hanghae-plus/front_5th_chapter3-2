@@ -7,6 +7,7 @@ import { ReactElement } from 'react';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
+  setupMockHandlerEventListUpdating,
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
@@ -325,6 +326,59 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('반복 일정 표시', () => {
+  it('반복 일정이 있으면 반복 일정 표시 태그가 노출된다', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '기존 회의',
+        date: '2025-10-15',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'daily', interval: 0 },
+        notificationTime: 10,
+      },
+    ]);
+
+    setup(<App />);
+
+    const eventList = await screen.findByTestId('event-list');
+    const repeatIcon = await screen.findByTestId('repeat-icon');
+
+    expect(eventList).toHaveTextContent('기존 회의');
+    expect(eventList).toHaveTextContent('반복일정');
+    expect(repeatIcon).toBeInTheDocument();
+  });
+
+  it('반복 일정이 없으면 반복 일정 표시 태그가 노출되지 않는다', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '기존 회의',
+        date: '2025-10-15',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 10,
+      },
+    ]);
+
+    setup(<App />);
+
+    const eventList = await screen.findByTestId('event-list');
+    const repeatIcon = await screen.queryByTestId('repeat-icon');
+
+    expect(eventList).toHaveTextContent('기존 회의');
+    expect(repeatIcon).not.toBeInTheDocument();
+  });
 });
 
 // /**
