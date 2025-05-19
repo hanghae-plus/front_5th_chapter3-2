@@ -18,7 +18,7 @@ import { RepeatType, Event, EventForm } from '@/types';
 	  - 만약, 윤년 29일에 또는 31일에 매월 또는 매년 반복일정을 설정한다면 어떻게 처리할까요? 다른 서비스를 참고해보시고 자유롭게 작성해보세요.
  */
 
-describe('ScheduleEventForm - 반복 유형 선택', () => {
+describe('반복 유형 선택', () => {
   const mockSetRepeatType = vi.fn();
   const mockSetRepeatInterval = vi.fn();
 
@@ -191,8 +191,6 @@ describe('ScheduleEventForm - 반복 유형 선택', () => {
 
     const events = generateRepeatEvents(eventForm);
 
-    console.log('events=>', events);
-
     expect(events.map((e: { date: any }) => e.date)).toEqual([
       '2024-02-29', // 윤년
       '2025-02-28', // ❗비윤년 → 보정
@@ -234,9 +232,101 @@ describe('ScheduleEventForm - 반복 유형 선택', () => {
     - 각 반복 유형에 대해 간격을 설정할 수 있다.
     - 예: 2일마다, 3주마다, 2개월마다 등
  */
-it('사용자가 반복 간격을 2로 설정하면 2일마다, 2주마다 등의 간격으로 적용된다', () => {
-  // generateRepeatEvents 결과가 2 간격인지 확인
+describe('반복 간격 설정', () => {
+  it('daily 반복일 때 간격이 2면 2일마다 생성된다', () => {
+    const eventForm: EventForm = {
+      title: '2일 간격 운동',
+      date: '2025-07-01',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'daily',
+        interval: 2,
+        count: 3,
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+
+    expect(events.map((e) => e.date)).toEqual(['2025-07-01', '2025-07-03', '2025-07-05']);
+  });
+
+  it('weekly 반복일 때 간격이 2면 2주마다 생성된다', () => {
+    // 날짜: 2025-07-01 → 07-15 → 07-29
+    const eventForm: EventForm = {
+      title: '2주 간격 운동',
+      date: '2025-07-01',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'weekly',
+        interval: 2,
+        count: 3,
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+    expect(events.map((e) => e.date)).toEqual(['2025-07-01', '2025-07-15', '2025-07-29']);
+  });
+
+  it('monthly 반복일 때 간격이 2면 2개월마다 생성된다', () => {
+    // 날짜: 2025-07-01 → 09-01 → 11-01
+    const eventForm: EventForm = {
+      title: '2개월 간격 운동',
+      date: '2025-07-01',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'monthly',
+        interval: 2,
+        count: 3,
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+    expect(events.map((e) => e.date)).toEqual(['2025-07-01', '2025-09-01', '2025-11-01']);
+  });
+
+  it('yearly 반복일 때 간격이 2면 2년마다 생성된다', () => {
+    // 날짜: 2024-02-29 → 2026-02-28 → 2028-02-29
+    const eventForm: EventForm = {
+      title: '2년 간격 운동',
+      date: '2024-02-29',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'yearly',
+        interval: 2,
+        count: 3,
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+
+    expect(events.map((e) => e.date)).toEqual([
+      '2024-02-29',
+      '2026-02-28', // ❗비윤년 → 보정
+      '2028-02-28', // ❗비윤년 → 보정
+    ]);
+  });
 });
+
 /**
  * 3. **(필수) 반복 일정 표시**
     - 캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표시한다.
