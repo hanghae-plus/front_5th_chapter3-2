@@ -24,6 +24,7 @@ import {
   FormLabel,
   Heading,
   HStack,
+  Icon,
   IconButton,
   Input,
   Select,
@@ -39,6 +40,8 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
+
+import { IoIosAlarm } from 'react-icons/io';
 
 import EventRepeatSelect from './feature/events/ui/EventRepeatSelect.tsx';
 import { useCalendarView } from './hooks/useCalendarView.ts';
@@ -461,7 +464,22 @@ function App() {
                         {event.title}
                       </Text>
                     </HStack>
-                    <Text>{event.date}</Text>
+                    <Flex alignItems="center">
+                      <Text>{event.date}</Text>
+                      {event.repeat.type !== 'none' && (
+                        <HStack
+                          paddingX={2}
+                          borderRadius="5px"
+                          backgroundColor="#7E80FB"
+                          marginLeft={2}
+                        >
+                          <IoIosAlarm data-testid="repeat-icon" fontSize="14px" color="white" />
+                          <Text textColor="white" fontSize="14px" fontWeight="bold">
+                            반복일정
+                          </Text>
+                        </HStack>
+                      )}
+                    </Flex>
                     <Text>
                       {event.startTime} - {event.endTime}
                     </Text>
