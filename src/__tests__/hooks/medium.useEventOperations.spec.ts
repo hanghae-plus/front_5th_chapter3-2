@@ -8,7 +8,7 @@ import {
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
 import { server } from '../../setupTests.ts';
-import { Event } from '../../types.ts';
+import { Event, EventForm } from '../../types.ts';
 
 const toastFn = vi.fn();
 
@@ -183,4 +183,1720 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
   });
 
   expect(result.current.events).toHaveLength(1);
+});
+
+// 반복 일정
+describe('반복 유형 선택', () => {
+  it(`'매일' 반복되는 일정을 생성하면 매일 반복되는 일정이 저장된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-17',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-18',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-19',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-20',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+    expect(result.current.events.slice(-5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-27',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-28',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-29',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+
+  it(`2일 간격으로 반복되는 일정을 생성하면 2일마다 반복되는 일정이 저장된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 2 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-18',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-20',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-22',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-24',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+    expect(result.current.events.slice(-5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-22',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-24',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-26',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-28',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+
+  it(`5일 간격으로 반복되는 일정을 생성하면 5일마다 반복되는 일정이 저장된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-21',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-26',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-11-05',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+    expect(result.current.events.slice(-5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-09',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-14',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-19',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-24',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-29',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'daily', interval: 2, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+
+  it(`'매주' 반복되는 일정을 생성하면 매주 반복되는 일정이 저장된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-23',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-11-06',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-11-13',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-11-20',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+    expect(result.current.events.slice(-5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-03',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-10',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-17',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-24',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+  it(`3주 간격으로 반복되는 일정을 생성하면 3주마다 반복되는 일정이 저장된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 3 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-11-06',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-11-27',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-12-18',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2026-01-08',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+    expect(result.current.events.slice(-5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-09-24',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-10-15',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-11-05',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-11-26',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-17',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'weekly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+
+  it(`'매월' 반복되는 일정을 생성하면 매월 반복되는 일정이 저장된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-11-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-12-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2026-01-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2026-02-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+    expect(result.current.events.slice(-5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-07-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-08-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-09-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-11-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+  it(`5달 간격으로 반복되는 일정을 생성하면 5달마다 반복되는 일정이 저장된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 5 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2026-03-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-08-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2027-01-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2027-06-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+    expect(result.current.events.slice(-5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-01-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-06-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2047-11-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-04-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-09-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 5, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+
+  it(`'매년' 반복되는 일정을 생성하면 매년 반복되는 일정이 저장된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2026-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2027-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2028-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2029-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+    expect(result.current.events.slice(-5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2044-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2045-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2046-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2047-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+  it(`3년 간격으로 반복되는 일정을 생성하면 3년마다 반복되는 일정이 저장된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 3 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2028-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2031-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2034-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2037-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '7',
+          "title": '새로운 반복 이벤트',
+          "date": '2040-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '8',
+          "title": '새로운 반복 이벤트',
+          "date": '2043-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '9',
+          "title": '새로운 반복 이벤트',
+          "date": '2046-10-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'yearly', interval: 3, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+
+  it(`2월 29일의 일정을 '매월' 반복으로 설정하면, 29일이 존재하지 않는 달은 제외하고 저장한다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2024-02-29',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2024-02-29',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2028-11-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2032-12-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2036-01-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2040-02-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '7',
+          "title": '새로운 반복 이벤트',
+          "date": '2044-02-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '8',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-02-16',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+
+  it(`30일의 일정을 '매월' 반복으로 설정하면, 30일이 존재하지 않는 달은 제외하고 저장한다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-01-30',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-01-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-03-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-04-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-05-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-06-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+    expect(result.current.events.slice(-5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-08-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-09-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-10-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-11-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-30',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+  it(`31일의 일정을 '매월' 반복으로 설정하면, 31일이 존재하지 않는 달은 제외하고 저장한다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-01-31',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-01-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-03-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-05-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-07-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2025-08-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+    expect(result.current.events.slice(-5)).toMatchInlineSnapshot(`
+      [
+        {
+          "id": '2',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-05-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '3',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-07-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '4',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-08-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '5',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-10-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+        {
+          "id": '6',
+          "title": '새로운 반복 이벤트',
+          "date": '2048-12-31',
+          "startTime": '09:00',
+          "endTime": '10:00',
+          "description": '새로운 이벤트입니다.',
+          "location": '회의실 A',
+          "category": '업무',
+          "repeat": { type: 'monthly', interval: 1, id: '1' },
+          "notificationTime": 10,
+        },
+      ]`);
+  });
+
+  it('단일 일정을 반복 일정으로 변경하면 선택한 반복 유형에 맞춰 저장한다.', async () => {
+    // 기존 일정이 중복되지 않는지 확인 (기존 일정 제거 -> 반복 일정 추가)
+  });
+
+  // TODO: 종료 날짜 포함
+  // TODO: 반복 일정을 수정
 });
