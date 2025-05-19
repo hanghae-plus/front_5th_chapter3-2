@@ -91,6 +91,8 @@ function App() {
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatEndCount,
+    setRepeatEndCount,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -414,6 +416,16 @@ function App() {
                     onChange={(e) => setRepeatEndDate(e.target.value)}
                   />
                 </FormControl>
+              </HStack>
+              <HStack>
+                <FormLabel>반복 횟수</FormLabel>
+                <Input
+                  data-testid="repeat-end-count-input"
+                  type="number"
+                  value={repeatEndCount}
+                  onChange={(e) => setRepeatEndCount(Number(e.target.value))}
+                  min={1}
+                />
               </HStack>
             </VStack>
           )}

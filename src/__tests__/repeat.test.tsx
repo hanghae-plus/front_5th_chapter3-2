@@ -80,7 +80,7 @@ it(
 it('31일에 매월 반복일정을 설정하면, 31일이 없는 달에는 30일 또는 말일에 생성되는지 확인한다.');
 
 // 반복 간격 설정
-it.only('반복 유형별로 반복 간격(예: 2일마다, 3주마다, 2개월마다 등)을 설정할 수 있다.', async () => {
+it('반복 유형별로 반복 간격(예: 2일마다, 3주마다, 2개월마다 등)을 설정할 수 있다.', async () => {
   const { user } = setup(<App />);
 
   const repeatTypeSelect = screen.getByTestId('repeat-type-select');
@@ -128,7 +128,17 @@ it("반복 종료 조건으로 '특정 날짜까지'를 지정할 수 있다.", 
   expect(repeatEndDateInput).toHaveValue(formatDate(repeatEndDate));
 });
 
-it("반복 종료 조건으로 '특정 횟수만큼'을 지정할 수 있다.");
+it("반복 종료 조건으로 '특정 횟수만큼'을 지정할 수 있다.", async () => {
+  const { user } = setup(<App />);
+
+  const repeatEndCountInput = screen.getByTestId('repeat-end-count-input');
+  expect(repeatEndCountInput).toBeInTheDocument();
+
+  await user.clear(repeatEndCountInput);
+  await user.type(repeatEndCountInput, '10');
+  expect(repeatEndCountInput).toHaveValue(10);
+});
+
 it("반복 종료 조건으로 '종료 없음'을 지정할 수 있다.");
 it(
   "반복 종료 조건이 '2025-09-30까지'로 설정된 경우, 해당 날짜 이후에는 반복 일정이 생성되지 않는다."
