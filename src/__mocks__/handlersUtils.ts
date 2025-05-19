@@ -101,7 +101,8 @@ export const setupMockHandlerCreationForEventList = (initEvents = [] as Event[])
       return HttpResponse.json({ events: mockEvents });
     }),
     http.post('/api/events-list', async ({ request }) => {
-      const newEventList = ((await request.json()) as Event[]).map((newEvent, index) => {
+      const requestEvents = (await request.json()) as { events: Event[] };
+      const newEventList = requestEvents.events.map((newEvent, index) => {
         return {
           ...newEvent,
           id: String(mockEvents.length + 1 + index),
