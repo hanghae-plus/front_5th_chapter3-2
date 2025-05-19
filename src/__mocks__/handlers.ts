@@ -4,9 +4,7 @@ import { events } from '../__mocks__/response/events.json' assert { type: 'json'
 import { Event } from '../types';
 
 export const handlers = [
-  http.get('/api/events', () => {
-    return HttpResponse.json({ events });
-  }),
+  http.get('/api/events', () => HttpResponse.json({ events })),
 
   http.post('/api/events', async ({ request }) => {
     const newEvent = (await request.json()) as Event;
