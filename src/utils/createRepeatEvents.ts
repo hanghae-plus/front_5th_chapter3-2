@@ -28,7 +28,7 @@ export const createRepeatEvents = (eventData: EventForm) => {
       case 'weekly':
         currentDate.setDate(currentDate.getDate() + 7 * interval);
         break;
-      case 'monthly':
+      case 'monthly': {
         currentDate.setMonth(currentDate.getMonth() + interval);
 
         // 월말 처리 (예: 1월 31일 -> 2월 28일)
@@ -40,6 +40,7 @@ export const createRepeatEvents = (eventData: EventForm) => {
           currentDate.setDate(0);
         }
         break;
+      }
       case 'yearly':
         currentDate.setFullYear(currentDate.getFullYear() + interval);
         break;

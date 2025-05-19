@@ -1,8 +1,8 @@
 import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
-import { createRepeatEvents } from '../utils/createRepeatEvents';
 import { Event, EventForm } from '../types';
+import { createRepeatEvents } from '../utils/createRepeatEvents';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
