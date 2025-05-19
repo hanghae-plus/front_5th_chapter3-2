@@ -36,4 +36,12 @@ export const handlers = [
 
     return new HttpResponse(null, { status: 404 });
   }),
+
+  http.post('/api/events-list', async ({ request }) => {
+    const newEvents = ((await request.json()) as Event[]).map((newEvent, index) => {
+      return { ...newEvent, id: String(events.length + 1 + index) };
+    });
+
+    return HttpResponse.json(newEvents, { status: 201 });
+  }),
 ];

@@ -92,3 +92,23 @@ export const setupMockHandlerDeletion = () => {
     })
   );
 };
+
+export const setupMockHandlerCreationForEventList = (initEvents = [] as Event[]) => {
+  const mockEvents: Event[] = [...initEvents];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const newEventList = ((await request.json()) as Event[]).map((newEvent, index) => {
+        return {
+          ...newEvent,
+          id: String(mockEvents.length + 1 + index),
+        };
+      });
+      mockEvents.push(...newEventList);
+      return HttpResponse.json(newEventList, { status: 201 });
+    })
+  );
+};
