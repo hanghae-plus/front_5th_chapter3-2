@@ -178,8 +178,8 @@ describe('일정 뷰', () => {
 describe('검색 기능', () => {
   beforeEach(() => {
     server.use(
-      http.get('/api/events', () => {
-        return HttpResponse.json({
+      http.get('/api/events', () =>
+        HttpResponse.json({
           events: [
             {
               id: 1,
@@ -206,8 +206,8 @@ describe('검색 기능', () => {
               notificationTime: 10,
             },
           ],
-        });
-      })
+        })
+      )
     );
   });
 
