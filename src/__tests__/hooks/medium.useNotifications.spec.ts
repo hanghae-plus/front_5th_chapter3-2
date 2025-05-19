@@ -8,6 +8,14 @@ import { parseHM } from '../utils.ts';
 const 초 = 1000;
 const 분 = 초 * 60;
 
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 it('초기 상태에서는 알림이 없어야 한다', () => {
   const { result } = renderHook(() => useNotifications([]));
   expect(result.current.notifications).toEqual([]);
