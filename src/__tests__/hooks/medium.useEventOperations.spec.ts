@@ -4,7 +4,6 @@ import { http, HttpResponse } from 'msw';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
-  setupMockHandlerEventList,
   setupMockHandlerEventListUpdating,
   setupMockHandlerUpdating,
 } from '../../__mocks__/handlersUtils.ts';
@@ -189,7 +188,7 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 
 describe('반복 유형 선택', () => {
   it('일정 생성시 선택한 반복 유형 정보가 반영된다.', async () => {
-    setupMockHandlerEventList();
+    setupMockHandlerCreation([]);
 
     const { result } = renderHook(() => useEventOperations(false));
 

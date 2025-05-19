@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act } from '@testing-library/react';
+import { render, screen, within, act, renderHook, waitFor } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
@@ -10,8 +10,9 @@ import {
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
+import { useNotifications } from '../hooks/useNotifications';
 import { server } from '../setupTests';
-import { Event } from '../types';
+import { Event, EventForm } from '../types';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
@@ -23,7 +24,8 @@ const setup = (element: ReactElement) => {
 // ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'>
+  form: Omit<EventForm, 'repeat' | 'notificationTime'> &
+    Partial<Pick<Event, 'repeat' | 'notificationTime'>>
 ) => {
   const { title, date, startTime, endTime, location, description, category } = form;
 
@@ -324,3 +326,62 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
+
+// /**
+//  * @description useOperation에서 작성할까 하다가 반복 간격대로 알림이 출력되는게 의미있는 테스트인것 같아서 여기서 작성
+//  */
+// eslint-disable-next-line vitest/no-commented-out-tests
+// describe('반복 간격 설정', () => {
+//   const checkNotification = async (date: string, shouldExist: boolean) => {
+//     vi.setSystemTime(new Date(`${date} 08:50:00`));
+
+//     await act(() => {
+//       vi.advanceTimersByTime(1000);
+//     });
+
+//     if (shouldExist) {
+//       expect(screen.getByText('10분 후 반복 테스트 일정이 시작됩니다.')).toBeInTheDocument();
+//     } else {
+//       expect(screen.queryByText('10분 후 반복 테스트 일정이 시작됩니다.')).not.toBeInTheDocument();
+//     }
+//   };
+
+// eslint-disable-next-line vitest/no-commented-out-tests
+//   it('반복 유형이 매일이고, 반복 간격이 2일이면 2일마다 알림이 출력된다', async () => {
+//     setupMockHandlerCreation([]);
+//     const mockEvents: Event[] = [
+//       {
+//         id: '1',
+//         title: '반복 테스트',
+//         date: '2025-10-01',
+//         startTime: '09:00',
+//         endTime: '10:00',
+//         description: '반복 테스트',
+//         location: '회의실 A',
+//         category: '업무',
+//         repeat: { type: 'daily', interval: 2, endDate: '2025-10-10' },
+//         notificationTime: 10,
+//       },
+//     ];
+//     const { user } = setup(<App />);
+//     const { result } = renderHook(() => useNotifications(mockEvents));
+
+//     await saveSchedule(user, mockEvents[0]);
+
+//     const checkDates = [
+//       { date: '2025-10-01', shouldExist: true },
+//       { date: '2025-10-02', shouldExist: false },
+//       { date: '2025-10-03', shouldExist: true },
+//       { date: '2025-10-05', shouldExist: true },
+//       { date: '2025-10-07', shouldExist: true },
+//       { date: '2025-10-09', shouldExist: true },
+//     ];
+
+//     checkDates.forEach(async (date) => {
+//       await checkNotification(date.date, date.shouldExist);
+//       await act(async () => {
+//         result.current.removeNotification(0);
+//       });
+//     });
+//   });
+// });
