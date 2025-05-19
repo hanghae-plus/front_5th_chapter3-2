@@ -2,6 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import { createRepeatedEvents } from '../utils/eventUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -92,6 +93,39 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  const saveRepeatedEvents = async (eventData: EventForm) => {
+    try {
+      const newEvents = createRepeatedEvents(eventData as Event);
+      const response = await fetch('/api/events-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: newEvents }),
+      });
+
+      if (!response.ok) {
+        throw new Error('반복 일정 저장 실패');
+      }
+
+      await fetchEvents();
+      onSave?.();
+      toast({
+        title: '반복 일정이 저장되었습니다.',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error saving repeated events:', error);
+      toast({
+        title: '반복 일정 저장 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      await fetchEvents();
+    }
+  };
+
   async function init() {
     await fetchEvents();
     toast({
@@ -106,5 +140,5 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent };
+  return { events, fetchEvents, saveEvent, deleteEvent, saveRepeatedEvents };
 };
