@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act } from '@testing-library/react';
+import { render, screen, within, act, waitFor } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
@@ -323,4 +323,170 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('반복 일정', () => {
+  it('반복 유형을 매일, 매주, 매월, 매년 중에서 선택할 수 있다', async () => {
+    const { user } = setup(<App />);
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const repeatSelect = screen.getByLabelText('반복 유형');
+
+    await user.selectOptions(repeatSelect, '매일');
+    expect((repeatSelect as HTMLSelectElement).value).toBe('daily');
+
+    await user.selectOptions(repeatSelect, '매주');
+    expect((repeatSelect as HTMLSelectElement).value).toBe('weekly');
+
+    await user.selectOptions(repeatSelect, '매월');
+    expect((repeatSelect as HTMLSelectElement).value).toBe('monthly');
+
+    await user.selectOptions(repeatSelect, '매년');
+    expect((repeatSelect as HTMLSelectElement).value).toBe('yearly');
+  });
+
+  it('간격 설정 (2일마다, 3주마다 등)이 정상 동작한다', async () => {
+    const { user } = setup(<App />);
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const repeatIntervalInput = screen.getByLabelText('반복 간격');
+    await user.clear(repeatIntervalInput);
+    await user.type(repeatIntervalInput, '3');
+    expect((repeatIntervalInput as HTMLInputElement).value).toBe('3');
+  });
+
+  it('캘린더에서 반복 일정이 아이콘이나 태그 등으로 구분되어 표시된다', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '반복 회의',
+        date: '2025-10-15',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '',
+        location: '',
+        category: '업무',
+        repeat: { type: 'daily', interval: 1 },
+        notificationTime: 0,
+      },
+    ]);
+
+    setup(<App />);
+
+    // 텍스트로 찾는 대신, 반복 회의가 포함된 이벤트 아이템 전체를 찾음
+    const allEventItems = await screen.findAllByTestId('event-item');
+
+    // "반복 회의"라는 텍스트를 포함한 요소만 골라냄
+    const targetItem = allEventItems.find((item) => within(item).queryByText('반복 회의'));
+
+    expect(targetItem).toBeTruthy(); // 없으면 테스트 실패
+
+    // repeat-icon이 존재하는지 확인
+    expect(within(targetItem!).getByTestId('repeat-icon')).toBeInTheDocument();
+  });
+
+  it('반복 종료 조건이 특정 날짜, 횟수 제한, 종료 없음으로 설정 가능하다', async () => {
+    const { user } = setup(<App />);
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const untilDateRadio = screen.getByLabelText('날짜까지 반복');
+    const countRadio = screen.getByLabelText('횟수 제한 반복');
+    const noEndRadio = screen.getByLabelText('종료 없음');
+
+    expect(untilDateRadio).toBeInTheDocument();
+    expect(countRadio).toBeInTheDocument();
+    expect(noEndRadio).toBeInTheDocument();
+
+    // 날짜까지 반복 선택 → date input 나타나야 함
+    await userEvent.click(untilDateRadio);
+    expect(screen.getByLabelText(/반복 종료일/)).toBeInTheDocument();
+
+    // 횟수 제한 반복 선택 → number input 나타나야 함
+    await userEvent.click(countRadio);
+    expect(screen.getByRole('spinbutton')).toBeInTheDocument();
+
+    // 종료 없음 선택 → 추가 인풋 없어야 함
+    await userEvent.click(noEndRadio);
+    expect(screen.queryByLabelText(/반복 종료일/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+  });
+
+  it('반복 일정을 단일로 수정하면 반복 아이콘이 사라진다', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '반복 회의',
+        date: '2025-10-15',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '',
+        location: '',
+        category: '업무',
+        repeat: { type: 'daily', interval: 1 },
+        notificationTime: 0,
+      },
+    ]);
+
+    render(<App />);
+
+    const eventItem = await screen.findByText('반복 회의');
+    const parent = eventItem.closest('[data-testid="event-item"]')!;
+    expect(within(parent as HTMLElement).getByTestId('repeat-icon')).toBeInTheDocument();
+
+    // 수정 모드 진입 (예: 클릭 → 편집 모달 열기)
+    await userEvent.click(eventItem);
+    const editButton = screen.getByRole('button', { name: /수정/i });
+    await userEvent.click(editButton);
+
+    // 반복 옵션 제거 (반복 없음 선택)
+    const repeatCheckbox = screen.getByLabelText('반복');
+    await userEvent.click(repeatCheckbox); // 반복 해제
+
+    const saveButton = screen.getByRole('button', { name: /저장/i });
+    await userEvent.click(saveButton);
+
+    // 아이템이 다시 표시되고, 반복 아이콘이 사라졌는지 확인
+    const updatedItem = await screen.findByText('반복 회의');
+    const updatedParent = updatedItem.closest('[data-testid="event-item"]')!;
+    expect(
+      within(updatedParent as HTMLElement).queryByTestId('repeat-icon')
+    ).not.toBeInTheDocument();
+  });
+
+  it('반복 일정 단일 삭제 시 해당 일정만 삭제된다', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '반복 회의',
+        date: '2025-10-15',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '',
+        location: '',
+        category: '업무',
+        repeat: { type: 'daily', interval: 1 },
+        notificationTime: 0,
+      },
+    ]);
+
+    render(<App />);
+
+    const eventItem = await screen.findByText('반복 회의');
+    await userEvent.click(eventItem);
+
+    const deleteButton = screen.getByRole('button', { name: /삭제/i });
+    await userEvent.click(deleteButton);
+
+    // 삭제 방식 선택 (단일 삭제)
+    const deleteSingleRadio = screen.getByLabelText('해당 일정만 삭제');
+    await userEvent.click(deleteSingleRadio);
+
+    const confirmButton = screen.getByRole('button', { name: /확인/i });
+    await userEvent.click(confirmButton);
+
+    // 해당 일정이 사라졌는지 확인
+    await waitFor(() => {
+      expect(screen.queryByText('반복 회의')).not.toBeInTheDocument();
+    });
+  });
 });
