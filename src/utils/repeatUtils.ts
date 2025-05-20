@@ -8,13 +8,18 @@ const MAX_REPEAT_END_DATE = '2025-09-30';
 
 /**
  * 윤년인지 확인.
+ * @param year: 연도
+ * @return: 윤년 여부
  */
 export function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
 
 /**
- * 해당 연월의 마지막 날짜를 반환합니다.
+ * 해당 연월의 마지막 날짜를 반환.
+ * @param year: 연도
+ * @param month: 월
+ * @return: 해당 연월의 마지막 날짜
  */
 export function getLastDayOfMonth(year: number, month: number): number {
   // JavaScript의 Date 객체에서 month는 0부터 시작하므로, 다음달의 0일(이전달의 마지막 날)을 구함.
@@ -23,6 +28,9 @@ export function getLastDayOfMonth(year: number, month: number): number {
 
 /**
  * 주어진 날짜에 이벤트를 생성해야 하는지 확인.
+ * @param eventData: 반복 일정 정보
+ * @param targetDate: 확인할 날짜
+ * @return: 이벤트 생성 여부
  */
 export function shouldCreateEventForDate(eventData: EventForm, targetDate: Date): boolean {
   const { date, repeat } = eventData;
@@ -115,6 +123,8 @@ export function shouldCreateEventForDate(eventData: EventForm, targetDate: Date)
 
 /**
  * 반복 일정에 대한 모든 이벤트 객체를 생성.
+ * @param eventData: 반복 일정 정보
+ * @return: 반복 일정 정보 배열
  */
 export function createRepeatingEvents(eventData: EventForm): EventForm[] {
   if (eventData.repeat.type === 'none') {
@@ -122,15 +132,19 @@ export function createRepeatingEvents(eventData: EventForm): EventForm[] {
   }
 
   const startDate = new Date(eventData.date);
-  const endDate = eventData.repeat.endDate
-    ? new Date(eventData.repeat.endDate)
-    : new Date(MAX_REPEAT_END_DATE);
+
+  // 종료일이 설정되지 않았다면 MAX_REPEAT_END_DATE로 설정
+  const userEndDate = eventData.repeat.endDate ? new Date(eventData.repeat.endDate) : null;
+  const maxEndDate = new Date(MAX_REPEAT_END_DATE);
+
+  // 종료일은 최대 MAX_REPEAT_END_DATE로 설정
+  const finalEndDate = userEndDate && userEndDate < maxEndDate ? userEndDate : maxEndDate;
 
   const dates: Date[] = [];
   let currentDate = new Date(startDate);
 
   // 시작일부터 종료일까지 하루씩 증가하며 체크
-  while (currentDate <= endDate) {
+  while (currentDate <= finalEndDate) {
     if (shouldCreateEventForDate(eventData, currentDate)) {
       dates.push(new Date(currentDate));
     }
