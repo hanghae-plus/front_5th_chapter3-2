@@ -2,7 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
-import { formatDate } from '../utils/dateUtils';
+import { createRepeatEvents } from '../utils/createRepeatEvents';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -34,34 +34,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         if (eventData.repeat && eventData.repeat.type !== 'none') {
           // 반복 이벤트라면 반복 이벤트 저장 엔드포인트에 바로 저장
           // (단일 이벤트 저장 X)
-          const { type, interval } = eventData.repeat;
-          const baseDate = new Date(eventData.date);
-
-          const repeatEvents: Omit<Event, 'id'>[] = [];
-          // 원래 일정 포함 + 추가 반복 일정
-          // ex) interval이 1이면 두 개의 이벤트(원래 일정 + 1회 반복)를 생성
-          for (let i = 0; i <= interval; i++) {
-            const nextDate = new Date(baseDate);
-
-            if (type === 'daily') {
-              nextDate.setDate(nextDate.getDate() + i);
-            } else if (type === 'weekly') {
-              nextDate.setDate(nextDate.getDate() + i * 7);
-            } else if (type === 'monthly') {
-              nextDate.setMonth(nextDate.getMonth() + i);
-            } else if (type === 'yearly') {
-              nextDate.setFullYear(nextDate.getFullYear() + i);
-            }
-
-            repeatEvents.push({
-              ...eventData,
-              date: formatDate(nextDate),
-              repeat: {
-                ...eventData.repeat,
-                id: `repeat-${i + 1}`
-              }
-            });
-          }
+          const repeatEvents = createRepeatEvents(eventData as Event);
 
           const response = await fetch('/api/events-list', {
             method: 'POST',
