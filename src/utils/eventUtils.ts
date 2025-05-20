@@ -52,7 +52,7 @@ export function getFilteredEvents(
 export function getRepeatedEvents(event: EventForm) {
   const { date, repeat } = event;
   const { type, interval, endDate } = repeat;
-  const finalEndDate = endDate ? new Date(endDate) : new Date('2048-12-31');
+  const finalEndDate = endDate ? new Date(endDate) : new Date('2025-09-30');
   const repeatedEvents: EventForm[] = [];
   let originMonth = new Date(date).getMonth(),
     originDate = new Date(date).getDate();
