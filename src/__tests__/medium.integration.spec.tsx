@@ -40,6 +40,98 @@ const saveSchedule = async (
   await user.click(screen.getByTestId('event-submit-button'));
 };
 
+describe('반복 일정 기능', () => {
+  describe('반복 유형 선택', () => {
+    it('일정 생성 시 반복 유형을 선택할 수 있어야 한다.', async () => {
+      const { user } = setup(<App />);
+      // 일정 추가 폼 확인
+      const addTitle = screen.getAllByText('일정 추가');
+      expect(addTitle[0]).toBeInTheDocument();
+
+      // 일정 추가 폼에서 반복 설정 체크 박스가 존재하는지 확인
+      const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+      const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+      expect(checkboxInput).toBeInTheDocument();
+
+      // 클릭하기 전 반복 유형 표시되는지 확인
+      expect(screen.queryByTestId('repeat-type-select')).not.toBeInTheDocument();
+      await user.click(checkboxInput);
+
+      // 클릭하고나서 반복 유형 표시되는지 확인
+      const repeatTypeSelect = screen.getByTestId('repeat-type-select');
+      expect(repeatTypeSelect).toBeInTheDocument();
+
+      // 매일, 매주, 매월, 매년 옵션이 모두 표시되는지 확인
+      expect(screen.getByRole('option', { name: '매일' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매주' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매월' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매년' })).toBeInTheDocument();
+
+      // 선택한 옵션과 값이 맞는지 확인
+      await user.selectOptions(repeatTypeSelect, '매일');
+      expect(repeatTypeSelect).toHaveValue('daily');
+      await user.selectOptions(repeatTypeSelect, '매주');
+      expect(repeatTypeSelect).toHaveValue('weekly');
+      await user.selectOptions(repeatTypeSelect, '매월');
+      expect(repeatTypeSelect).toHaveValue('monthly');
+      await user.selectOptions(repeatTypeSelect, '매년');
+      expect(repeatTypeSelect).toHaveValue('yearly');
+    });
+
+    it('일정 수정 시 반복 유형을 선택할 수 있어야 한다.', async () => {
+      const { user } = setup(<App />);
+
+      // 수정 버튼 클릭
+      const eventList = screen.getByTestId('event-list');
+      const editButton = await within(eventList).findAllByLabelText('Edit event');
+      await user.click(editButton[0]);
+
+      // 일정 추가 -> 수정 폼으로 바뀌는지 확인
+      const editTitle = screen.getAllByText('일정 수정');
+      expect(editTitle[0]).toBeInTheDocument();
+
+      // 반복 설정 체크 박스가 존재하는지 확인
+      const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+      const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+      expect(checkboxInput).toBeInTheDocument();
+
+      // 클릭하기 전 반복 유형 표시되는지 확인
+      expect(screen.queryByTestId('repeat-type-select')).not.toBeInTheDocument();
+      await user.click(checkboxInput);
+
+      // 클릭하고나서 반복 유형 표시되는지 확인
+      const repeatTypeSelect = screen.getByTestId('repeat-type-select');
+      expect(repeatTypeSelect).toBeInTheDocument();
+
+      // 매일, 매주, 매월, 매년 옵션이 모두 표시되는지 확인
+      expect(screen.getByRole('option', { name: '매일' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매주' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매월' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매년' })).toBeInTheDocument();
+
+      // 선택한 옵션과 값이 맞는지 확인
+      await user.selectOptions(repeatTypeSelect, '매일');
+      expect(repeatTypeSelect).toHaveValue('daily');
+      await user.selectOptions(repeatTypeSelect, '매주');
+      expect(repeatTypeSelect).toHaveValue('weekly');
+      await user.selectOptions(repeatTypeSelect, '매월');
+      expect(repeatTypeSelect).toHaveValue('monthly');
+      await user.selectOptions(repeatTypeSelect, '매년');
+      expect(repeatTypeSelect).toHaveValue('yearly');
+    });
+
+    it('윤년 2월 29일의 반복 일정이 올바르게 처리되어야 한다', () => {
+      // 2월 29일을 시작으로 하는 매월/매년 반복 일정이
+      // 윤년이 아닌 해에는 2월 28일로 처리되는지 확인
+    });
+
+    it('31일이 없는 월의 반복 일정이 올바르게 처리되어야 한다', () => {
+      // 31일을 시작으로 하는 매월 반복 일정이
+      // 31일이 없는 월에는 해당 월의 마지막 날짜로 처리되는지 확인
+    });
+  });
+});
+
 describe('일정 CRUD 및 기본 기능', () => {
   it('입력한 새로운 일정 정보에 맞춰 모든 필드가 이벤트 리스트에 정확히 저장된다.', async () => {
     setupMockHandlerCreation();
