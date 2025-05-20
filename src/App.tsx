@@ -102,6 +102,8 @@ function App() {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    repeatIntervalError,
+    handleRepeatIntervalChange,
   } = useEventForm();
 
   const { events, saveEvent, saveRepeatEvent, deleteEvent } = useEventOperations(
@@ -453,12 +455,18 @@ function App() {
               <HStack width="100%">
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
-                  <Input
-                    type="number"
-                    value={repeatInterval}
-                    onChange={(e) => setRepeatInterval(Number(e.target.value))}
-                    min={1}
-                  />
+                  <Tooltip
+                    label={repeatIntervalError}
+                    isOpen={!!repeatIntervalError}
+                    placement="top"
+                  >
+                    <Input
+                      type="number"
+                      value={repeatInterval}
+                      onChange={(e) => handleRepeatIntervalChange(e)}
+                      min={1}
+                    />
+                  </Tooltip>
                 </FormControl>
                 <FormControl>
                   <FormLabel>반복 종료일</FormLabel>
