@@ -1,5 +1,5 @@
-import { Event } from '../types';
-import { getWeekDates, isDateInRange } from './dateUtils';
+import { Event, EventForm } from '../types';
+import { formatDate, getWeekDates, isDateInRange } from './dateUtils';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
   return events.filter((event) => {
@@ -47,4 +47,22 @@ export function getFilteredEvents(
   }
 
   return searchedEvents;
+}
+
+export function generateRepeatEvents(event: Event | EventForm) {
+  const repeatEvents = [];
+  const repeatEndDate = event.repeat.endDate
+    ? new Date(event.repeat.endDate)
+    : new Date('2025-09-30');
+  let currentDate = new Date(event.date);
+
+  while (currentDate <= repeatEndDate) {
+    repeatEvents.push({
+      ...event,
+      date: formatDate(currentDate),
+    });
+    currentDate.setDate(currentDate.getDate() + event.repeat.interval);
+  }
+
+  return repeatEvents;
 }

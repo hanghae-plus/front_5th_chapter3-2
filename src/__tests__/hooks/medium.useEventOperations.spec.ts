@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 
 import {
@@ -185,7 +185,7 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 
 describe('반복 유형 선택', () => {
   it('일정 생성시 선택한 반복 유형 정보가 반영된다.', async () => {
-    setupMockHandlerCreation([]);
+    setupMockHandlerCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
 
@@ -200,15 +200,15 @@ describe('반복 유형 선택', () => {
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 1 },
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-17' },
       notificationTime: 1,
     };
 
     await act(async () => {
-      await result.current.saveEvent(newEvent);
+      await result.current.saveRepeatEvents(newEvent);
     });
 
-    expect(result.current.events).toHaveLength(1);
+    expect(result.current.events).toHaveLength(2);
     expect(result.current.events[0].repeat.type).toBe('daily');
     expect(result.current.events[0].repeat.interval).toBe(1);
   });
@@ -229,7 +229,7 @@ describe('반복 유형 선택', () => {
       description: '수정된 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'weekly', interval: 1 },
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-10-17' },
       notificationTime: 1,
     };
 
@@ -237,7 +237,37 @@ describe('반복 유형 선택', () => {
       await result.current.saveEvent(updatedEvent);
     });
 
+    console.log(result.current.events);
     expect(result.current.events[result.current.events.length - 1].repeat.type).toBe('weekly');
     expect(result.current.events[result.current.events.length - 1].repeat.interval).toBe(1);
+  });
+});
+
+describe('반복 간격 설정', () => {
+  it('일정 생성시 반복 간격 정보가 반영된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-20' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvents(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(5);
   });
 });
