@@ -12,7 +12,6 @@ type Props = {
 };
 
 const CalendarView = ({ view, currentDate, holidays, filteredEvents, notifiedEvents }: Props) => {
-  console.log('CalendarView', view, currentDate, holidays, filteredEvents, notifiedEvents);
   return view === 'week' ? (
     <WeekView
       currentDate={currentDate}

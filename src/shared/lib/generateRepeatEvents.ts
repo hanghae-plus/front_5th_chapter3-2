@@ -18,8 +18,7 @@ export function generateRepeatEvents(baseEvent: EventForm): Event[] {
   const interval = repeat.interval ?? 1;
   const count = repeat.count ?? 4; // fallback: 4회 반복
 
-  const endDate = repeat.endDate ? new Date(repeat.endDate) : new Date(start);
-  endDate.setMonth(endDate.getMonth() + 3); // fallback: 3회 반복
+  const endDate = repeat.endDate ? new Date(repeat.endDate) : new Date('2025-09-30'); // fallback: 2025년 9월 30일까지
 
   const startDay = start.getDate();
   const startMonth = start.getMonth();
@@ -53,8 +52,6 @@ export function generateRepeatEvents(baseEvent: EventForm): Event[] {
   if (repeat.type === 'yearly') {
     const interval = repeat.interval ?? 1;
     const startYear = start.getFullYear();
-
-    console.log('interval', interval);
 
     let i = 0;
 

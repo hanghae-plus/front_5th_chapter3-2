@@ -10,6 +10,7 @@ import { server } from '@/setupTests.ts';
 import { useEventOperations } from '@/shared/hooks/useEventOperations';
 import { generateRepeatEvents } from '@/shared/lib/generateRepeatEvents';
 import { RepeatType, Event, EventForm } from '@/types';
+import CalendarView from '@/features/calendarView/ui/CalendarView';
 
 /**
  * 1. **(필수) 반복 유형 선택**
@@ -332,9 +333,9 @@ describe('반복 간격 설정', () => {
     - 캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표시한다.
     - 아이콘을 넣든 태그를 넣든 자유롭게 해보세요!
  */
+
 describe('반복 일정 표시', () => {
-  it('반복 일정인 경우 캘린더에 반복 아이콘(🔁 등)이 표시된다', () => {
-    // calendar cell 내에 반복 아이콘 존재 여부 확인
+  it('반복 일정인 경우 캘린더에 🔁 아이콘이 표시된다', () => {
     const repeatEvent: Event = {
       id: '1',
       title: '정기 회의',
@@ -346,25 +347,61 @@ describe('반복 일정 표시', () => {
       category: '',
       repeat: {
         type: 'weekly',
-        interval: 1,
-        count: 5,
+        interval: 1, // 🔁 조건 만족
       },
       notificationTime: 0,
     };
 
-    const events = generateRepeatEvents(repeatEvent);
-    expect(events.map((e) => e.date)).toEqual([
-      '2025-07-01',
-      '2025-07-08',
-      '2025-07-15',
-      '2025-07-22',
-      '2025-07-29',
-    ]);
+    render(
+      <ChakraProvider>
+        <CalendarView
+          view="month"
+          currentDate={new Date('2025-07-01')}
+          holidays={{}}
+          filteredEvents={[repeatEvent]}
+          notifiedEvents={[]}
+        />
+      </ChakraProvider>
+    );
 
-    // 캘린더 셀에 반복 아이콘이 표시되는지 확인
-    const calendarCell = screen.getByText('정기 회의');
-    expect(calendarCell).toBeInTheDocument();
-    expect(calendarCell).toHaveTextContent('🔁');
+    // 🔍 전체 텍스트가 포함된 항목 확인
+    const eventWithIcon = screen.getByText(/🔁.*정기 회의/);
+    expect(eventWithIcon).toBeInTheDocument();
+  });
+
+  it('반복 일정이 아닌 경우 🔁 아이콘이 표시되지 않는다', () => {
+    const normalEvent: Event = {
+      id: '2',
+      title: '일반 일정',
+      date: '2025-07-01',
+      startTime: '13:00',
+      endTime: '14:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: {
+        type: 'none',
+        interval: 0, // 🔁 조건 미충족
+      },
+      notificationTime: 0,
+    };
+
+    render(
+      <ChakraProvider>
+        <CalendarView
+          view="month"
+          currentDate={new Date('2025-07-01')}
+          holidays={{}}
+          filteredEvents={[normalEvent]}
+          notifiedEvents={[]}
+        />
+      </ChakraProvider>
+    );
+
+    // 🔍 🔁 없는 텍스트만 있는지 확인
+    const eventText = screen.getByText('일반 일정');
+    expect(eventText).toBeInTheDocument();
+    expect(eventText).not.toHaveTextContent('🔁');
   });
 
   it('반복 일정인 경우 캘린더에 표시가 되어야 한다.', () => {

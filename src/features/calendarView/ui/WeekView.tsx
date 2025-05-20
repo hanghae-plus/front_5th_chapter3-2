@@ -62,6 +62,7 @@ const WeekView = ({ currentDate, filteredEvents, notifiedEvents }: Props) => {
                         <HStack spacing={1}>
                           {isNotified && <BellIcon />}
                           <Text fontSize="sm" noOfLines={1}>
+                            {event.repeat?.interval !== 0 && ' 🔁'}
                             {event.title}
                           </Text>
                         </HStack>
