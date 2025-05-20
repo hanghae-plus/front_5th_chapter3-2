@@ -75,7 +75,7 @@ export const handlers = [
     return new HttpResponse(null, { status: 404 });
   }),
 
-  http.delete('api/events-list', async ({ request }) => {
+  http.delete('/api/events-list', async ({ request }) => {
     const { eventIds: eventIdsToDelete } = (await request.json()) as { eventIds: string[] };
     const deletedEvents = events.filter((event) => eventIdsToDelete.includes(event.id));
     const isDeleted = deletedEvents.length === eventIdsToDelete.length;
