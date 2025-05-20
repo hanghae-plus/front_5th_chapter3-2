@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -103,9 +104,8 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
-  );
+  const { events, saveEvent, deleteEvent, saveRepeatedEvents, deleteAllRepeatedEvents } =
+    useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
@@ -138,6 +138,17 @@ function App() {
       return;
     }
 
+    const repeat = editingEvent
+      ? {
+          type: 'none' as RepeatType,
+          interval: 0,
+        }
+      : {
+          type: isRepeating ? repeatType : 'none',
+          interval: repeatInterval,
+          endDate: repeatEndDate || undefined,
+        };
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -147,13 +158,15 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat,
       notificationTime,
     };
+
+    if (isRepeating && !editingEvent) {
+      await saveRepeatedEvents(eventData);
+      resetForm();
+      return;
+    }
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
@@ -270,6 +283,7 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && <RepeatIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -499,18 +513,30 @@ function App() {
                       }
                     </Text>
                   </VStack>
-                  <HStack>
-                    <IconButton
-                      aria-label="Edit event"
-                      icon={<EditIcon />}
-                      onClick={() => editEvent(event)}
-                    />
-                    <IconButton
-                      aria-label="Delete event"
-                      icon={<DeleteIcon />}
-                      onClick={() => deleteEvent(event.id)}
-                    />
-                  </HStack>
+                  <VStack>
+                    <HStack>
+                      <IconButton
+                        aria-label="Edit event"
+                        icon={<EditIcon />}
+                        onClick={() => editEvent(event)}
+                      />
+                      <IconButton
+                        aria-label="Delete event"
+                        icon={<DeleteIcon />}
+                        onClick={() => deleteEvent(event.id)}
+                      />
+                    </HStack>
+                    {event.repeat.type !== 'none' && (
+                      <HStack>
+                        <Button
+                          data-testid="delete-all-repeated-events"
+                          onClick={() => deleteAllRepeatedEvents(event.repeat.id as string)}
+                        >
+                          모두 삭제
+                        </Button>
+                      </HStack>
+                    )}
+                  </VStack>
                 </HStack>
               </Box>
             ))
