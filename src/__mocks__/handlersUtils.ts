@@ -180,3 +180,35 @@ export const setupMockHandlerDeletion = () => {
     })
   );
 };
+
+export const setupMockHandlerEventListDeletion = () => {
+  let mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '삭제할 이벤트',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '삭제할 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.delete('/api/events-list', async ({ request }) => {
+      const body = await request.json();
+
+      const { eventIds } = body as { eventIds: string[] };
+
+      mockEvents = mockEvents.filter((event) => !eventIds.includes(event.id));
+
+      return HttpResponse.json(null, { status: 204 });
+    })
+  );
+};
