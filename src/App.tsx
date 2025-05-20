@@ -24,7 +24,6 @@ import {
   FormLabel,
   Heading,
   HStack,
-  Icon,
   IconButton,
   Input,
   Select,
@@ -40,7 +39,6 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
-
 import { IoIosAlarm } from 'react-icons/io';
 
 import EventRepeatSelect from './feature/events/ui/EventRepeatSelect.tsx';

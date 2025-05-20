@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 
 import {
@@ -237,7 +237,6 @@ describe('반복 유형 선택', () => {
       await result.current.saveEvent(updatedEvent);
     });
 
-    console.log(result.current.events);
     expect(result.current.events[result.current.events.length - 1].repeat.type).toBe('weekly');
     expect(result.current.events[result.current.events.length - 1].repeat.interval).toBe(1);
   });

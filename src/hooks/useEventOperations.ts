@@ -36,6 +36,8 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),
         });
+
+        await fetchEvents();
       } else {
         if (eventData.repeat.type === 'none') {
           response = await fetch('/api/events', {
@@ -43,16 +45,17 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(eventData),
           });
+
+          await fetchEvents();
         } else {
-          return await saveRepeatEvents(eventData);
+          saveRepeatEvents(eventData);
         }
       }
 
-      if (!response.ok) {
+      if (!response?.ok) {
         throw new Error('Failed to save event');
       }
 
-      await fetchEvents();
       onSave?.();
       toast({
         title: editing ? '일정이 수정되었습니다.' : '일정이 추가되었습니다.',
@@ -100,35 +103,18 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   };
 
   const saveRepeatEvents = async (eventData: Event | EventForm) => {
-    try {
-      const repeatEvents = generateRepeatEvents(eventData);
-      const response = await fetch('/api/events-list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ events: repeatEvents }),
-      });
+    const repeatEvents = generateRepeatEvents(eventData);
+    const response = await fetch('/api/events-list', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ events: repeatEvents }),
+    });
 
-      if (!response.ok) {
-        throw new Error('Failed to save repeat events');
-      }
-
-      await fetchEvents();
-      onSave?.();
-      toast({
-        title: '반복 일정이 저장되었습니다.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error('Error saving event:', error);
-      toast({
-        title: '반복 일정 저장 실패',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+    if (!response.ok) {
+      throw new Error('Failed to save repeat events');
     }
+
+    await fetchEvents();
   };
 
   async function init() {
