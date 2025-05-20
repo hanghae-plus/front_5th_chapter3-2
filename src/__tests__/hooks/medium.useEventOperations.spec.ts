@@ -1488,7 +1488,7 @@ describe('반복 일정 저장', () => {
     ]);
   });
 
-  it(`2월 29일의 일정을 '매월' 반복으로 설정하면, 29일이 존재하지 않는 달은 제외하고 저장한다.`, async () => {
+  it(`2월 29일의 일정을 '매년' 반복으로 설정하면, 평년의 2월은 제외하고 저장한다.`, async () => {
     setupMockHandlerCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
@@ -1500,7 +1500,7 @@ describe('반복 일정 저장', () => {
       description: '새로운 이벤트입니다.',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'monthly', interval: 1 },
+      repeat: { type: 'yearly', interval: 1 },
       notificationTime: 10,
     };
 
@@ -1518,79 +1518,79 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'yearly', interval: 1, id: '1' },
         notificationTime: 10,
       },
       {
         id: '3',
         title: '새로운 반복 이벤트',
-        date: '2028-11-16',
+        date: '2028-02-29',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'yearly', interval: 1, id: '1' },
         notificationTime: 10,
       },
       {
         id: '4',
         title: '새로운 반복 이벤트',
-        date: '2032-12-16',
+        date: '2032-02-29',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'yearly', interval: 1, id: '1' },
         notificationTime: 10,
       },
       {
         id: '5',
         title: '새로운 반복 이벤트',
-        date: '2036-01-16',
+        date: '2036-02-29',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'yearly', interval: 1, id: '1' },
         notificationTime: 10,
       },
       {
         id: '6',
         title: '새로운 반복 이벤트',
-        date: '2040-02-16',
+        date: '2040-02-29',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'yearly', interval: 1, id: '1' },
         notificationTime: 10,
       },
       {
         id: '7',
         title: '새로운 반복 이벤트',
-        date: '2044-02-16',
+        date: '2044-02-29',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'yearly', interval: 1, id: '1' },
         notificationTime: 10,
       },
       {
         id: '8',
         title: '새로운 반복 이벤트',
-        date: '2048-02-16',
+        date: '2048-02-29',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'yearly', interval: 1, id: '1' },
         notificationTime: 10,
       },
     ]);
@@ -1615,6 +1615,8 @@ describe('반복 일정 저장', () => {
     await act(async () => {
       await result.current.saveRepeatedEvents(newEvent);
     });
+
+    let lastId = result.current.events.length + 1;
 
     expect(result.current.events.slice(0, 5)).toEqual([
       {
@@ -1680,7 +1682,7 @@ describe('반복 일정 저장', () => {
     ]);
     expect(result.current.events.slice(-5)).toEqual([
       {
-        id: '2',
+        id: String(lastId - 4),
         title: '새로운 반복 이벤트',
         date: '2048-08-30',
         startTime: '09:00',
@@ -1692,7 +1694,7 @@ describe('반복 일정 저장', () => {
         notificationTime: 10,
       },
       {
-        id: '3',
+        id: String(lastId - 3),
         title: '새로운 반복 이벤트',
         date: '2048-09-30',
         startTime: '09:00',
@@ -1704,7 +1706,7 @@ describe('반복 일정 저장', () => {
         notificationTime: 10,
       },
       {
-        id: '4',
+        id: String(lastId - 2),
         title: '새로운 반복 이벤트',
         date: '2048-10-30',
         startTime: '09:00',
@@ -1716,7 +1718,7 @@ describe('반복 일정 저장', () => {
         notificationTime: 10,
       },
       {
-        id: '5',
+        id: String(lastId - 1),
         title: '새로운 반복 이벤트',
         date: '2048-11-30',
         startTime: '09:00',
@@ -1728,7 +1730,7 @@ describe('반복 일정 저장', () => {
         notificationTime: 10,
       },
       {
-        id: '6',
+        id: String(lastId),
         title: '새로운 반복 이벤트',
         date: '2048-12-30',
         startTime: '09:00',
@@ -1760,6 +1762,8 @@ describe('반복 일정 저장', () => {
     await act(async () => {
       await result.current.saveRepeatedEvents(newEvent);
     });
+
+    let lastId = result.current.events.length + 1;
 
     expect(result.current.events.slice(0, 5)).toEqual([
       {
@@ -1825,7 +1829,7 @@ describe('반복 일정 저장', () => {
     ]);
     expect(result.current.events.slice(-5)).toEqual([
       {
-        id: '2',
+        id: String(lastId - 4),
         title: '새로운 반복 이벤트',
         date: '2048-05-31',
         startTime: '09:00',
@@ -1837,7 +1841,7 @@ describe('반복 일정 저장', () => {
         notificationTime: 10,
       },
       {
-        id: '3',
+        id: String(lastId - 3),
         title: '새로운 반복 이벤트',
         date: '2048-07-31',
         startTime: '09:00',
@@ -1849,7 +1853,7 @@ describe('반복 일정 저장', () => {
         notificationTime: 10,
       },
       {
-        id: '4',
+        id: String(lastId - 2),
         title: '새로운 반복 이벤트',
         date: '2048-08-31',
         startTime: '09:00',
@@ -1861,7 +1865,7 @@ describe('반복 일정 저장', () => {
         notificationTime: 10,
       },
       {
-        id: '5',
+        id: String(lastId - 1),
         title: '새로운 반복 이벤트',
         date: '2048-10-31',
         startTime: '09:00',
@@ -1873,7 +1877,7 @@ describe('반복 일정 저장', () => {
         notificationTime: 10,
       },
       {
-        id: '6',
+        id: String(lastId),
         title: '새로운 반복 이벤트',
         date: '2048-12-31',
         startTime: '09:00',
