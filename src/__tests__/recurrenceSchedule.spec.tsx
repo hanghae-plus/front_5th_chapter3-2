@@ -102,3 +102,22 @@ describe('반복 일정 표시', () => {
     expect(formatEventTitle(testEvent)).toBe('일반 일정');
   });
 });
+
+describe('반복 종료', () => {
+  it('종료 조건이 "특정 날짜"일 경우, 해당 날짜까지만 반복된다.', () => {
+    const start = new Date('2025-05-01');
+    const repeat = {
+      type: 'daily',
+      interval: 1,
+      ends: {
+        type: 'untilDate',
+        endDate: new Date('2025-05-05'),
+      },
+    };
+
+    const result = generateRepeats(start, repeat);
+    const dates = result.map((d) => d.toISOString().slice(0, 10));
+
+    expect(dates).toEqual(['2025-05-01', '2025-05-02', '2025-05-03', '2025-05-04', '2025-05-05']);
+  });
+});
