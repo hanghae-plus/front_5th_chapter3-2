@@ -1,16 +1,16 @@
 // 반복 유형 선택
 
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, fireEvent, waitFor, act, renderHook } from '@testing-library/react';
+import { render, screen, fireEvent, act, renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { setupMockHandlerCreation } from '@/__mocks__/handlersUtils';
 import ScheduleEventForm from '@/entities/eventForm/ui/ScheduleEventForm';
+import CalendarView from '@/features/calendarView/ui/CalendarView';
 import { server } from '@/setupTests.ts';
 import { useEventOperations } from '@/shared/hooks/useEventOperations';
 import { generateRepeatEvents } from '@/shared/lib/generateRepeatEvents';
 import { RepeatType, Event, EventForm } from '@/types';
-import CalendarView from '@/features/calendarView/ui/CalendarView';
 
 /**
  * 1. **(필수) 반복 유형 선택**
