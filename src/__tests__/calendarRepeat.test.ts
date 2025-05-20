@@ -16,9 +16,8 @@ describe('매일 반복', () => {
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
-
     expect(result).toContainEqual({
-      id: '2',
+      id: 'fixed-id',
       title: 'test title',
       date: '2025-05-20',
       startTime: '10:00',
@@ -30,6 +29,8 @@ describe('매일 반복', () => {
       notificationTime: 1,
     });
   });
+
+  // TODO: 다음 버튼을 클릭하면 다음달에 적용
 });
 
 describe('매주 반복', () => {
@@ -49,7 +50,7 @@ describe('매주 반복', () => {
     const result = getRepeatingEvents(event);
 
     expect(result).toContainEqual({
-      id: '2',
+      id: 'fixed-id',
       title: 'test title',
       date: '2025-05-26',
       startTime: '10:00',
@@ -80,7 +81,7 @@ describe('매월 반복', () => {
     const result = getRepeatingEvents(event);
 
     expect(result).toContainEqual({
-      id: '2',
+      id: 'fixed-id',
       title: 'test title',
       date: '2025-06-19',
       startTime: '10:00',
@@ -109,9 +110,38 @@ describe('매월 반복', () => {
     const result = getRepeatingEvents(event);
 
     expect(result).toContainEqual({
-      id: '2',
+      id: 'fixed-id',
       title: 'test title',
       date: '2028-03-29',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: 'test description',
+      location: 'test home',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 0 },
+      notificationTime: 1,
+    });
+  });
+
+  it('등록한 일정이 1월 31일이면 다음달 2월 28일로 일정이 등록된다.', () => {
+    const event: Event = {
+      id: '2',
+      title: 'test title',
+      date: '2025-01-31',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: 'test description',
+      location: 'test home',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 0 },
+      notificationTime: 1,
+    };
+    const result = getRepeatingEvents(event);
+
+    expect(result).toContainEqual({
+      id: 'fixed-id',
+      title: 'test title',
+      date: '2025-02-28',
       startTime: '10:00',
       endTime: '11:00',
       description: 'test description',
@@ -140,7 +170,7 @@ describe('매년 반복', () => {
     const result = getRepeatingEvents(event);
 
     expect(result).toContainEqual({
-      id: '2',
+      id: 'fixed-id',
       title: 'test title',
       date: '2026-05-19',
       startTime: '10:00',
@@ -152,8 +182,8 @@ describe('매년 반복', () => {
       notificationTime: 1,
     });
   });
-
-  it('등록한 일정이 윤년 29일이면 다음 윤년 29일에 반복된다.', () => {
+  // 아이폰 캘린더 기준 윤달이면 해당 월의 말일로 설정
+  it('등록한 일정이 윤년 29일이면 윤년이 아닌 월은 말일에 등록된다', () => {
     const event: Event = {
       id: '2',
       title: 'test title',
@@ -169,9 +199,9 @@ describe('매년 반복', () => {
     const result = getRepeatingEvents(event);
 
     expect(result).toContainEqual({
-      id: '2',
+      id: 'fixed-id',
       title: 'test title',
-      date: '2032-02-29',
+      date: '2029-02-28',
       startTime: '10:00',
       endTime: '11:00',
       description: 'test description',
@@ -184,7 +214,7 @@ describe('매년 반복', () => {
     expect(result).not.toContainEqual({
       id: '2',
       title: 'test title',
-      date: '2031-02-28',
+      date: '2030-03-01',
       startTime: '10:00',
       endTime: '11:00',
       description: 'test description',
