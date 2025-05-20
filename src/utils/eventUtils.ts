@@ -1,5 +1,5 @@
 import { Event, EventForm } from '../types';
-import { formatDate, getWeekDates, isDateInRange } from './dateUtils';
+import { formatDate, getDateByInterval, getWeekDates, isDateInRange } from './dateUtils';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
   return events.filter((event) => {
@@ -61,7 +61,7 @@ export function generateRepeatEvents(event: Event | EventForm) {
       ...event,
       date: formatDate(currentDate),
     });
-    currentDate.setDate(currentDate.getDate() + event.repeat.interval);
+    currentDate = getDateByInterval(currentDate, event.repeat.type, event.repeat.interval);
   }
 
   return repeatEvents;
