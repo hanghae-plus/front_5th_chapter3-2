@@ -69,6 +69,39 @@ const notificationOptions = [
   { value: 1440, label: '1일 전' },
 ];
 
+function expandRecurringEvents(events, startDate, endDate) {
+  const expanded: any = [];
+  events.forEach((event: any) => {
+    if (event.repeat.type === 'none') {
+      expanded.push(event);
+      return;
+    }
+    const interval = event.repeat.interval || 1;
+    const repeatEnd = event.repeat.endDate ? new Date(event.repeat.endDate) : endDate;
+    let current = new Date(event.date);
+    while (current <= endDate && current <= repeatEnd) {
+      if (current >= startDate) {
+        expanded.push({ ...event, date: current.toISOString().slice(0, 10) });
+      }
+      switch (event.repeat.type) {
+        case 'daily':
+          current.setDate(current.getDate() + interval);
+          break;
+        case 'weekly':
+          current.setDate(current.getDate() + 7 * interval);
+          break;
+        case 'monthly':
+          current.setMonth(current.getMonth() + interval);
+          break;
+        case 'yearly':
+          current.setFullYear(current.getFullYear() + interval);
+          break;
+      }
+    }
+  });
+  return expanded;
+}
+
 function App() {
   const {
     title,
@@ -219,6 +252,18 @@ function App() {
 
   const renderMonthView = () => {
     const weeks = getWeeksAtMonth(currentDate);
+    // 한 달의 시작~끝 날짜 구하기
+    const flatDays = weeks.flat().filter((d): d is number => typeof d === 'number');
+    const firstDay =
+      flatDays.length > 0
+        ? new Date(currentDate.getFullYear(), currentDate.getMonth(), flatDays[0])
+        : currentDate;
+    const lastDay =
+      flatDays.length > 0
+        ? new Date(currentDate.getFullYear(), currentDate.getMonth(), flatDays[flatDays.length - 1])
+        : currentDate;
+    // 반복일정까지 포함해서 전개
+    const expandedEvents = expandRecurringEvents(filteredEvents, firstDay, lastDay);
 
     return (
       <VStack data-testid="month-view" align="stretch" w="full" spacing={4}>
@@ -227,9 +272,7 @@ function App() {
           <Thead>
             <Tr>
               {weekDays.map((day) => (
-                <Th key={day} width="14.28%">
-                  {day}
-                </Th>
+                <Th key={day} width="14.28%">{day}</Th>
               ))}
             </Tr>
           </Thead>
@@ -237,46 +280,38 @@ function App() {
             {weeks.map((week, weekIndex) => (
               <Tr key={weekIndex}>
                 {week.map((day, dayIndex) => {
-                  const dateString = day ? formatDate(currentDate, day) : '';
+                  const dateObj = day ? new Date(currentDate.getFullYear(), currentDate.getMonth(), day) : null;
+                  const dateString = dateObj ? dateObj.toISOString().slice(0, 10) : '';
                   const holiday = holidays[dateString];
-
                   return (
-                    <Td
-                      key={dayIndex}
-                      height="100px"
-                      verticalAlign="top"
-                      width="14.28%"
-                      position="relative"
-                    >
+                    <Td key={dayIndex} height="100px" verticalAlign="top" width="14.28%" position="relative">
                       {day && (
                         <>
                           <Text fontWeight="bold">{day}</Text>
                           {holiday && (
-                            <Text color="red.500" fontSize="sm">
-                              {holiday}
-                            </Text>
+                            <Text color="red.500" fontSize="sm">{holiday}</Text>
                           )}
-                          {getEventsForDay(filteredEvents, day).map((event) => {
-                            const isNotified = notifiedEvents.includes(event.id);
-                            return (
-                              <Box
-                                key={event.id}
-                                p={1}
-                                my={1}
-                                bg={isNotified ? 'red.100' : 'gray.100'}
-                                borderRadius="md"
-                                fontWeight={isNotified ? 'bold' : 'normal'}
-                                color={isNotified ? 'red.500' : 'inherit'}
-                              >
-                                <HStack spacing={1}>
-                                  {isNotified && <BellIcon />}
-                                  <Text fontSize="sm" noOfLines={1}>
-                                    {event.title}
-                                  </Text>
-                                </HStack>
-                              </Box>
-                            );
-                          })}
+                          {expandedEvents
+                            .filter(event => event.date === dateString)
+                            .map(event => {
+                              const isNotified = notifiedEvents.includes(event.id);
+                              return (
+                                <Box
+                                  key={event.id}
+                                  p={1}
+                                  my={1}
+                                  bg={isNotified ? 'red.100' : 'gray.100'}
+                                  borderRadius="md"
+                                  fontWeight={isNotified ? 'bold' : 'normal'}
+                                  color={isNotified ? 'red.500' : 'inherit'}
+                                >
+                                  <HStack spacing={1}>
+                                    {isNotified && <BellIcon />}
+                                    <Text fontSize="sm" noOfLines={1}>{event.title}</Text>
+                                  </HStack>
+                                </Box>
+                              );
+                            })}
                         </>
                       )}
                     </Td>

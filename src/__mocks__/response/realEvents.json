@@ -57,7 +57,7 @@
       "description": "주간 운동",
       "location": "헬스장",
       "category": "개인",
-      "repeat": { "type": "none", "interval": 0 },
+      "repeat": { "type": "daily", "interval": 0, "endDate": "2025-05-24" },
       "notificationTime": 1
     }
   ]
