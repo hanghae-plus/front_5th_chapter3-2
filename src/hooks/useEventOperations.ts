@@ -2,6 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import { formatDate } from '../utils/dateUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -28,23 +29,70 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
-      let response;
-      if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
+      // 새 이벤트 등록 시
+      if (!editing) {
+        if (eventData.repeat && eventData.repeat.type !== 'none') {
+          // 반복 이벤트라면 반복 이벤트 저장 엔드포인트에 바로 저장
+          // (단일 이벤트 저장 X)
+          const { type, interval } = eventData.repeat;
+          const baseDate = new Date(eventData.date);
+
+          const repeatEvents: Omit<Event, 'id'>[] = [];
+          // 원래 일정 포함 + 추가 반복 일정
+          // ex) interval이 1이면 두 개의 이벤트(원래 일정 + 1회 반복)를 생성
+          for (let i = 0; i <= interval; i++) {
+            const nextDate = new Date(baseDate);
+
+            if (type === 'daily') {
+              nextDate.setDate(nextDate.getDate() + i);
+            } else if (type === 'weekly') {
+              nextDate.setDate(nextDate.getDate() + i * 7);
+            } else if (type === 'monthly') {
+              nextDate.setMonth(nextDate.getMonth() + i);
+            } else if (type === 'yearly') {
+              nextDate.setFullYear(nextDate.getFullYear() + i);
+            }
+
+            repeatEvents.push({
+              ...eventData,
+              date: formatDate(nextDate),
+              repeat: {
+                ...eventData.repeat,
+                id: `repeat-${i + 1}`
+              }
+            });
+          }
+
+          const response = await fetch('/api/events-list', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ events: repeatEvents }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to create repeat events');
+          }
+
+          const createdEvents = await response.json();
+          setEvents(createdEvents);
+        } else {
+          await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          })
+        }
+      } else {
+        // 편집 모드라면 PUT으로 업데이트
+        const response = await fetch(`/api/events/${(eventData as Event).id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),
         });
-      } else {
-        response = await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to save event');
+        
+        if (!response.ok) {
+          throw new Error('Failed to update event');
+        }
       }
 
       await fetchEvents();

@@ -203,8 +203,8 @@ describe('반복 일정 기능', () => {
     });
 
     expect(result.current.events).toEqual([
-      { ...newEvent, id: '1' },
-      { ...newEvent, date: '2025-01-02', id: '2' },
+      { ...newEvent, id: '1', repeat: { ...newEvent.repeat, id: 'repeat-1' } },
+      { ...newEvent, date: '2025-01-02', id: '2', repeat: { ...newEvent.repeat, id: 'repeat-1' } },
     ]);
   })
 })
