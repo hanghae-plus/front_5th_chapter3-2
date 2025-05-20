@@ -179,7 +179,7 @@ describe('매월 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'monthly', interval: 0 },
+      repeat: { type: 'monthly', interval: 2 },
       notificationTime: 1,
     });
   });
