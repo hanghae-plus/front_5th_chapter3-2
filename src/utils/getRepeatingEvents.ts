@@ -9,7 +9,7 @@ function* dailyEventGenerator(eventData: Event | EventForm) {
 
   const repeatInterval = eventData.repeat.interval || 1;
 
-  while (!eventData.repeat.endDate) {
+  while (true) {
     yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
     date.setDate(date.getDate() + repeatInterval);
   }
@@ -20,7 +20,7 @@ function* weeklyEventGenerator(eventData: Event | EventForm) {
   const repeatInterval = eventData.repeat.interval || 1;
   const week = repeatInterval * WEEK_NUM;
 
-  while (!eventData.repeat.endDate) {
+  while (true) {
     yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
     date.setDate(date.getDate() + week);
   }
@@ -33,7 +33,7 @@ function* monthEventGenerator(eventData: Event | EventForm) {
 
   const repeatInterval = eventData.repeat.interval || 1;
 
-  while (!eventData.repeat.endDate) {
+  while (true) {
     yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
     const currentMonth = date.getMonth() + repeatInterval;
 
@@ -53,7 +53,7 @@ function* yearEventGenerator(eventData: Event | EventForm) {
 
   const repeatInterval = eventData.repeat.interval || 1;
 
-  while (!eventData.repeat.endDate) {
+  while (true) {
     yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
     date.setFullYear(date.getFullYear() + repeatInterval);
 
