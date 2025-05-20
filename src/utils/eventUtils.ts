@@ -1,5 +1,5 @@
 import { Event } from '../types';
-import { getWeekDates, isDateInRange, isValidDate } from './dateUtils';
+import { formatDate, getWeekDates, isDateInRange, isValidDate, stripTime } from './dateUtils';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
   return events.filter((event) => {
@@ -34,26 +34,36 @@ function expandRepeatingEvents(events: Event[], rangeStart: Date, rangeEnd: Date
   const expanded: Event[] = [];
   const modifiedMap = new Map<string, boolean>();
 
+  const rangeStartDate = stripTime(rangeStart);
+  const rangeEndDate = stripTime(rangeEnd);
+
   for (const event of events) {
     if (!event.repeat || event.repeat.type === 'none') {
       expanded.push(event);
     } else if (!('originalRepeatId' in event)) {
       const { type, interval, endDate } = event.repeat;
-      const repeatEnd = isValidDate(endDate) ? new Date(endDate!) : new Date('2025-09-30');
-      const start = new Date(event.date);
+
+      const repeatEnd = stripTime(isValidDate(endDate) ? new Date(endDate!) : rangeEnd);
+      const start = stripTime(new Date(event.date));
 
       let current = new Date(start);
-      while (current <= repeatEnd && current <= rangeEnd) {
-        if (current >= rangeStart) {
-          const dateStr = current.toISOString().split('T')[0];
+      let preservedDay: number | null = null;
+
+      while (stripTime(current) <= repeatEnd && stripTime(current) <= rangeEndDate) {
+        const strippedCurrent = stripTime(current);
+
+        if (strippedCurrent >= rangeStartDate) {
+          const dateStr = formatDate(strippedCurrent);
           const key = `${event.id}_${dateStr}`;
+
           if (!modifiedMap.has(key)) {
             expanded.push({
               ...event,
-              id: `${event.id}_${dateStr}`, // 각 반복 회차 고유 ID
+              id: `${event.id}_${dateStr}`,
               date: dateStr,
               repeat: event.repeat,
             });
+            modifiedMap.set(key, true);
           }
         }
 
@@ -64,9 +74,26 @@ function expandRepeatingEvents(events: Event[], rangeStart: Date, rangeEnd: Date
           case 'weekly':
             current.setDate(current.getDate() + 7 * interval);
             break;
-          case 'monthly':
-            current.setMonth(current.getMonth() + interval);
+          case 'monthly': {
+            const next = new Date(current);
+            next.setDate(1); // 안전하게 1일로 초기화
+            next.setMonth(next.getMonth() + interval);
+
+            const originalDay: number = preservedDay ?? start.getDate();
+            const maxDays = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+
+            if (originalDay > maxDays) {
+              next.setDate(1);
+              next.setMonth(next.getMonth() + 1);
+              preservedDay = 1;
+            } else {
+              next.setDate(originalDay);
+              preservedDay = originalDay;
+            }
+
+            current = next;
             break;
+          }
           case 'yearly':
             current.setFullYear(current.getFullYear() + interval);
             break;
