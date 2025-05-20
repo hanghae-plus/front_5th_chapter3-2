@@ -129,16 +129,7 @@ function CalendarPage() {
 
     const eventsToSave = generateRepeatEvents(eventData);
 
-    // const overlapping = findOverlappingEvents(eventData, events);
     const overlapping = eventsToSave.flatMap((ev) => findOverlappingEvents(ev, events));
-
-    // if (overlapping.length > 0) {
-    //   setOverlappingEvents(overlapping);
-    //   setIsOverlapDialogOpen(true);
-    // } else {
-    //   await saveEvent(eventData);
-    //   resetForm();
-    // }
 
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);

@@ -23,7 +23,6 @@ export function generateRepeatEvents(baseEvent: EventForm): Event[] {
 
   const startDay = start.getDate();
   const startMonth = start.getMonth();
-  const startYear = start.getFullYear();
 
   if (repeat.type === 'daily') {
     for (let i = 0; i < count; i++) {

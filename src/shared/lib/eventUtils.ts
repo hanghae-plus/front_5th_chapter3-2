@@ -62,6 +62,10 @@ function filterEventsByDateRangeAtWeek(events: Event[], currentDate: Date) {
 function filterEventsByDateRangeAtMonth(events: Event[], currentDate: Date) {
   const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
   const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+  // 👇 end 범위를 하루의 끝까지 늘려줌
+  monthEnd.setHours(23, 59, 59, 999);
+
   return filterEventsByDateRange(events, monthStart, monthEnd);
 }
 
