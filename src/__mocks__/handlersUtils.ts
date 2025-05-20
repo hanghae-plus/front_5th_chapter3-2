@@ -182,18 +182,21 @@ export const setupMockHandlerDeletion = () => {
 };
 
 export const setupMockHandlerEventListDeletion = () => {
-  let mockEvents: Event[] = [
+  let mockEvents = [
     {
-      id: '1',
-      title: '삭제할 이벤트',
+      category: '업무',
       date: '2025-10-15',
-      startTime: '09:00',
+      description: '기존 팀 미팅',
       endTime: '10:00',
-      description: '삭제할 이벤트입니다',
-      location: '어딘가',
-      category: '기타',
-      repeat: { type: 'none', interval: 0 },
+      id: '1',
+      location: '회의실 B',
       notificationTime: 10,
+      repeat: {
+        interval: 0,
+        type: 'none',
+      },
+      startTime: '09:00',
+      title: '기존 회의',
     },
   ];
 
@@ -202,11 +205,11 @@ export const setupMockHandlerEventListDeletion = () => {
       return HttpResponse.json({ events: mockEvents });
     }),
     http.delete('/api/events-list', async ({ request }) => {
-      const body = await request.json();
+      const body = (await request.json()) as { eventIds: string[] };
 
-      const { eventIds } = body as { eventIds: string[] };
-
-      mockEvents = mockEvents.filter((event) => !eventIds.includes(event.id));
+      const filtered = mockEvents.filter((e) => !body.eventIds.includes(e.id));
+      mockEvents.length = 0;
+      mockEvents.push(...filtered);
 
       return HttpResponse.json(null, { status: 204 });
     })

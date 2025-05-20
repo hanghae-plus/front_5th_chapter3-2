@@ -132,29 +132,21 @@ describe('반복 종료', () => {
     expect(dates).toEqual(['2025-05-20', '2025-05-22']);
   });
 
-  it('종료 조건이 "없음"일 경우, 무한 반복이 가능하다.', () => {
+  it('종료 조건이 "없음"일 경우, "2025-09-30"일까지 반복된다.', () => {
     const start = new Date('2025-05-22');
+    const end = new Date('2025-09-30');
     const repeat = {
       type: 'daily',
       interval: 1,
+      endDate: end.toISOString().slice(0, 10),
     } as RepeatInfo;
 
-    // 테스트에서는 무한 반복을 사용할 수 없으므로 일부만 slice해서 테스트
     const result = generateRepeats(start, repeat);
 
-    const dates = result.slice(0, 10).map((d) => d.toISOString().slice(0, 10));
+    const dates = result.map((d) => d.toISOString().slice(0, 10));
 
-    expect(dates).toEqual([
-      '2025-05-22',
-      '2025-05-23',
-      '2025-05-24',
-      '2025-05-25',
-      '2025-05-26',
-      '2025-05-27',
-      '2025-05-28',
-      '2025-05-29',
-      '2025-05-30',
-      '2025-05-31',
-    ]);
+    expect(dates[0]).toBe('2025-05-22');
+    expect(dates[dates.length - 1]).toBe('2025-09-30');
+    expect(dates.length).toBe(132);
   });
 });

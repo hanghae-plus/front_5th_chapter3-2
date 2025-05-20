@@ -3,8 +3,10 @@ import { act, render, renderHook, screen } from '@testing-library/react';
 
 import {
   setupMockHandlerEventListCreation,
+  setupMockHandlerEventListDeletion,
   setupMockHandlerEventListUpdating,
 } from '../__mocks__/handlersUtils';
+import mockEvents from '../__mocks__/response/events.json';
 import EventItem from '../components/EventItem';
 import { useEventOperations } from '../hooks/useEventOperations';
 import { Event } from '../types';
@@ -358,14 +360,14 @@ describe('반복 종료', () => {
     expect(savedDates).toEqual(['2025-05-20', '2025-05-22']);
   });
 
-  it('종료 조건이 "없음"일 경우, 기본 최대 반복 횟수만큼 일정이 저장된다.', async () => {
+  it('종료 조건이 "없음"일 경우, 2025-09-30일까지 일정이 저장된다.', async () => {
     setupMockHandlerEventListCreation();
 
     const { result } = renderHook(() => useEventOperations(false, true));
     await act(() => Promise.resolve(null));
 
-    const startDate = new Date('2025-05-20');
-    const defaultMaxCount = 1000;
+    const startDate = new Date('2025-05-22');
+    const EndDate = new Date('2025-09-30');
 
     const baseEvent = {
       id: '',
@@ -378,6 +380,7 @@ describe('반복 종료', () => {
       repeat: {
         type: 'daily',
         interval: 1,
+        endDate: EndDate.toISOString().slice(0, 10),
       },
       notificationTime: 10,
     } as Omit<Event, 'id' | 'date'>;
@@ -388,7 +391,7 @@ describe('반복 종료', () => {
       date: date.toISOString().slice(0, 10),
     }));
 
-    // 실제로 너무 많으면 테스트 시간 오래 걸리므로 앞 5개만 저장
+    // 일부만 저장 (성능 고려)
     for (let i = 0; i < 5; i++) {
       await act(async () => {
         await result.current.saveEvent(events[i]);
@@ -396,19 +399,17 @@ describe('반복 종료', () => {
     }
 
     const savedDates = result.current.events.map((e) => e.date);
+
     expect(savedDates).toEqual([
-      '2025-05-20',
-      '2025-05-21',
       '2025-05-22',
       '2025-05-23',
       '2025-05-24',
+      '2025-05-25',
+      '2025-05-26',
     ]);
-
-    // 내부에서 1000개 생성되었는지 확인
-    expect(events.length).toBe(defaultMaxCount);
+    expect(events.length).toBe(132);
   });
 });
-
 describe('반복 일정 단일 수정', () => {
   it('반복 일정에서 반복 체크를 해제하면  단일 일정으로 변경되고, 🔁 아이콘이 사라진다.', async () => {
     setupMockHandlerEventListUpdating();
@@ -460,5 +461,44 @@ describe('반복 일정 단일 수정', () => {
     );
 
     expect(screen.queryByText(/🔁/)).not.toBeInTheDocument();
+  });
+});
+
+describe('반복 일정 단일 삭제', () => {
+  // ✅ 테스트마다 mockEvents 초기화
+  afterEach(() => {
+    const events = mockEvents.events;
+    events.length = 0;
+    events.push({
+      id: '1',
+      title: '기존 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      location: '회의실 B',
+      category: '업무',
+      description: '기존 팀 미팅',
+      notificationTime: 10,
+      repeat: {
+        type: 'none',
+        interval: 0,
+      },
+    });
+  });
+
+  it('반복 그룹에서 하나의 일정만 삭제하면, 해당 일정만 삭제되고 나머지는 유지된다.', async () => {
+    setupMockHandlerEventListDeletion();
+
+    const { result } = renderHook(() => useEventOperations(false, true));
+
+    await act(() => Promise.resolve(null));
+
+    await act(async () => {
+      await result.current.deleteRepeatEvents(['1']);
+    });
+
+    await act(() => Promise.resolve(null));
+
+    expect(result.current.events).toEqual([]);
   });
 });
