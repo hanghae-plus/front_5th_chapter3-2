@@ -406,39 +406,57 @@ describe('반복 종료', () => {
   });
 });
 
-// describe('반복 일정 단일 수정', () => {
-//   it('반복 일정 체크 해제 시 🔁 아이콘이 사라진다.', () => {
-//     render(<EventForm />);
+describe('반복 일정 단일 수정', () => {
+  it('반복 일정에서 반복 체크를 해제하면  단일 일정으로 변경되고, 🔁 아이콘이 사라진다.', async () => {
+    setupMockHandlerEventListCreation();
 
-//     const checkbox = screen.getByLabelText(/반복 일정/i);
-//     const checkboxWrapper = checkbox.closest('label');
+    const { result } = renderHook(() => useEventOperations(false, true));
+    await act(() => Promise.resolve(null));
 
-//     console.log('chec', checkbox);
+    // 1. 반복 일정 저장
+    const originalEvent = {
+      id: '',
+      title: '반복 회의',
+      date: '2025-05-20',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-05-30',
+      },
+      notificationTime: 10,
+    } as Omit<Event, 'id'>;
 
-//     // 체크 → 체크 해제
-//     fireEvent.click(checkbox); // ON
-//     expect(checkboxWrapper).toHaveAttribute('data-checked');
+    await act(async () => {
+      await result.current.saveEvent(originalEvent);
+    });
 
-//     fireEvent.click(checkbox); // OFF
-//     expect(checkboxWrapper).not.toHaveAttribute('data-checked');
-//   });
+    const saved = result.current.events[0];
 
-//   it('반복일정을 수정하면 단일 일정으로 변경된다.', () => {
-//     const originalEvent = {
-//       id: 'abc',
-//       title: '매일 아침 회의',
-//       date: '2025-05-22',
-//       repeat: {
-//         type: 'daily',
-//         interval: 1,
-//         endDate: '2025-06-22',
-//       },
-//       isRepeating: true,
-//     };
+    // 2. 반복 설정 해제하여 단일 일정으로 변경
+    const updatedEvent = {
+      ...saved,
+      repeat: {
+        type: 'none', // 🔁 해제
+        interval: 0,
+      },
+    } as Event;
 
-//     const updatedEvent = updateRepeatToNone(originalEvent);
+    await act(async () => {
+      await result.current.saveEvent(updatedEvent);
+    });
 
-//     expect(updatedEvent.repeat.type).toBe('none');
-//     expect(updatedEvent.isRepeating).toBe(false); // UI용 부가 확인
-//   });
-// });
+    render(
+      <ChakraProvider>
+        <EventItem event={result.current.events[0]} isNotified={false} />
+      </ChakraProvider>
+    );
+    console.log('result.current.events[0]', updatedEvent);
+
+    expect(screen.queryByText(/🔁/)).not.toBeInTheDocument();
+  });
+});
