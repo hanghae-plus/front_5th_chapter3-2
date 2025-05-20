@@ -53,6 +53,7 @@ export const createRepeatEvents = (event: Event | EventForm): EventForm[] => {
   // 최대 일자 2025-09-30 ..?
   const events: EventForm[] = [];
   const { type, interval, endDate } = event.repeat;
+
   if (type === 'none' || interval === 0) return [event];
   const st = new Date(event.date);
   const ed = endDate ? new Date(endDate) : new Date('2026-06-30'); // test
@@ -80,6 +81,24 @@ export const createRepeatEvents = (event: Event | EventForm): EventForm[] => {
 
       cur = next;
     }
+  } else if (type === 'yearly') {
+    for (let cur = new Date(st); cur <= ed; ) {
+      events.push({ ...event, date: formatDate(new Date(cur)) });
+
+      const next = new Date(cur);
+      next.setFullYear(next.getFullYear() + interval);
+      next.setMonth(st.getMonth());
+      next.setDate(st.getDate());
+
+      if (next.getMonth() !== st.getMonth() || next.getDate() !== st.getDate()) {
+        next.setMonth(0);
+        next.setDate(1);
+        next.setFullYear(next.getFullYear() + 1);
+      }
+
+      cur = next;
+    }
   }
+
   return events;
 };
