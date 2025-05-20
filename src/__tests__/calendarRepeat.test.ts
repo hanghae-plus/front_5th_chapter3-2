@@ -1,6 +1,5 @@
 import { Event } from '../types';
 import { getRepeatingEvents } from '../utils/getRepeatingEvents';
-// TODO: 다음 버튼을 클릭하면 다음달에 적용
 
 describe('매일 반복', () => {
   it('등록한 일정이 매일 반복된다.', () => {
@@ -73,7 +72,7 @@ describe('매일 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'daily', interval: 2, endDate: '2025-09-30' },
+      repeat: { type: 'daily', interval: 0, endDate: '2025-09-30' },
       notificationTime: 1,
     };
 
@@ -111,7 +110,7 @@ describe('매일 반복', () => {
 
     const result = getRepeatingEvents(event);
 
-    expect(result).toContainEqual({
+    expect(result).not.toContainEqual({
       id: 'fixed-id',
       title: 'test title',
       date: '2025-10-01',
