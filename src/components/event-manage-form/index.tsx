@@ -33,7 +33,9 @@ export const EventManageForm = () => {
     isRepeating,
     setIsRepeating,
     repeatType,
+    setRepeatType,
     repeatInterval,
+    setRepeatInterval,
     repeatEndDate,
     notificationTime,
     startTimeError,
@@ -85,18 +87,21 @@ export const EventManageForm = () => {
       notificationTime,
     };
 
-    if (isRepeating && repeatType !== 'none') {
-      await saveRepeatEvent(eventData);
-      resetForm();
-      return;
-    }
+    // 단일 수정으로 진행 시에 반복 제거
+    if (editingEvent) eventData.repeat = { type: 'none', interval: 0 };
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      // 단일 생성으로 일단 구현
+      console.log(isRepeating, repeatType);
+      if (isRepeating && repeatType !== 'none') {
+        await saveRepeatEvent(eventData);
+      } else {
+        await saveEvent(eventData);
+      }
       resetForm();
     }
   };
@@ -131,7 +136,14 @@ export const EventManageForm = () => {
 
       <FormControl>
         <FormLabel>반복 설정</FormLabel>
-        <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+        <Checkbox
+          isChecked={isRepeating}
+          onChange={(e) => {
+            setIsRepeating(e.target.checked);
+            setRepeatType(e.target.checked ? 'daily' : 'none');
+            setRepeatInterval(e.target.checked ? 1 : 0);
+          }}
+        >
           반복 일정
         </Checkbox>
       </FormControl>
