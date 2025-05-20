@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -26,6 +27,8 @@ import {
   HStack,
   IconButton,
   Input,
+  Radio,
+  RadioGroup,
   Select,
   Table,
   Tbody,
@@ -114,6 +117,9 @@ function App() {
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
   const cancelRef = useRef<HTMLButtonElement>(null);
+
+  const [repeatEndOption, setRepeatEndOption] = useState<'untilDate' | 'count' | 'none'>('none');
+  const [repeatCount, setRepeatCount] = useState(1);
 
   const toast = useToast();
 
@@ -400,14 +406,48 @@ function App() {
                     min={1}
                   />
                 </FormControl>
+              </HStack>
+              <HStack width="100%">
                 <FormControl>
-                  <FormLabel>반복 종료일</FormLabel>
-                  <Input
-                    type="date"
-                    value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
-                  />
+                  <FormLabel>반복 종료 조건</FormLabel>
+                  <RadioGroup
+                    onChange={(value) =>
+                      setRepeatEndOption(value as 'untilDate' | 'count' | 'none')
+                    }
+                    value={repeatEndOption}
+                  >
+                    <VStack align="start">
+                      <Radio value="untilDate">날짜까지 반복</Radio>
+                      <Radio value="count">횟수 제한 반복</Radio>
+                      <Radio value="none">종료 없음</Radio>
+                    </VStack>
+                  </RadioGroup>
                 </FormControl>
+
+                {repeatEndOption === 'untilDate' && (
+                  <FormControl>
+                    <FormLabel htmlFor="repeat-end-date">반복 종료일</FormLabel>
+                    <Input
+                      id="repeat-end-date"
+                      type="date"
+                      value={repeatEndDate}
+                      onChange={(e) => setRepeatEndDate(e.target.value)}
+                    />
+                  </FormControl>
+                )}
+
+                {repeatEndOption === 'count' && (
+                  <FormControl>
+                    <FormLabel htmlFor="repeat-count">반복 횟수</FormLabel>
+                    <Input
+                      id="repeat-count"
+                      type="number"
+                      value={repeatCount}
+                      onChange={(e) => setRepeatCount(Number(e.target.value))}
+                      min={1}
+                    />
+                  </FormControl>
+                )}
               </HStack>
             </VStack>
           )}
@@ -459,7 +499,14 @@ function App() {
             <Text>검색 결과가 없습니다.</Text>
           ) : (
             filteredEvents.map((event) => (
-              <Box key={event.id} borderWidth={1} borderRadius="lg" p={3} width="100%">
+              <Box
+                data-testid="event-item"
+                key={event.id}
+                borderWidth={1}
+                borderRadius="lg"
+                p={3}
+                width="100%"
+              >
                 <HStack justifyContent="space-between">
                   <VStack align="start">
                     <HStack>
@@ -470,6 +517,9 @@ function App() {
                       >
                         {event.title}
                       </Text>
+                      {event.repeat?.type !== 'none' && (
+                        <RepeatIcon data-testid="repeat-icon" boxSize={4} color="blue.500" />
+                      )}
                     </HStack>
                     <Text>{event.date}</Text>
                     <Text>

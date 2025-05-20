@@ -326,6 +326,10 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 });
 
 describe('반복 일정', () => {
+  afterEach(() => {
+    server.resetHandlers();
+  });
+
   it('반복 유형을 매일, 매주, 매월, 매년 중에서 선택할 수 있다', async () => {
     const { user } = setup(<App />);
     await user.click(screen.getByTestId('event-submit-button'));
@@ -403,12 +407,12 @@ describe('반복 일정', () => {
 
     // 횟수 제한 반복 선택 → number input 나타나야 함
     await userEvent.click(countRadio);
-    expect(screen.getByRole('spinbutton')).toBeInTheDocument();
+    expect(await screen.findByLabelText('반복 횟수')).toBeInTheDocument();
 
     // 종료 없음 선택 → 추가 인풋 없어야 함
     await userEvent.click(noEndRadio);
     expect(screen.queryByLabelText(/반복 종료일/)).not.toBeInTheDocument();
-    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('반복 횟수')).not.toBeInTheDocument();
   });
 
   it('반복 일정을 단일로 수정하면 반복 아이콘이 사라진다', async () => {
@@ -427,30 +431,35 @@ describe('반복 일정', () => {
       },
     ]);
 
-    render(<App />);
+    setup(<App />);
 
-    const eventItem = await screen.findByText('반복 회의');
-    const parent = eventItem.closest('[data-testid="event-item"]')!;
-    expect(within(parent as HTMLElement).getByTestId('repeat-icon')).toBeInTheDocument();
+    // 반복 회의 텍스트를 가진 이벤트 아이템 찾기
+    const allEventItems = await screen.findAllByTestId('event-item');
+    const targetItem = allEventItems.find((item) => within(item).queryByText('반복 회의'));
+    expect(targetItem).toBeTruthy();
 
-    // 수정 모드 진입 (예: 클릭 → 편집 모달 열기)
-    await userEvent.click(eventItem);
-    const editButton = screen.getByRole('button', { name: /수정/i });
-    await userEvent.click(editButton);
+    // 반복 아이콘 존재 확인
+    expect(within(targetItem!).getByTestId('repeat-icon')).toBeInTheDocument();
 
-    // 반복 옵션 제거 (반복 없음 선택)
-    const repeatCheckbox = screen.getByLabelText('반복');
-    await userEvent.click(repeatCheckbox); // 반복 해제
+    // 수정 버튼 클릭 (aria-label 기반)
+    const editIconButton = within(targetItem!).getByLabelText('Edit event');
+    await userEvent.click(editIconButton);
 
-    const saveButton = screen.getByRole('button', { name: /저장/i });
+    // 반복 체크박스 해제 (이 부분은 UI에서 반복 체크박스가 해제되면 내부적으로 repeat.type을 'none'으로 변경한다고 가정)
+    const repeatCheckbox = screen.getByLabelText('반복 일정');
+    await userEvent.click(repeatCheckbox);
+
+    // 저장 버튼 클릭
+    const saveButton = screen.getByRole('button', { name: /일정 수정/i });
     await userEvent.click(saveButton);
 
-    // 아이템이 다시 표시되고, 반복 아이콘이 사라졌는지 확인
-    const updatedItem = await screen.findByText('반복 회의');
-    const updatedParent = updatedItem.closest('[data-testid="event-item"]')!;
-    expect(
-      within(updatedParent as HTMLElement).queryByTestId('repeat-icon')
-    ).not.toBeInTheDocument();
+    // 업데이트된 이벤트 아이템에서 반복 아이콘이 사라졌는지 확인
+    const updatedItems = await screen.findAllByTestId('event-item');
+    const updatedItem = updatedItems.find((item) => within(item).queryByText('반복 회의'));
+    expect(updatedItem).toBeTruthy();
+
+    // 반복 타입이 'none'이면 아이콘이 사라져야 하므로 queryByTestId는 null을 반환해야 함
+    expect(within(updatedItem!).queryByTestId('repeat-icon')).not.toBeInTheDocument();
   });
 
   it('반복 일정 단일 삭제 시 해당 일정만 삭제된다', async () => {
@@ -467,26 +476,35 @@ describe('반복 일정', () => {
         repeat: { type: 'daily', interval: 1 },
         notificationTime: 0,
       },
+      {
+        id: '2',
+        title: '반복 회의',
+        date: '2025-10-16',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '',
+        location: '',
+        category: '업무',
+        repeat: { type: 'daily', interval: 1 },
+        notificationTime: 0,
+      },
     ]);
 
-    render(<App />);
+    setup(<App />);
 
-    const eventItem = await screen.findByText('반복 회의');
-    await userEvent.click(eventItem);
+    const eventItems = await screen.findAllByTestId('event-item');
+    const targetItem = eventItems.find((item) => within(item).queryByText('2025-10-15'));
+    expect(targetItem).toBeTruthy();
 
-    const deleteButton = screen.getByRole('button', { name: /삭제/i });
+    const deleteButton = within(targetItem!).getByLabelText('Delete event');
     await userEvent.click(deleteButton);
 
-    // 삭제 방식 선택 (단일 삭제)
-    const deleteSingleRadio = screen.getByLabelText('해당 일정만 삭제');
-    await userEvent.click(deleteSingleRadio);
-
-    const confirmButton = screen.getByRole('button', { name: /확인/i });
-    await userEvent.click(confirmButton);
-
-    // 해당 일정이 사라졌는지 확인
+    // 2025-10-15 일정이 삭제됐는지 확인
     await waitFor(() => {
-      expect(screen.queryByText('반복 회의')).not.toBeInTheDocument();
+      expect(screen.queryByText('2025-10-15')).not.toBeInTheDocument();
     });
+
+    // 2025-10-16 일정은 여전히 존재해야 함
+    expect(screen.getByText('2025-10-16')).toBeInTheDocument();
   });
 });

@@ -16,6 +16,33 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
       newEvent.id = String(mockEvents.length + 1); // 간단한 ID 생성
       mockEvents.push(newEvent);
       return HttpResponse.json(newEvent, { status: 201 });
+    }),
+    http.put('/api/events/:id', async ({ request, params }) => {
+      const id = params.id;
+      const updatedEvent = (await request.json()) as Event;
+
+      if (!updatedEvent.repeat) {
+        updatedEvent.repeat = { type: 'none', interval: 0 };
+      } else if (!updatedEvent.repeat.type) {
+        updatedEvent.repeat.type = 'none';
+      }
+
+      const index = mockEvents.findIndex((e) => e.id === id);
+      if (index !== -1) {
+        mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
+        return HttpResponse.json(mockEvents[index]);
+      } else {
+        return HttpResponse.json({ message: 'Not Found' }, { status: 404 });
+      }
+    }),
+    http.delete('/api/events/:id', ({ params }) => {
+      const id = params.id;
+      const index = mockEvents.findIndex((e) => e.id === id);
+      if (index !== -1) {
+        mockEvents.splice(index, 1);
+        return HttpResponse.json({ message: 'Deleted' });
+      }
+      return HttpResponse.json({ message: 'Not Found' }, { status: 404 });
     })
   );
 };
