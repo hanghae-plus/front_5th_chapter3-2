@@ -50,7 +50,7 @@ export function getFilteredEvents(
 }
 
 export const createRepeatEvents = (event: Event | EventForm): EventForm[] => {
-  // 최대 일자 2025-09-30 ..?
+  // 최대 일자 2025-09-30 ..? 연간 테스트를 위해 2026-06-30 로 제한 변경
   const events: EventForm[] = [];
   const { type, interval, endDate } = event.repeat;
 
