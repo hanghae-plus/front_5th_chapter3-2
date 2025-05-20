@@ -72,8 +72,8 @@ function generateRecurringDates({
         break;
       }
       case 'monthly': {
+        currentDate.setMonth(currentDate.getMonth() + interval);
         if (isLastDayOfMonth) {
-          currentDate.setMonth(currentDate.getMonth() + interval);
           currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
         }
 
