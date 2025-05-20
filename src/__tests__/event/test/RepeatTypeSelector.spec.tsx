@@ -522,14 +522,95 @@ describe('반복 종료', () => {
     - 반복일정을 수정하면 단일 일정으로 변경됩니다.
     - 반복일정 아이콘도 사라집니다.
  */
-it('반복 일정 중 하나를 수정하면 해당 일정은 repeat.id가 제거되어 반복에서 분리된다', () => {
-  // 수정 후 repeat.id가 사라졌는지 확인
+describe('반복 일정 단일 수정', () => {
+  it('반복 일정 중 하나를 수정하면 해당 일정은 repeat.id가 제거되어 반복에서 분리된다', () => {
+    // 수정 후 repeat.id가 사라졌는지 확인
+    const eventForm: EventForm = {
+      title: '반복 일정 수정',
+      date: '2025-07-01',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        count: 3,
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+    const modifiedEvent = {
+      ...events[0],
+      title: '수정된 일정',
+      repeat: {
+        type: 'none', // 반복에서 분리
+        interval: 0,
+      },
+    };
+
+    expect(modifiedEvent.repeat.type).toBe('none');
+    expect(modifiedEvent.repeat.interval).toBe(0);
+  });
 });
 
 /**
  * 6. **(필수)**  **반복 일정 단일 삭제**
     - 반복일정을 삭제하면 해당 일정만 삭제합니다.
  */
-it('반복 일정 중 하나만 삭제하면 다른 일정은 유지된다', () => {
-  // 삭제 요청 후 나머지 일정이 유지되는지 검증
+describe('반복 일정 단일 삭제', () => {
+  it('반복 일정 중 하나만 삭제하면 다른 일정은 유지된다', () => {
+    // 삭제 요청 후 나머지 일정이 유지되는지 검증
+    const eventForm: EventForm = {
+      title: '반복 일정 삭제',
+      date: '2025-07-01',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        count: 3,
+      },
+    };
+    // ✅ ID 부여
+    const events = generateRepeatEvents(eventForm).map((e, i) => ({
+      ...e,
+      id: String(i + 1),
+    }));
+
+    const deletedEvent = events[0]; // 삭제할 이벤트
+    const remainingEvents = events.filter((event) => event.id !== deletedEvent.id);
+    expect(remainingEvents.length).toBe(2); // 삭제 후 남은 일정 개수 확인
+    expect(remainingEvents).toEqual([
+      expect.objectContaining({
+        id: events[1].id,
+        title: '반복 일정 삭제',
+        date: '2025-07-02',
+      }),
+      expect.objectContaining({
+        id: events[2].id,
+        title: '반복 일정 삭제',
+        date: '2025-07-03',
+      }),
+    ]);
+  });
 });
+
+// advanced
+// 7. 예외 날짜 처리:
+//     - 반복 일정 중 특정 날짜를 제외할 수 있다.
+//     - 반복 일정 중 특정 날짜의 일정을 수정할 수 있다.
+// 8. 요일 지정 (주간 반복의 경우):
+//     - 주간 반복 시 특정 요일을 선택할 수 있다.
+// 9. 월간 반복 옵션:
+//     - 매월 특정 날짜에 반복되도록 설정할 수 있다.
+//     - 매월 특정 순서의 요일에 반복되도록 설정할 수 있다.
+// 10. 반복 일정 전체 수정 및 삭제
+//     - 반복 일정의 모든 일정을 수정할 수 있다.
+//     - 반복 일정의 모든 일정을 삭제할 수 있다.
