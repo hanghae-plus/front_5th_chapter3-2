@@ -1,7 +1,10 @@
 import { ChakraProvider } from '@chakra-ui/react';
 import { act, render, renderHook, screen } from '@testing-library/react';
 
-import { setupMockHandlerEventListCreation } from '../__mocks__/handlersUtils';
+import {
+  setupMockHandlerEventListCreation,
+  setupMockHandlerEventListUpdating,
+} from '../__mocks__/handlersUtils';
 import EventItem from '../components/EventItem';
 import { useEventOperations } from '../hooks/useEventOperations';
 import { Event } from '../types';
@@ -408,7 +411,7 @@ describe('반복 종료', () => {
 
 describe('반복 일정 단일 수정', () => {
   it('반복 일정에서 반복 체크를 해제하면  단일 일정으로 변경되고, 🔁 아이콘이 사라진다.', async () => {
-    setupMockHandlerEventListCreation();
+    setupMockHandlerEventListUpdating();
 
     const { result } = renderHook(() => useEventOperations(false, true));
     await act(() => Promise.resolve(null));
@@ -455,7 +458,6 @@ describe('반복 일정 단일 수정', () => {
         <EventItem event={result.current.events[0]} isNotified={false} />
       </ChakraProvider>
     );
-    console.log('result.current.events[0]', updatedEvent);
 
     expect(screen.queryByText(/🔁/)).not.toBeInTheDocument();
   });

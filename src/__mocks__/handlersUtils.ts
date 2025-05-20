@@ -136,6 +136,7 @@ export const setupMockHandlerEventListUpdating = () => {
 
       updatedEvents.forEach((event) => {
         const eventIndex = newEvents.findIndex((e) => e.id === event.id);
+
         if (eventIndex > -1) {
           isUpdated = true;
           newEvents[eventIndex] = { ...newEvents[eventIndex], ...event };
