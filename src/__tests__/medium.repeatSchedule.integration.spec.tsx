@@ -4,7 +4,7 @@ import { act, render, renderHook, screen } from '@testing-library/react';
 import { setupMockHandlerEventListCreation } from '../__mocks__/handlersUtils';
 import EventItem from '../components/EventItem';
 import { useEventOperations } from '../hooks/useEventOperations';
-import { Event, RepeatInfo } from '../types';
+import { Event } from '../types';
 import {
   generateDailyRepeats,
   generateMonthlyRepeats,
@@ -314,44 +314,95 @@ describe('반복 종료', () => {
     ]);
   });
 
-  it('종료 조건이 "반복 횟수"일 경우, 지정된 횟수만큼 반복된다.', () => {
-    const start = new Date('2025-05-20');
-    const repeat = {
-      type: 'daily',
-      interval: 2,
-      endDate: '2025-05-25',
-    } as RepeatInfo;
+  it('종료 조건이 "반복 횟수"이고 2일 간격일 경우, 해당 날짜까지만 반복 일정이 저장된다.', async () => {
+    setupMockHandlerEventListCreation();
 
-    const result = generateRepeats(start, repeat);
-    const dates = result.map((d) => d.toISOString().slice(0, 10));
+    const { result } = renderHook(() => useEventOperations(false, true));
+    await act(() => Promise.resolve(null));
 
-    expect(dates).toEqual(['2025-05-20', '2025-05-22', '2025-05-24']);
+    const startDate = new Date('2025-05-20');
+
+    const baseEvent = {
+      id: '',
+      title: '반복 종료 테스트',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 2,
+        count: 2,
+      },
+      notificationTime: 10,
+    } as Omit<Event, 'id' | 'date'>;
+
+    const events = generateRepeats(startDate, baseEvent.repeat).map((date) => ({
+      ...baseEvent,
+      id: '',
+      date: date.toISOString().slice(0, 10),
+    }));
+
+    for (const event of events) {
+      await act(async () => {
+        await result.current.saveEvent(event);
+      });
+    }
+
+    const savedDates = result.current.events.map((e) => e.date);
+
+    expect(savedDates).toEqual(['2025-05-20', '2025-05-22']);
   });
 
-  it('종료 조건이 "없음"일 경우, 무한 반복이 가능하다.', () => {
-    const start = new Date('2025-05-22');
-    const repeat = {
-      type: 'daily',
-      interval: 1,
-    } as RepeatInfo;
+  it('종료 조건이 "없음"일 경우, 기본 최대 반복 횟수만큼 일정이 저장된다.', async () => {
+    setupMockHandlerEventListCreation();
 
-    // 테스트에서는 무한 반복을 사용할 수 없으므로 일부만 slice해서 테스트
-    const result = generateRepeats(start, repeat);
+    const { result } = renderHook(() => useEventOperations(false, true));
+    await act(() => Promise.resolve(null));
 
-    const dates = result.slice(0, 10).map((d) => d.toISOString().slice(0, 10));
+    const startDate = new Date('2025-05-20');
+    const defaultMaxCount = 1000;
 
-    expect(dates).toEqual([
+    const baseEvent = {
+      id: '',
+      title: '무한 반복 테스트',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '',
+      location: '회의실 B',
+      category: '기타',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+      },
+      notificationTime: 10,
+    } as Omit<Event, 'id' | 'date'>;
+
+    const events = generateRepeats(startDate, baseEvent.repeat).map((date) => ({
+      ...baseEvent,
+      id: '',
+      date: date.toISOString().slice(0, 10),
+    }));
+
+    // 실제로 너무 많으면 테스트 시간 오래 걸리므로 앞 5개만 저장
+    for (let i = 0; i < 5; i++) {
+      await act(async () => {
+        await result.current.saveEvent(events[i]);
+      });
+    }
+
+    const savedDates = result.current.events.map((e) => e.date);
+    expect(savedDates).toEqual([
+      '2025-05-20',
+      '2025-05-21',
       '2025-05-22',
       '2025-05-23',
       '2025-05-24',
-      '2025-05-25',
-      '2025-05-26',
-      '2025-05-27',
-      '2025-05-28',
-      '2025-05-29',
-      '2025-05-30',
-      '2025-05-31',
     ]);
+
+    // 내부에서 1000개 생성되었는지 확인
+    expect(events.length).toBe(defaultMaxCount);
   });
 });
 
