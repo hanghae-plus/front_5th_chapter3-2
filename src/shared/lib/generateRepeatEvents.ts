@@ -16,6 +16,8 @@ export function generateRepeatEvents(baseEvent: EventForm): Event[] {
   if (!repeat || repeat.type === 'none') return [baseEvent as Event];
 
   const interval = repeat.interval ?? 1;
+  const count = repeat.count ?? 4; // fallback: 4회 반복
+
   const endDate = repeat.endDate ? new Date(repeat.endDate) : new Date(start);
   endDate.setMonth(endDate.getMonth() + 3); // fallback: 3회 반복
 
@@ -23,18 +25,54 @@ export function generateRepeatEvents(baseEvent: EventForm): Event[] {
   const startMonth = start.getMonth();
   const startYear = start.getFullYear();
 
+  if (repeat.type === 'daily') {
+    for (let i = 0; i < count; i++) {
+      const newDate = new Date(start);
+      newDate.setDate(start.getDate() + i * interval);
+      events.push({
+        ...baseEvent,
+        id: undefined,
+        date: newDate.toISOString().split('T')[0],
+      });
+    }
+    return events;
+  }
+
+  if (repeat.type === 'weekly') {
+    for (let i = 0; i < count; i++) {
+      const newDate = new Date(start);
+      newDate.setDate(start.getDate() + i * interval * 7);
+      events.push({
+        ...baseEvent,
+        id: undefined,
+        date: newDate.toISOString().split('T')[0],
+      });
+    }
+    return events;
+  }
+
   if (repeat.type === 'yearly') {
-    for (let i = 0; i < 4; i++) {
-      const year = startYear + i;
+    const interval = repeat.interval ?? 1;
+    const startYear = start.getFullYear();
+
+    console.log('interval', interval);
+
+    let i = 0;
+
+    while (i < count) {
+      const targetYear = startYear + i * interval;
+      const targetDate = new Date(targetYear, startMonth, startDay);
+
+      if (repeat.endDate && targetDate > endDate) break;
+
       let dateStr;
 
       if (startMonth === 1 && startDay === 29) {
         // 2월 29일 보정
-        const correctedDay = isLeapYear(year) ? 29 : 28;
-        dateStr = `${year}-02-${pad(correctedDay)}`;
+        const correctedDay = isLeapYear(targetYear) ? 29 : 28;
+        dateStr = `${targetYear}-02-${pad(correctedDay)}`;
       } else {
-        const nextDate = new Date(year, startMonth, startDay);
-        dateStr = nextDate.toISOString().split('T')[0];
+        dateStr = targetDate.toISOString().split('T')[0];
       }
 
       events.push({
@@ -42,7 +80,10 @@ export function generateRepeatEvents(baseEvent: EventForm): Event[] {
         id: undefined,
         date: dateStr,
       });
+
+      i++;
     }
+
     return events;
   }
 
@@ -51,19 +92,11 @@ export function generateRepeatEvents(baseEvent: EventForm): Event[] {
     const startDay = start.getDate();
     const startMonth = start.getMonth();
     const startYear = start.getFullYear();
-
-    // ✅ fallback 적용 시에만 +3개월
-    const end = repeat.endDate
-      ? new Date(repeat.endDate)
-      : (() => {
-          const fallback = new Date(start);
-          fallback.setMonth(fallback.getMonth() + 3);
-          return fallback;
-        })();
+    const count = repeat.count ?? Infinity;
 
     let i = 0;
 
-    while (true) {
+    while (i < count) {
       const targetMonth = startMonth + i * interval;
       const targetDate = new Date(startYear, targetMonth, 1);
 
@@ -75,7 +108,7 @@ export function generateRepeatEvents(baseEvent: EventForm): Event[] {
       const finalDate = new Date(Date.UTC(year, month, day));
       const dateStr = finalDate.toISOString().split('T')[0];
 
-      if (new Date(dateStr) > end) break;
+      if (repeat.endDate && new Date(dateStr) > new Date(repeat.endDate)) break;
 
       events.push({
         ...baseEvent,
