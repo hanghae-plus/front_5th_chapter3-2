@@ -4,7 +4,8 @@ import { http, HttpResponse } from 'msw';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
-  setupMockHandlerEventListCreation,
+  setupMockHandlerRepeatedEventCreation,
+  setupMockHandlerRepeatedEventDeletion,
   setupMockHandlerUpdating,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
@@ -188,7 +189,7 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 
 describe('반복 일정 생성', () => {
   it('매일 반복되는 일정이 올바르게 저장된다.', async () => {
-    setupMockHandlerEventListCreation();
+    setupMockHandlerRepeatedEventCreation();
     const { result } = renderHook(() => useEventOperations(false));
     await act(() => Promise.resolve(null));
 
@@ -239,7 +240,7 @@ describe('반복 일정 생성', () => {
   });
 
   it('매주 반복되는 일정이 올바르게 저장된다.', async () => {
-    setupMockHandlerEventListCreation();
+    setupMockHandlerRepeatedEventCreation();
     const { result } = renderHook(() => useEventOperations(false));
     await act(() => Promise.resolve(null));
 
@@ -280,7 +281,7 @@ describe('반복 일정 생성', () => {
   });
 
   it('세 달마다 반복되는 일정이 올바르게 저장된다', async () => {
-    setupMockHandlerEventListCreation();
+    setupMockHandlerRepeatedEventCreation();
     const { result } = renderHook(() => useEventOperations(false));
     await act(() => Promise.resolve(null));
 
@@ -326,7 +327,7 @@ describe('반복 일정 생성', () => {
   });
 
   it('격년 반복되는 일정이 올바르게 저장된다', async () => {
-    setupMockHandlerEventListCreation();
+    setupMockHandlerRepeatedEventCreation();
     const { result } = renderHook(() => useEventOperations(false));
     await act(() => Promise.resolve(null));
 
@@ -372,7 +373,7 @@ describe('반복 일정 생성', () => {
   });
 
   it('31일에 매월 반복되는 일정을 설정하면 31일이 있는 달만 일정이 생성된다', async () => {
-    setupMockHandlerEventListCreation();
+    setupMockHandlerRepeatedEventCreation();
     const { result } = renderHook(() => useEventOperations(false));
     await act(() => Promise.resolve(null));
 
@@ -413,7 +414,7 @@ describe('반복 일정 생성', () => {
   });
 
   it('2월 29일에 매년 반복되는 일정을 설정하면 윤년에만 일정이 생성된다.', async () => {
-    setupMockHandlerEventListCreation();
+    setupMockHandlerRepeatedEventCreation();
     const { result } = renderHook(() => useEventOperations(false));
     await act(() => Promise.resolve(null));
 
@@ -454,14 +455,87 @@ describe('반복 일정 생성', () => {
   });
 });
 
-describe('반복 일정 수정', () => {
-  it('반복 일정 중 하나를 수정하면 반복 아이콘이 사라지며 단일 일정으로 변경된다.', () => {});
-
-  it('반복 일정 전체 수정을 하면 같은 반복 일정이 다 일괄 수정된다.', () => {});
-});
-
 describe('반복 일정 삭제', () => {
-  it('반복 일정 중 하나를 삭제하면 해당 일정만 삭제된다.', () => {});
+  it('반복 일정 중 하나를 삭제하면 해당 일정만 삭제된다.', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+    await act(() => Promise.resolve(null));
 
-  it('반복 일정 전체 삭제를 하면 같은 반복 일정이 다 삭제된다.', () => {});
+    const initialEvents: Event[] = [
+      {
+        id: '1',
+        title: '매월 반복',
+        date: '2025-07-01',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '월간 보고',
+        location: '본사',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-09-01', id: 'repeat-id' },
+        notificationTime: 60,
+      },
+      {
+        id: '2',
+        title: '매월 반복',
+        date: '2025-08-01',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '월간 보고',
+        location: '본사',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-09-01', id: 'repeat-id' },
+        notificationTime: 60,
+      },
+      {
+        id: '3',
+        title: '매월 반복',
+        date: '2025-09-01',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '월간 보고',
+        location: '본사',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-09-01', id: 'repeat-id' },
+        notificationTime: 60,
+      },
+    ];
+
+    let mockEventsData = [...initialEvents];
+
+    server.use(
+      http.get('/api/events', () => HttpResponse.json({ events: mockEventsData })),
+      http.delete('/api/events/:id', ({ params }) => {
+        const { id } = params;
+        mockEventsData = mockEventsData.filter((event) => event.id !== id);
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    await act(async () => {
+      await result.current.deleteEvent('2');
+    });
+    await act(() => Promise.resolve(null));
+
+    expect(result.current.events.find((e) => e.id === '2')).toBeUndefined();
+    expect(result.current.events.find((e) => e.id === '1')).toBeDefined();
+    expect(result.current.events.find((e) => e.id === '3')).toBeDefined();
+    expect(result.current.events.filter((e) => e.repeat.id === 'repeat-id')).toHaveLength(2);
+    expect(result.current.events).toHaveLength(2);
+  });
+
+  it('반복 일정 전체 삭제를 하면 같은 반복 일정이 다 삭제된다.', async () => {
+    setupMockHandlerRepeatedEventDeletion();
+
+    const { result } = renderHook(() => useEventOperations(false));
+    await act(() => Promise.resolve(null));
+
+    await act(async () => {
+      await result.current.deleteAllRepeatedEvents('repeat-id');
+    });
+
+    await act(() => Promise.resolve(null));
+
+    const keptEvent = result.current.events.find((e) => e.id === '4');
+    expect(keptEvent).toBeDefined();
+    expect(result.current.events).toHaveLength(1);
+  });
 });

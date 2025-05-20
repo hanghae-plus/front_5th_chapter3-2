@@ -36,7 +36,7 @@ export const setupMockHandlerUpdating = () => {
     },
     {
       id: '2',
-      title: '기존 회의2',
+      title: '기존 회의1',
       date: '2025-10-15',
       startTime: '11:00',
       endTime: '12:00',
@@ -93,22 +93,132 @@ export const setupMockHandlerDeletion = () => {
   );
 };
 
-export const setupMockHandlerEventListCreation = (initEvents = [] as Event[]) => {
+export const setupMockHandlerRepeatedEventCreation = (initEvents = [] as Event[]) => {
   const mockEvents: Event[] = [...initEvents];
 
-  const getEventsHandler = http.get('/api/events', () => {
-    return HttpResponse.json({ events: mockEvents });
-  });
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const { events: newEvents } = (await request.json()) as { events: Event[] };
+      const repeatedEvents = newEvents.map((event, index) => ({
+        ...event,
+        id: `${mockEvents.length + index + 1}`,
+      }));
+      mockEvents.push(...repeatedEvents);
+      return HttpResponse.json(repeatedEvents, { status: 201 });
+    })
+  );
+};
 
-  const createEventListHandler = http.post('/api/events-list', async ({ request }) => {
-    const { events: newEvents } = (await request.json()) as { events: Event[] };
-    const repeatedEvents = newEvents.map((event, index) => ({
-      ...event,
-      id: `${mockEvents.length + index + 1}`,
-    }));
-    mockEvents.push(...repeatedEvents);
-    return HttpResponse.json(repeatedEvents, { status: 201 });
-  });
+export const setupMockHandlerRepeatedEventUpdating = () => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '기존 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '기존 팀 미팅',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    },
+    {
+      id: '2',
+      title: '기존 회의2',
+      date: '2025-10-15',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '기존 팀 미팅 2',
+      location: '회의실 C',
+      category: '업무 회의',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 5,
+    },
+  ];
 
-  server.use(getEventsHandler, createEventListHandler);
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.put('/api/events-list', async ({ request }) => {
+      const { events: newEvents } = (await request.json()) as { events: Event[] };
+      newEvents.forEach((event) => {
+        const eventIndex = mockEvents.findIndex((target) => target.id === event.id);
+        if (eventIndex > -1) {
+          mockEvents[eventIndex] = { ...mockEvents[eventIndex], ...event };
+        }
+      });
+
+      return HttpResponse.json(mockEvents);
+    })
+  );
+};
+
+export const setupMockHandlerRepeatedEventDeletion = () => {
+  let mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '삭제 대상',
+      date: '2025-07-07',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '삭제될 회의',
+      location: '회의실 X',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-07-21', id: 'repeat-id' },
+      notificationTime: 10,
+    },
+    {
+      id: '2',
+      title: '삭제 대상',
+      date: '2025-07-14',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '삭제될 회의',
+      location: '회의실 X',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-07-21', id: 'repeat-id' },
+      notificationTime: 10,
+    },
+    {
+      id: '3',
+      title: '삭제 대상',
+      date: '2025-07-21',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '삭제될 회의',
+      location: '회의실 X',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-07-21', id: 'repeat-id' },
+      notificationTime: 10,
+    },
+    {
+      id: '4',
+      title: '유지될 회의',
+      date: '2025-07-07',
+      startTime: '16:00',
+      endTime: '17:00',
+      description: '다른 용무',
+      location: '개인실',
+      category: '개인',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 5,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.delete('/api/events-list', async ({ request }) => {
+      const { eventIds } = (await request.json()) as { eventIds: string[] };
+      const newEvents = mockEvents.filter((event) => !eventIds.includes(event.id));
+      mockEvents = [...newEvents];
+      return new HttpResponse(null, { status: 204 });
+    })
+  );
 };
