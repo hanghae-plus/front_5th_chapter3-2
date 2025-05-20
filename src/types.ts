@@ -1,4 +1,15 @@
-export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+/* eslint-disable no-redeclare */
+type KeyOf<T> = T[keyof T];
+
+export const RepeatType = {
+  NONE: 'none',
+  DAILY: 'daily',
+  WEEKLY: 'weekly',
+  MONTHLY: 'monthly',
+  YEARLY: 'yearly',
+} as const;
+
+export type RepeatType = KeyOf<typeof RepeatType>;
 
 export interface RepeatInfo {
   type: RepeatType;
