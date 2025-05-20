@@ -118,4 +118,18 @@ describe('반복 종료', () => {
 
     expect(dates).toEqual(['2025-05-01', '2025-05-02', '2025-05-03', '2025-05-04', '2025-05-05']);
   });
+
+  it('종료 조건이 "반복 횟수"일 경우, 지정된 횟수만큼 반복된다.', () => {
+    const start = new Date('2025-05-20');
+    const repeat = {
+      type: 'daily',
+      interval: 2,
+      endDate: '2025-05-25',
+    } as RepeatInfo;
+
+    const result = generateRepeats(start, repeat);
+    const dates = result.map((d) => d.toISOString().slice(0, 10));
+
+    expect(dates).toEqual(['2025-05-20', '2025-05-22', '2025-05-24']);
+  });
 });
