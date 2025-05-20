@@ -12,8 +12,11 @@ import { Event } from '../../types.ts';
 
 const toastFn = vi.fn();
 
+// mock - 실제 모듈을 모킹한 모듈로 대체하여 테스트 실행
+// params 1 - '원하는 모듈'
+// params 2 - () => 원하는 대체 구현
 vi.mock('@chakra-ui/react', async () => {
-  const actual = await vi.importActual('@chakra-ui/react');
+  const actual = await vi.importActual('@chakra-ui/react'); // 일부 모듈에 대해서만 모킹, 나머지는 기존 모듈의 기능을 그대로 사용
   return {
     ...actual,
     useToast: () => toastFn,

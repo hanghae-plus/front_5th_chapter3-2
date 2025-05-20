@@ -38,7 +38,7 @@ it('지정된 시간이 된 경우 알림이 새롭게 생성되어 추가된다
   vi.setSystemTime(new Date(Date.now() + notificationTime * 분));
 
   act(() => {
-    vi.advanceTimersByTime(1000);
+    vi.advanceTimersByTime(1000); // 1초 만큼의 시간이 흐르도록 함
   });
 
   expect(result.current.notifications).toHaveLength(1);
