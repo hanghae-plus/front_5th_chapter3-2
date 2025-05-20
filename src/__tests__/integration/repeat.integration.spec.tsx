@@ -28,6 +28,9 @@ const saveRepeatSchedule = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
+  await user.selectOptions(screen.getByLabelText('반복 종류'), repeat?.type);
+  await user.type(screen.getByLabelText('반복 간격'), repeat?.interval.toString());
+  await user.type(screen.getByLabelText('반복 종료 날짜'), repeat?.endDate ?? '');
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -84,7 +87,7 @@ describe.only('반복 일정', () => {
   });
 
   it('설정한 반복 간격에 따라 일정이 올바른 날짜에 생성되는지 확인한다.', async () => {
-    vi.setSystemTime(new Date('2025-05-01 08:49:59'));
+    vi.setSystemTime(new Date('2025-07-01 08:49:59'));
 
     setupMockHandlerCreation();
 
@@ -108,15 +111,129 @@ describe.only('반복 일정', () => {
     expect(eventList.getByText('매월 반복 일정')).toBeInTheDocument();
   });
 
-  it(
-    "반복 종료 조건이 '2025-09-30까지'로 설정된 경우, 해당 날짜 이후에는 반복 일정이 생성되지 않는다."
-  );
+  it("반복 종료 조건이 '2025-09-30까지'로 설정된 경우, 해당 날짜 이후에는 반복 일정이 생성되지 않는다.", async () => {
+    vi.setSystemTime(new Date('2025-10-01 08:49:59'));
 
-  it('반복 일정의 한 인스턴스를 수정하면, 해당 일정이 반복에서 분리되어 단일 일정으로 변경된다.');
+    setupMockHandlerCreation();
 
-  it('반복 일정의 한 인스턴스를 삭제하면, 해당 일정만 삭제되고 나머지 반복 일정에는 영향이 없다.');
+    const { user } = setup(<App />);
 
-  it('캘린더 뷰에서 반복 일정이 일반 일정과 시각적으로 구분되어 표시된다.');
-  it('반복 일정에 반복 아이콘 또는 태그가 표시된다.');
-  it('반복 일정에서 분리된 단일 일정에는 반복 아이콘이 표시되지 않는다.');
+    await screen.findByText('일정 로딩 완료!');
+
+    await saveRepeatSchedule(user, {
+      title: '매월 반복 일정',
+      date: '2025-05-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '매월 반복 일정',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-09-30' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.queryByText('2025-10-30')).not.toBeInTheDocument();
+    expect(eventList.getByText('매월 반복 일정')).toBeInTheDocument();
+  });
+
+  it('캘린더 뷰에서 반복 일정에 반복 아이콘 또는 태그가 표시된다.', async () => {
+    vi.setSystemTime(new Date('2025-05-01 08:49:59'));
+
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    await saveRepeatSchedule(user, {
+      title: '매월 반복 일정',
+      date: '2025-05-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '매월 반복 일정',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-09-30' },
+    });
+
+    const monthView = within(screen.getByTestId('month-view'));
+
+    const eventItem = monthView.getByText('매월 반복 일정');
+
+    expect(within(eventItem.parentElement!).getByText('🔁')).toBeInTheDocument();
+  });
+
+  it('반복 일정의 한 인스턴스를 수정하면, 해당 일정이 반복에서 분리되어 단일 일정으로 변경된다.', async () => {
+    vi.setSystemTime(new Date('2025-06-01 08:49:59'));
+
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    await saveRepeatSchedule(user, {
+      title: '매월 반복 일정',
+      date: '2025-05-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '매월 반복 일정',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-09-30' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    const editButton = eventList.getByText('매월 반복 일정').closest('li')?.querySelector('button');
+
+    expect(editButton).toBeInTheDocument();
+    await user.click(editButton!);
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 매월 반복 일정');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const updatedEventItem = eventList.getByText('수정된 매월 반복 일정');
+    expect(updatedEventItem).toBeInTheDocument();
+    expect(within(updatedEventItem.parentElement!).getByText('🔁')).not.toBeInTheDocument();
+  });
+
+  it('반복 일정의 한 인스턴스를 삭제하면, 해당 일정만 삭제되고 나머지 반복 일정에는 영향이 없다.', async () => {
+    vi.setSystemTime(new Date('2025-06-01 08:49:59'));
+
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    await saveRepeatSchedule(user, {
+      title: '매월 반복 일정',
+      date: '2025-05-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '매월 반복 일정',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-09-30' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    const deleteButton = eventList
+      .getByText('매월 반복 일정')
+      .closest('li')
+      ?.querySelector('button');
+
+    expect(deleteButton).toBeInTheDocument();
+    await user.click(deleteButton!);
+
+    expect(eventList.queryByText('매월 반복 일정')).not.toBeInTheDocument();
+    expect(eventList.getByText('2025-06-01')).not.toBeInTheDocument();
+
+    vi.setSystemTime(new Date('2025-07-01 08:49:59'));
+
+    expect(eventList.queryByText('매월 반복 일정')).not.toBeInTheDocument();
+    expect(eventList.getByText('2025-07-01')).not.toBeInTheDocument();
+  });
 });
