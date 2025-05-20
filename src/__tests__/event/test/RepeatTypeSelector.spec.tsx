@@ -335,11 +335,93 @@ describe('반복 간격 설정', () => {
 describe('반복 일정 표시', () => {
   it('반복 일정인 경우 캘린더에 반복 아이콘(🔁 등)이 표시된다', () => {
     // calendar cell 내에 반복 아이콘 존재 여부 확인
+    const repeatEvent: Event = {
+      id: '1',
+      title: '정기 회의',
+      date: '2025-07-01',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: {
+        type: 'weekly',
+        interval: 1,
+        count: 5,
+      },
+      notificationTime: 0,
+    };
+
+    const events = generateRepeatEvents(repeatEvent);
+    expect(events.map((e) => e.date)).toEqual([
+      '2025-07-01',
+      '2025-07-08',
+      '2025-07-15',
+      '2025-07-22',
+      '2025-07-29',
+    ]);
+
+    // 캘린더 셀에 반복 아이콘이 표시되는지 확인
+    const calendarCell = screen.getByText('정기 회의');
+    expect(calendarCell).toBeInTheDocument();
+    expect(calendarCell).toHaveTextContent('🔁');
   });
 
-  it('반복 일정인 경우 캘린더에 표시가 되어야 한다.', () => {});
+  it('반복 일정인 경우 캘린더에 표시가 되어야 한다.', () => {
+    // 반복 일정이 캘린더에 표시되는지 확인
+    const repeatEvent: Event = {
+      id: '1',
+      title: '정기 회의',
+      date: '2025-07-01',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: {
+        type: 'weekly',
+        interval: 1,
+        count: 5,
+      },
+      notificationTime: 0,
+    };
 
-  it('윤년 반복일정이 캘린더에 표시되어야 한다.', () => {});
+    const events = generateRepeatEvents(repeatEvent);
+    expect(events.map((e) => e.date)).toEqual([
+      '2025-07-01',
+      '2025-07-08',
+      '2025-07-15',
+      '2025-07-22',
+      '2025-07-29',
+    ]);
+  });
+
+  it('윤년 반복일정이 캘린더에 표시되어야 한다.', () => {
+    // 윤년 반복 일정이 캘린더에 표시되는지 확인
+    const repeatEvent: Event = {
+      id: '1',
+      title: '윤년 반복 테스트',
+      date: '2024-02-29',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: {
+        type: 'yearly',
+        interval: 1,
+        count: 3,
+      },
+      notificationTime: 0,
+    };
+
+    const events = generateRepeatEvents(repeatEvent);
+    expect(events.map((e) => e.date)).toEqual([
+      '2024-02-29', // 윤년
+      '2025-02-28', // ❗비윤년 → 보정
+      '2026-02-28', // ❗비윤년 → 보정
+    ]);
+  });
 });
 /**
  * 4. **(필수) 반복 종료**
