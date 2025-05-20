@@ -25,6 +25,13 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
       }));
       mockEvents.push(...repeatedEvents);
       return HttpResponse.json(repeatedEvents, { status: 201 });
+    }),
+    http.delete('/api/events/:id', ({ params }) => {
+      const { id } = params;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      mockEvents.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
     })
   );
 };

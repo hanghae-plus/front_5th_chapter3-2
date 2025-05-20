@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act } from '@testing-library/react';
+import { render, screen, within, act, waitFor } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
@@ -376,5 +376,52 @@ describe('반복 일정 표시', () => {
 
     expect(eventList).toHaveTextContent('기존 회의');
     expect(repeatIcon).not.toBeInTheDocument();
+  });
+});
+
+describe('반복 일정 단일 삭제', () => {
+  it('반복 일정을 단일 삭제하면 해당 일정만 삭제된다', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '기존 회의',
+        date: '2025-10-20',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '2',
+        title: '기존 회의',
+        date: '2025-10-27',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const eventList = await screen.findByTestId('event-list');
+    const deleteButtons = await screen.findAllByLabelText('Delete event');
+
+    await act(async () => {
+      await user.click(deleteButtons[1]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByLabelText('Delete event')).toHaveLength(1);
+      expect(eventList).toHaveTextContent('기존 회의');
+    });
   });
 });

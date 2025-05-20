@@ -265,7 +265,6 @@ describe('반복 유형 선택', () => {
       await result.current.saveRepeatEvents(newEvent);
     });
 
-    console.log(result.current.events);
     expect(result.current.events).toHaveLength(3);
     expect(result.current.events[0].date).toBe('2024-02-29');
     expect(result.current.events[1].date).toBe('2024-08-29');
