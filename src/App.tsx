@@ -44,6 +44,7 @@ import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
+import { useRepeatEvent } from './hooks/useRepeatEvent.ts';
 import { useSearch } from './hooks/useSearch.ts';
 import { Event, EventForm, RepeatType } from './types';
 import {
@@ -103,6 +104,12 @@ function App() {
     editEvent,
   } = useEventForm();
 
+  const {
+    events: repeatEvents,
+    createRepeatEvent,
+    updateRepeatEvent,
+    deleteRepeatEvent,
+  } = useRepeatEvent();
   const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
     setEditingEvent(null)
   );
@@ -160,7 +167,15 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      if (isRepeating) {
+        createRepeatEvent(eventData);
+        // Save each repeated event
+        for (const event of repeatEvents) {
+          await saveEvent(event);
+        }
+      } else {
+        await saveEvent(eventData);
+      }
       resetForm();
     }
   };
@@ -507,7 +522,12 @@ function App() {
                     <IconButton
                       aria-label="Delete event"
                       icon={<DeleteIcon />}
-                      onClick={() => deleteEvent(event.id)}
+                      onClick={() => {
+                        if (event.repeat.type !== 'none') {
+                          deleteRepeatEvent(event.id);
+                        }
+                        deleteEvent(event.id);
+                      }}
                     />
                   </HStack>
                 </HStack>
