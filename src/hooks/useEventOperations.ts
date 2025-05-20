@@ -73,8 +73,17 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  async function init() {
+    await fetchEvents();
+    toast({
+      title: '일정 로딩 완료!',
+      status: 'info',
+      duration: 1000,
+    });
+  }
+
   useEffect(() => {
-    fetchEvents();
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -201,8 +201,10 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
+                              {event.repeat.type !== 'none' && '반복'}
                             </Text>
                           </HStack>
                         </Box>

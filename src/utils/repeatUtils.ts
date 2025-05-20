@@ -122,6 +122,41 @@ export function shouldCreateEventForDate(eventData: EventForm, targetDate: Date)
 }
 
 /**
+ * 최종 종료일을 반환.
+ * MAX_REPEAT_END_DATE는 2025년 9월 30일이므로 2025년 이후의 날짜는 생성하지 않음.
+ * 2월 29일이 윤년인 경우 2025년 이후의 날짜는 생성하지 않기 때문에 윤년으로 설정한 경우엔 MAX_REPEAT_END_DATE를 풀어줘야함.
+ * 예를 들어 2025년 2월 29일을 설정하고 연간 반복 간격을 4년이면 2029년 2월 29일이 최종 종료일이 됨.
+ * @param eventData: 반복 일정 정보
+ * @return: 최종 종료일
+ */
+function getFinalEndDate(eventData: EventForm): Date {
+  const startDate = new Date(eventData.date);
+  const maxLimit = new Date(MAX_REPEAT_END_DATE);
+
+  if (eventData.repeat.endDate) {
+    return new Date(eventData.repeat.endDate);
+  }
+
+  const isFeb29 =
+    eventData.repeat.type === 'yearly' &&
+    startDate.getMonth() === 1 &&
+    startDate.getDate() === 29 &&
+    isLeapYear(startDate.getFullYear());
+
+  if (isFeb29) {
+    let year = startDate.getFullYear() + eventData.repeat.interval;
+    while (year <= 2050) {
+      if (isLeapYear(year)) {
+        return new Date(`${year}-02-29`);
+      }
+      year += eventData.repeat.interval;
+    }
+  }
+
+  return maxLimit;
+}
+
+/**
  * 반복 일정에 대한 모든 이벤트 객체를 생성.
  * @param eventData: 반복 일정 정보
  * @return: 반복 일정 정보 배열
@@ -132,13 +167,14 @@ export function createRepeatingEvents(eventData: EventForm): EventForm[] {
   }
 
   const startDate = new Date(eventData.date);
+  const finalEndDate = getFinalEndDate(eventData);
 
   // 종료일이 설정되지 않았다면 MAX_REPEAT_END_DATE로 설정
-  const userEndDate = eventData.repeat.endDate ? new Date(eventData.repeat.endDate) : null;
-  const maxEndDate = new Date(MAX_REPEAT_END_DATE);
+  // const userEndDate = eventData.repeat.endDate ? new Date(eventData.repeat.endDate) : null;
+  // const maxEndDate = new Date(MAX_REPEAT_END_DATE);
 
   // 종료일은 최대 MAX_REPEAT_END_DATE로 설정
-  const finalEndDate = userEndDate && userEndDate < maxEndDate ? userEndDate : maxEndDate;
+  // const finalEndDate = userEndDate && userEndDate < maxEndDate ? userEndDate : maxEndDate;
 
   const dates: Date[] = [];
   let currentDate = new Date(startDate);
@@ -146,9 +182,13 @@ export function createRepeatingEvents(eventData: EventForm): EventForm[] {
   // 시작일부터 종료일까지 하루씩 증가하며 체크
   while (currentDate <= finalEndDate) {
     if (shouldCreateEventForDate(eventData, currentDate)) {
-      dates.push(new Date(currentDate));
+      // 중복된 날짜를 추가하지 않도록 체크
+      if (
+        !dates.some((existingDate) => existingDate.toDateString() === currentDate.toDateString())
+      ) {
+        dates.push(new Date(currentDate));
+      }
     }
-
     // 다음 날로 이동
     currentDate.setDate(currentDate.getDate() + 1);
   }
