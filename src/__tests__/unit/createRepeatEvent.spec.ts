@@ -212,3 +212,75 @@ describe('반복 일정 등록 시 반복 종료를 입력할 때', () => {
     expect(repeatEvents[0].date).toBe('2025-07-06');
   });
 })
+
+describe('반복 일정 등록 시 반복 간격 설정을 했을 때', () => {
+  it('매일 반복 이벤트를 등록 시 반복 일정 정보에 맞는 이벤트를 생성한다.', () => {
+    const event: Event = {
+      id: '1',
+      title: '매일 회고',
+      date: '2025-09-21',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: 'test',
+      location: 'test',
+      category: 'test',
+      repeat: {
+        type: 'daily',
+        interval: 6,
+      },
+      notificationTime: 10,
+    };
+
+    const repeatEvents = createRepeatEvents(event);
+
+    expect(repeatEvents).toBeDefined();
+    expect(repeatEvents.length).toBe(2);
+
+    expect(repeatEvents[0].date).toBe('2025-09-21');
+    expect(repeatEvents[0].id).toBe('1');
+    expect(repeatEvents[0].repeat.id).toBe('repeat-1');
+
+    expect(repeatEvents[1].date).toBe('2025-09-27');
+    expect(repeatEvents[1].id).toBe('2');
+    expect(repeatEvents[1].repeat.id).toBe('repeat-1');
+  });
+
+  it('매주 반복 이벤트를 전달받으면 반복 일정 정보에 맞는 이벤트를 생성한다.', () => {
+    const event: Event = {
+      id: '1',
+      title: '주간 회의',
+      date: '2025-08-15',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: 'test',
+      location: 'test',
+      category: 'test',
+      repeat: {
+        type: 'weekly',
+        interval: 2,
+      },
+      notificationTime: 10,
+    };
+
+    const repeatEvents = createRepeatEvents(event);
+
+    expect(repeatEvents).toBeDefined();
+    expect(repeatEvents.length).toBe(4);
+
+    expect(repeatEvents[0].date).toBe('2025-08-15');
+    expect(repeatEvents[0].id).toBe('1');
+    expect(repeatEvents[0].repeat.id).toBe('repeat-1');
+
+    expect(repeatEvents[1].date).toBe('2025-08-29');
+    expect(repeatEvents[1].id).toBe('2');
+    expect(repeatEvents[1].repeat.id).toBe('repeat-1');
+
+    expect(repeatEvents[2].date).toBe('2025-09-12');
+    expect(repeatEvents[2].id).toBe('3');
+    expect(repeatEvents[2].repeat.id).toBe('repeat-1');
+
+    expect(repeatEvents[3].date).toBe('2025-09-26');
+    expect(repeatEvents[3].id).toBe('4');
+    expect(repeatEvents[3].repeat.id).toBe('repeat-1');
+  });
+});
