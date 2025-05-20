@@ -1,5 +1,5 @@
-import { Event } from '../types';
-import { getWeekDates, isDateInRange } from './dateUtils';
+import { Event, EventForm } from '../types';
+import { getWeekDates, isDateInRange, formatDate } from './dateUtils';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
   return events.filter((event) => {
@@ -47,4 +47,45 @@ export function getFilteredEvents(
   }
 
   return searchedEvents;
+}
+
+export function getRepeatedEvents(event: EventForm) {
+  const { date, repeat } = event;
+  const { type, interval, endDate } = repeat;
+  const finalEndDate = endDate ? new Date(endDate) : new Date('2048-12-31');
+  const repeatedEvents: EventForm[] = [];
+  let currentDate = new Date(date);
+
+  switch (type) {
+    case 'daily':
+      while (currentDate <= finalEndDate) {
+        repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+
+        currentDate.setDate(currentDate.getDate() + interval);
+      }
+      break;
+    case 'weekly':
+      while (currentDate <= finalEndDate) {
+        repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+
+        currentDate.setDate(currentDate.getDate() + 7 * interval);
+      }
+      break;
+    case 'monthly':
+      while (currentDate <= finalEndDate) {
+        repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+
+        currentDate.setMonth(currentDate.getMonth() + interval);
+      }
+      break;
+    case 'yearly':
+      while (currentDate <= finalEndDate) {
+        repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+
+        currentDate.setFullYear(currentDate.getFullYear() + interval);
+      }
+      break;
+  }
+
+  return repeatedEvents;
 }
