@@ -584,39 +584,75 @@ describe('반복 유형 선택', () => {
 
 describe('반복 간격 설정', () => {
   it('매일 반복에 대한 간격을 설정할 수 있다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 유형을 '매일'로 선택
-    // 4. 반복 간격을 2로 설정
-    // 5. 일정 저장
-    // 6. 저장된 일정이 2일 간격으로 반복되는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '2일 간격 반복',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '2일 간격 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 2 },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('반복: 2일마다')).toBeInTheDocument();
   });
 
   it('매주 반복에 대한 간격을 설정할 수 있다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 유형을 '매주'로 선택
-    // 4. 반복 간격을 2로 설정
-    // 5. 일정 저장
-    // 6. 저장된 일정이 2주 간격으로 반복되는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '2주 간격 반복',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '2주 간격 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 2 },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('반복: 2주마다')).toBeInTheDocument();
   });
 
   it('매월 반복에 대한 간격을 설정할 수 있다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 유형을 '매월'로 선택
-    // 4. 반복 간격을 2로 설정
-    // 5. 일정 저장
-    // 6. 저장된 일정이 2개월 간격으로 반복되는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '2개월 간격 반복',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '2개월 간격 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 2 },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('반복: 2개월마다')).toBeInTheDocument();
   });
 
   it('매년 반복에 대한 간격을 설정할 수 있다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 유형을 '매년'으로 선택
-    // 4. 반복 간격을 2로 설정
-    // 5. 일정 저장
-    // 6. 저장된 일정이 2년 간격으로 반복되는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '2년 간격 반복',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '2년 간격 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 2 },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('반복: 2년마다')).toBeInTheDocument();
   });
 });
 
