@@ -60,7 +60,7 @@ export function shouldCreateEventForDate(eventData: EventForm, targetDate: Date)
       // 일간 반복: 일 간격으로 체크
       const diffTime = targetDate.getTime() - eventDate.getTime();
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays % repeat.interval === 0;
+      return diffDays >= 0 && diffDays % repeat.interval === 0;
     }
 
     case 'weekly': {
