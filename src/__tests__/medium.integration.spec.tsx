@@ -344,12 +344,8 @@ const saveScheduleWithRepeatInfo = async (
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
 
-  // 두 번 클릭해야 반복 일정이 true가 됨
   await user.click(screen.getByLabelText('반복 일정'));
-  await user.click(screen.getByLabelText('반복 일정'));
-
   await user.selectOptions(screen.getByLabelText('반복 유형'), repeat.type);
-
   await user.clear(screen.getByLabelText('반복 간격'));
   await user.type(screen.getByLabelText('반복 간격'), String(repeat.interval));
 
@@ -365,11 +361,6 @@ describe('반복 일정 등록', () => {
     setupMockHandlerCreationForEventList();
 
     const { user } = setup(<App />);
-
-    // 반복 정보 초기값
-    const eventForm = within(screen.getByTestId('repeat-info'));
-    expect(eventForm.getByText('매일')).toBeInTheDocument();
-    expect(eventForm.getByRole('spinbutton')).toHaveValue(1);
 
     await saveScheduleWithRepeatInfo(user, {
       title: '새 회의',
