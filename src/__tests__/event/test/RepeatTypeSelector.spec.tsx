@@ -465,12 +465,55 @@ describe('반복 일정 표시', () => {
     - 반복 종료 조건을 지정할 수 있다.
     - 옵션: 특정 날짜까지, 특정 횟수만큼, 또는 종료 없음 (예제 특성상, 2025-09-30까지)
  */
-it('반복 횟수(count)를 3으로 설정하면 3개의 일정만 생성된다', () => {
-  // count 기준으로 반복 생성 결과 검증
-});
+describe('반복 종료', () => {
+  it('반복 횟수(count)를 3으로 설정하면 3개의 일정만 생성된다', () => {
+    // count 기준으로 반복 생성 결과 검증
+    const eventForm: EventForm = {
+      title: '3회 반복 운동',
+      date: '2025-07-01',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        count: 3,
+      },
+    };
+    const events = generateRepeatEvents(eventForm);
+    expect(events.map((e) => e.date)).toEqual(['2025-07-01', '2025-07-02', '2025-07-03']);
+  });
 
-it('반복 종료일(endDate) 이전까지만 일정이 생성된다', () => {
-  // 2025-09-30 이전까지만 반복됨
+  it('반복 종료일(endDate) 이전까지만 일정이 생성된다', () => {
+    // mock date 에선 2025-07-30 이전까지만 반복됨
+    const eventForm: EventForm = {
+      title: '종료일 설정 운동',
+      date: '2025-07-25',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-07-30',
+      },
+    };
+    const events = generateRepeatEvents(eventForm);
+    expect(events.map((e) => e.date)).toEqual([
+      '2025-07-25',
+      '2025-07-26',
+      '2025-07-27',
+      '2025-07-28',
+      '2025-07-29',
+      '2025-07-30', // 종료일 포함
+    ]);
+  });
 });
 
 /**
