@@ -1,8 +1,9 @@
-import { Event } from '../types';
+import { Event, RepeatInfo } from '../types';
 import { formatEventTitle } from '../utils/eventUtils';
 import {
   generateDailyRepeats,
   generateMonthlyRepeats,
+  generateRepeats,
   generateWeeklyRepeats,
   generateYearlyRepeats,
 } from '../utils/repeatUtils';
@@ -109,11 +110,8 @@ describe('반복 종료', () => {
     const repeat = {
       type: 'daily',
       interval: 1,
-      ends: {
-        type: 'untilDate',
-        endDate: new Date('2025-05-05'),
-      },
-    };
+      endDate: '2025-05-05',
+    } as RepeatInfo;
 
     const result = generateRepeats(start, repeat);
     const dates = result.map((d) => d.toISOString().slice(0, 10));

@@ -1,3 +1,4 @@
+import { RepeatInfo } from '../types';
 import { isDateInRange } from './dateUtils';
 
 /** 매년 반복되는 일정 */
@@ -73,4 +74,29 @@ export function generateWeeklyRepeats(startDate: Date, endDate: Date, interval: 
     currentDate.setDate(currentDate.getDate() + interval * 7);
   }
   return result;
+}
+
+/**
+ * 주어진 반복 설정에 따라 반복 일정을 생성합니다.
+ *
+ * @param startDate - 반복 시작 날짜
+ * @param repeat - 반복 설정 정보 (유형, 간격, 종료 날짜 포함)
+ * @returns 반복 일정의 날짜 배열
+ *
+ */
+
+export function generateRepeats(startDate: Date, repeat: RepeatInfo): Date[] {
+  const { type, interval, endDate } = repeat;
+  const end = new Date(endDate!);
+
+  switch (type) {
+    case 'daily':
+      return generateDailyRepeats(startDate, end, interval);
+    case 'weekly':
+      return generateWeeklyRepeats(startDate, end, interval);
+    case 'monthly':
+      return generateMonthlyRepeats(startDate, end, interval);
+    default:
+      throw new Error(`Unsupported repeat type: ${type}`);
+  }
 }
