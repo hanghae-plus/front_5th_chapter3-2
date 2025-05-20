@@ -237,7 +237,7 @@ describe('반복 유형 선택', () => {
       await result.current.saveEvent(updatedEvent);
     });
 
-    expect(result.current.events[result.current.events.length - 1].repeat.type).toBe('weekly');
+    expect(result.current.events[result.current.events.length - 1].repeat.type).toBe('none');
     expect(result.current.events[result.current.events.length - 1].repeat.interval).toBe(1);
   });
 

@@ -31,10 +31,18 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     try {
       let response;
       if (editing) {
+        const editingEvent = {
+          ...eventData,
+          repeat: {
+            ...(eventData as Event).repeat,
+            type: 'none',
+          },
+        };
+
         response = await fetch(`/api/events/${(eventData as Event).id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
+          body: JSON.stringify(editingEvent),
         });
 
         await fetchEvents();
