@@ -31,7 +31,7 @@ const EventList = ({
         <Text>검색 결과가 없습니다.</Text>
       ) : (
         filteredEvents.map((event) => {
-          const isNotified = notifiedEvents.includes(event.id);
+          const isNotified = notifiedEvents.includes(event.id ?? '');
           return (
             <Box key={event.id} borderWidth={1} borderRadius="lg" p={3} width="100%">
               <HStack justifyContent="space-between">
@@ -42,6 +42,7 @@ const EventList = ({
                       fontWeight={isNotified ? 'bold' : 'normal'}
                       color={isNotified ? 'red.500' : 'inherit'}
                     >
+                      {event.repeat?.interval !== 0 && ' 🔁\n'}
                       {event.title}
                     </Text>
                   </HStack>

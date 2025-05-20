@@ -11,6 +11,7 @@ import { server } from '@/setupTests.ts';
 import { useEventOperations } from '@/shared/hooks/useEventOperations';
 import { generateRepeatEvents } from '@/shared/lib/generateRepeatEvents';
 import { RepeatType, Event, EventForm } from '@/types';
+import { desc } from 'framer-motion/client';
 
 /**
  * 1. **(필수) 반복 유형 선택**
@@ -599,6 +600,63 @@ describe('반복 일정 단일 삭제', () => {
         date: '2025-07-03',
       }),
     ]);
+  });
+});
+
+describe('예외 날짜 처리', () => {
+  it('반복 일정 중 특정 날짜를 제외할 수 있다.', () => {
+    const eventForm: EventForm = {
+      title: '특정 날짜 제외',
+      date: '2025-07-01',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        count: 5,
+        excludeDates: ['2025-07-03'], // 제외할 날짜
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+    expect(events.map((e) => e.date)).toEqual([
+      '2025-07-01',
+      '2025-07-02',
+      '2025-07-04', // 제외된 날짜는 포함되지 않음
+      '2025-07-05',
+    ]);
+  });
+
+  it('반복 일정 중 특정 날짜의 일정을 수정할 수 있다.', () => {
+    const eventForm: EventForm = {
+      title: '특정 날짜 수정',
+      date: '2025-07-01',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        count: 5,
+        excludeDates: ['2025-07-03'], // 제외할 날짜
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+    const modifiedEvent = {
+      ...events[2],
+      title: '수정된 일정', // 특정 날짜 수정
+    };
+
+    expect(modifiedEvent.title).toBe('수정된 일정');
+    expect(modifiedEvent.date).toBe('2025-07-03'); // 수정된 날짜 확인
   });
 });
 

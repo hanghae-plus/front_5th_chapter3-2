@@ -129,6 +129,7 @@ function CalendarPage() {
 
     const eventsToSave = generateRepeatEvents(eventData);
 
+    // flatMpa
     const overlapping = eventsToSave.flatMap((ev) => findOverlappingEvents(ev, events));
 
     if (overlapping.length > 0) {

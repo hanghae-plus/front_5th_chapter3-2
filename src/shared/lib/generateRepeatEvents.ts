@@ -8,10 +8,15 @@ function pad(n: number): string {
   return n.toString().padStart(2, '0');
 }
 
+/**
+ * 주어진 이벤트를 기반으로 반복 이벤트를 생성합니다.
+ * @param baseEvent
+ * @returns
+ */
 export function generateRepeatEvents(baseEvent: EventForm): Event[] {
-  const events: Event[] = [];
-  const repeat = baseEvent.repeat;
-  const start = new Date(baseEvent.date);
+  const events: Event[] = []; // 반복 이벤트를 저장할 배열
+  const repeat = baseEvent.repeat; // 반복 정보
+  const start = new Date(baseEvent.date); // 시작 날짜
 
   if (!repeat || repeat.type === 'none') return [baseEvent as Event];
 
