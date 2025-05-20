@@ -4,7 +4,6 @@ import { http, HttpResponse } from 'msw';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
-  setupMockHandlerEventListUpdating,
   setupMockHandlerUpdating,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
@@ -172,9 +171,7 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 
   await act(() => Promise.resolve(null));
 
-  await act(async () => {
-    await result.current.deleteEvent('1');
-  });
+  await result.current.deleteEvent('1');
 
   expect(toastFn).toHaveBeenCalledWith({
     duration: 3000,
@@ -208,7 +205,7 @@ describe('반복 유형 선택', () => {
     };
 
     await act(async () => {
-      await result.current.saveEventList(newEvent);
+      await result.current.saveEvent(newEvent);
     });
 
     expect(result.current.events).toHaveLength(1);
@@ -217,14 +214,14 @@ describe('반복 유형 선택', () => {
   });
 
   it('일정 수정시 반복 유형 정보를 변경하면 변경된 정보가 반영된다.', async () => {
-    setupMockHandlerEventListUpdating();
+    setupMockHandlerUpdating();
 
     const { result } = renderHook(() => useEventOperations(true));
 
     await act(() => Promise.resolve(null));
 
     const updatedEvent: Event = {
-      id: '1',
+      id: '2',
       title: '수정된 회의',
       date: '2025-10-16',
       startTime: '11:00',
@@ -237,11 +234,10 @@ describe('반복 유형 선택', () => {
     };
 
     await act(async () => {
-      await result.current.updateEventList(updatedEvent);
+      await result.current.saveEvent(updatedEvent);
     });
 
-    expect(result.current.events).toHaveLength(1);
-    expect(result.current.events[0].repeat.type).toBe('weekly');
-    expect(result.current.events[0].repeat.interval).toBe(1);
+    expect(result.current.events[result.current.events.length - 1].repeat.type).toBe('weekly');
+    expect(result.current.events[result.current.events.length - 1].repeat.interval).toBe(1);
   });
 });

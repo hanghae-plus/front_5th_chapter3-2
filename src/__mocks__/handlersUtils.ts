@@ -17,12 +17,6 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
       mockEvents.push(newEvent);
       return HttpResponse.json(newEvent, { status: 201 });
     }),
-    http.post('/api/events-list', async ({ request }) => {
-      const newEvent = (await request.json()) as Event;
-      newEvent.id = String(mockEvents.length + 1);
-      mockEvents.push(newEvent);
-      return HttpResponse.json(newEvent, { status: 201 });
-    })
   );
 };
 
@@ -95,37 +89,6 @@ export const setupMockHandlerDeletion = () => {
 
       mockEvents.splice(index, 1);
       return new HttpResponse(null, { status: 204 });
-    })
-  );
-};
-
-export const setupMockHandlerEventListUpdating = () => {
-  const mockEvents: Event[] = [
-    {
-      id: '1',
-      title: '기존 회의',
-      date: '2025-10-15',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '기존 팀 미팅',
-      location: '회의실 B',
-      category: '업무',
-      repeat: { type: 'daily', interval: 0 },
-      notificationTime: 10,
-    },
-  ];
-
-  server.use(
-    http.get('/api/events', () => {
-      return HttpResponse.json({ events: mockEvents });
-    }),
-    http.put('/api/events-list/:id', async ({ params, request }) => {
-      const { id } = params;
-      const updatedEvent = (await request.json()) as Event;
-      const index = mockEvents.findIndex((event) => event.id === id);
-
-      mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
-      return HttpResponse.json(mockEvents[index]);
     })
   );
 };
