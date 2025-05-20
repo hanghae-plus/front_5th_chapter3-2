@@ -23,7 +23,7 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
       const newEvents = eventsToCreate.map((event, index) => {
         const isRepeatEvent = event.repeat.type !== 'none';
         return {
-          id: String(mockEvents.length + 1 + index),
+          id: String(mockEvents.length + 2 + index),
           ...event,
           repeat: {
             ...event.repeat,
