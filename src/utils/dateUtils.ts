@@ -1,4 +1,4 @@
-import { Event } from '../types.ts';
+import { Event, RepeatType } from '../types.ts';
 
 /**
  * 주어진 년도와 월의 일수를 반환합니다.
@@ -107,4 +107,26 @@ export function formatDate(currentDate: Date, day?: number) {
     fillZero(currentDate.getMonth() + 1),
     fillZero(day ?? currentDate.getDate()),
   ].join('-');
+}
+
+export function getDateByInterval(date: Date, repeatType: RepeatType, interval: number): Date {
+  const currentDate = new Date(date);
+
+  if (repeatType === 'daily') {
+    currentDate.setDate(currentDate.getDate() + interval);
+  }
+
+  if (repeatType === 'weekly') {
+    currentDate.setDate(currentDate.getDate() + interval * 7);
+  }
+
+  if (repeatType === 'monthly') {
+    currentDate.setMonth(currentDate.getMonth() + interval);
+  }
+
+  if (repeatType === 'yearly') {
+    currentDate.setFullYear(currentDate.getFullYear() + interval);
+  }
+
+  return currentDate;
 }
