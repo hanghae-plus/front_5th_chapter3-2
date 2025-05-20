@@ -187,13 +187,13 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 
 // 반복 일정
 describe('반복 일정 저장', () => {
-  it(`'매일' 반복되는 일정을 생성하면 매일 반복되는 일정이 저장된다.`, async () => {
+  it(`매일 반복되는 이벤트를 저장하면 하루 간격으로 일정이 생성된다.`, async () => {
     setupMockHandlerCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
       title: '새로운 반복 이벤트',
-      date: '2025-10-16',
+      date: '2025-09-24',
       startTime: '09:00',
       endTime: '10:00',
       description: '새로운 이벤트입니다.',
@@ -207,13 +207,11 @@ describe('반복 일정 저장', () => {
       await result.current.saveRepeatedEvents(newEvent);
     });
 
-    const lastId = result.current.events.length + 1;
-
-    expect(result.current.events.slice(0, 5)).toEqual([
+    expect(result.current.events).toEqual([
       {
         id: '2',
         title: '새로운 반복 이벤트',
-        date: '2025-10-16',
+        date: '2025-09-24',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
@@ -225,7 +223,7 @@ describe('반복 일정 저장', () => {
       {
         id: '3',
         title: '새로운 반복 이벤트',
-        date: '2025-10-17',
+        date: '2025-09-25',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
@@ -237,7 +235,7 @@ describe('반복 일정 저장', () => {
       {
         id: '4',
         title: '새로운 반복 이벤트',
-        date: '2025-10-18',
+        date: '2025-09-26',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
@@ -249,7 +247,7 @@ describe('반복 일정 저장', () => {
       {
         id: '5',
         title: '새로운 반복 이벤트',
-        date: '2025-10-19',
+        date: '2025-09-27',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
@@ -261,21 +259,7 @@ describe('반복 일정 저장', () => {
       {
         id: '6',
         title: '새로운 반복 이벤트',
-        date: '2025-10-20',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-    expect(result.current.events.slice(-5)).toEqual([
-      {
-        id: String(lastId - 4),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-27',
+        date: '2025-09-28',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
@@ -285,9 +269,9 @@ describe('반복 일정 저장', () => {
         notificationTime: 10,
       },
       {
-        id: String(lastId - 3),
+        id: '7',
         title: '새로운 반복 이벤트',
-        date: '2048-12-28',
+        date: '2025-09-29',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
@@ -297,33 +281,9 @@ describe('반복 일정 저장', () => {
         notificationTime: 10,
       },
       {
-        id: String(lastId - 2),
+        id: '8',
         title: '새로운 반복 이벤트',
-        date: '2048-12-29',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 1),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-30',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-31',
+        date: '2025-09-30',
         startTime: '09:00',
         endTime: '10:00',
         description: '새로운 이벤트입니다.',
@@ -335,7 +295,7 @@ describe('반복 일정 저장', () => {
     ]);
   });
 
-  it(`2일 간격으로 반복되는 일정을 생성하면 2일마다 반복되는 일정이 저장된다.`, async () => {
+  it(`이틀마다 반복되는 이벤트를 저장하면 이틀 간격으로 일정이 생성된다.`, async () => {
     setupMockHandlerCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
@@ -347,1040 +307,7 @@ describe('반복 일정 저장', () => {
       description: '새로운 이벤트입니다.',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 2 },
-      notificationTime: 10,
-    };
-
-    await act(async () => {
-      await result.current.saveRepeatedEvents(newEvent);
-    });
-
-    const lastId = result.current.events.length + 1;
-
-    expect(result.current.events.slice(0, 5)).toEqual([
-      {
-        id: '2',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 2, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '3',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-18',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 2, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '4',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-20',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 2, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '5',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-22',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 2, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '6',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-24',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 2, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-    expect(result.current.events.slice(-5)).toEqual([
-      {
-        id: String(lastId - 4),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-22',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 2, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 3),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-24',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 2, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 2),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-26',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 2, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 1),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-28',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 2, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-30',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 2, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-  });
-
-  it(`5일 간격으로 반복되는 일정을 생성하면 5일마다 반복되는 일정이 저장된다.`, async () => {
-    setupMockHandlerCreation();
-
-    const { result } = renderHook(() => useEventOperations(false));
-    const newEvent: EventForm = {
-      title: '새로운 반복 이벤트',
-      date: '2025-10-16',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '새로운 이벤트입니다.',
-      location: '회의실 A',
-      category: '업무',
-      repeat: { type: 'daily', interval: 5 },
-      notificationTime: 10,
-    };
-
-    await act(async () => {
-      await result.current.saveRepeatedEvents(newEvent);
-    });
-
-    const lastId = result.current.events.length + 1;
-
-    expect(result.current.events.slice(0, 5)).toEqual([
-      {
-        id: '2',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '3',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-21',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '4',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-26',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '5',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-31',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '6',
-        title: '새로운 반복 이벤트',
-        date: '2025-11-05',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-    expect(result.current.events.slice(-5)).toEqual([
-      {
-        id: String(lastId - 4),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-09',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 3),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-14',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 2),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-19',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 1),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-24',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-29',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'daily', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-  });
-
-  it(`'매주' 반복되는 일정을 생성하면 매주 반복되는 일정이 저장된다.`, async () => {
-    setupMockHandlerCreation();
-
-    const { result } = renderHook(() => useEventOperations(false));
-    const newEvent: EventForm = {
-      title: '새로운 반복 이벤트',
-      date: '2025-10-16',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '새로운 이벤트입니다.',
-      location: '회의실 A',
-      category: '업무',
-      repeat: { type: 'weekly', interval: 1 },
-      notificationTime: 10,
-    };
-
-    await act(async () => {
-      await result.current.saveRepeatedEvents(newEvent);
-    });
-
-    const lastId = result.current.events.length + 1;
-
-    expect(result.current.events.slice(0, 5)).toEqual([
-      {
-        id: '2',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '3',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-23',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '4',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-30',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '5',
-        title: '새로운 반복 이벤트',
-        date: '2025-11-06',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '6',
-        title: '새로운 반복 이벤트',
-        date: '2025-11-13',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-    expect(result.current.events.slice(-5)).toEqual([
-      {
-        id: String(lastId - 4),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-03',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 3),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-10',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 2),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-17',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 1),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-24',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-31',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-  });
-  it(`3주 간격으로 반복되는 일정을 생성하면 3주마다 반복되는 일정이 저장된다.`, async () => {
-    setupMockHandlerCreation();
-
-    const { result } = renderHook(() => useEventOperations(false));
-    const newEvent: EventForm = {
-      title: '새로운 반복 이벤트',
-      date: '2025-10-16',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '새로운 이벤트입니다.',
-      location: '회의실 A',
-      category: '업무',
-      repeat: { type: 'weekly', interval: 3 },
-      notificationTime: 10,
-    };
-
-    await act(async () => {
-      await result.current.saveRepeatedEvents(newEvent);
-    });
-
-    const lastId = result.current.events.length + 1;
-
-    expect(result.current.events.slice(0, 5)).toEqual([
-      {
-        id: '2',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '3',
-        title: '새로운 반복 이벤트',
-        date: '2025-11-06',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '4',
-        title: '새로운 반복 이벤트',
-        date: '2025-11-27',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '5',
-        title: '새로운 반복 이벤트',
-        date: '2025-12-18',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '6',
-        title: '새로운 반복 이벤트',
-        date: '2026-01-08',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-    expect(result.current.events.slice(-5)).toEqual([
-      {
-        id: String(lastId - 4),
-        title: '새로운 반복 이벤트',
-        date: '2048-09-24',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 3),
-        title: '새로운 반복 이벤트',
-        date: '2048-10-15',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 2),
-        title: '새로운 반복 이벤트',
-        date: '2048-11-05',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 1),
-        title: '새로운 반복 이벤트',
-        date: '2048-11-26',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-17',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'weekly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-  });
-
-  it(`'매월' 반복되는 일정을 생성하면 매월 반복되는 일정이 저장된다.`, async () => {
-    setupMockHandlerCreation();
-
-    const { result } = renderHook(() => useEventOperations(false));
-    const newEvent: EventForm = {
-      title: '새로운 반복 이벤트',
-      date: '2025-10-16',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '새로운 이벤트입니다.',
-      location: '회의실 A',
-      category: '업무',
-      repeat: { type: 'monthly', interval: 1 },
-      notificationTime: 10,
-    };
-
-    await act(async () => {
-      await result.current.saveRepeatedEvents(newEvent);
-    });
-
-    const lastId = result.current.events.length + 1;
-
-    expect(result.current.events.slice(0, 5)).toEqual([
-      {
-        id: '2',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '3',
-        title: '새로운 반복 이벤트',
-        date: '2025-11-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '4',
-        title: '새로운 반복 이벤트',
-        date: '2025-12-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '5',
-        title: '새로운 반복 이벤트',
-        date: '2026-01-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '6',
-        title: '새로운 반복 이벤트',
-        date: '2026-02-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-    expect(result.current.events.slice(-5)).toEqual([
-      {
-        id: String(lastId - 4),
-        title: '새로운 반복 이벤트',
-        date: '2048-08-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 3),
-        title: '새로운 반복 이벤트',
-        date: '2048-09-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 2),
-        title: '새로운 반복 이벤트',
-        date: '2048-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 1),
-        title: '새로운 반복 이벤트',
-        date: '2048-11-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-  });
-  it(`5달 간격으로 반복되는 일정을 생성하면 5달마다 반복되는 일정이 저장된다.`, async () => {
-    setupMockHandlerCreation();
-
-    const { result } = renderHook(() => useEventOperations(false));
-    const newEvent: EventForm = {
-      title: '새로운 반복 이벤트',
-      date: '2025-10-16',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '새로운 이벤트입니다.',
-      location: '회의실 A',
-      category: '업무',
-      repeat: { type: 'monthly', interval: 5 },
-      notificationTime: 10,
-    };
-
-    await act(async () => {
-      await result.current.saveRepeatedEvents(newEvent);
-    });
-
-    const lastId = result.current.events.length + 1;
-
-    expect(result.current.events.slice(0, 5)).toEqual([
-      {
-        id: '2',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '3',
-        title: '새로운 반복 이벤트',
-        date: '2026-03-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '4',
-        title: '새로운 반복 이벤트',
-        date: '2026-08-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '5',
-        title: '새로운 반복 이벤트',
-        date: '2027-01-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '6',
-        title: '새로운 반복 이벤트',
-        date: '2027-06-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-    expect(result.current.events.slice(-5)).toEqual([
-      {
-        id: String(lastId - 4),
-        title: '새로운 반복 이벤트',
-        date: '2047-01-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 3),
-        title: '새로운 반복 이벤트',
-        date: '2047-06-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 2),
-        title: '새로운 반복 이벤트',
-        date: '2047-11-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 1),
-        title: '새로운 반복 이벤트',
-        date: '2048-04-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId),
-        title: '새로운 반복 이벤트',
-        date: '2048-09-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 5, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-  });
-
-  it(`'매년' 반복되는 일정을 생성하면 매년 반복되는 일정이 저장된다.`, async () => {
-    setupMockHandlerCreation();
-
-    const { result } = renderHook(() => useEventOperations(false));
-    const newEvent: EventForm = {
-      title: '새로운 반복 이벤트',
-      date: '2025-10-16',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '새로운 이벤트입니다.',
-      location: '회의실 A',
-      category: '업무',
-      repeat: { type: 'yearly', interval: 1 },
-      notificationTime: 10,
-    };
-
-    await act(async () => {
-      await result.current.saveRepeatedEvents(newEvent);
-    });
-
-    const lastId = result.current.events.length + 1;
-
-    expect(result.current.events.slice(0, 5)).toEqual([
-      {
-        id: '2',
-        title: '새로운 반복 이벤트',
-        date: '2025-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '3',
-        title: '새로운 반복 이벤트',
-        date: '2026-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '4',
-        title: '새로운 반복 이벤트',
-        date: '2027-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '5',
-        title: '새로운 반복 이벤트',
-        date: '2028-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '6',
-        title: '새로운 반복 이벤트',
-        date: '2029-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-    expect(result.current.events.slice(-5)).toEqual([
-      {
-        id: String(lastId - 4),
-        title: '새로운 반복 이벤트',
-        date: '2044-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 3),
-        title: '새로운 반복 이벤트',
-        date: '2045-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 2),
-        title: '새로운 반복 이벤트',
-        date: '2046-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 1),
-        title: '새로운 반복 이벤트',
-        date: '2047-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId),
-        title: '새로운 반복 이벤트',
-        date: '2048-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-  });
-  it(`3년 간격으로 반복되는 일정을 생성하면 3년마다 반복되는 일정이 저장된다.`, async () => {
-    setupMockHandlerCreation();
-
-    const { result } = renderHook(() => useEventOperations(false));
-    const newEvent: EventForm = {
-      title: '새로운 반복 이벤트',
-      date: '2025-10-16',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '새로운 이벤트입니다.',
-      location: '회의실 A',
-      category: '업무',
-      repeat: { type: 'yearly', interval: 3 },
+      repeat: { type: 'daily', interval: 2, endDate: '2025-10-30' },
       notificationTime: 10,
     };
 
@@ -1398,7 +325,616 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'yearly', interval: 3, id: '1' },
+        repeat: { type: 'daily', interval: 2, id: '1', endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '3',
+        title: '새로운 반복 이벤트',
+        date: '2025-10-18',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 2, id: '1', endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '4',
+        title: '새로운 반복 이벤트',
+        date: '2025-10-20',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 2, id: '1', endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '5',
+        title: '새로운 반복 이벤트',
+        date: '2025-10-22',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 2, id: '1', endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '6',
+        title: '새로운 반복 이벤트',
+        date: '2025-10-24',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 2, id: '1', endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '7',
+        title: '새로운 반복 이벤트',
+        date: '2025-10-26',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 2, id: '1', endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '8',
+        title: '새로운 반복 이벤트',
+        date: '2025-10-28',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 2, id: '1', endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '9',
+        title: '새로운 반복 이벤트',
+        date: '2025-10-30',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 2, id: '1', endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+    ]);
+  });
+
+  it(`5일마다 반복되는 이벤트를 저장하면 5일 간격으로 일정이 생성된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-08-20',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5, endDate: '2025-09-12' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toEqual([
+      {
+        id: '2',
+        title: '새로운 반복 이벤트',
+        date: '2025-08-20',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 5, id: '1', endDate: '2025-09-12' },
+        notificationTime: 10,
+      },
+      {
+        id: '3',
+        title: '새로운 반복 이벤트',
+        date: '2025-08-25',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 5, id: '1', endDate: '2025-09-12' },
+        notificationTime: 10,
+      },
+      {
+        id: '4',
+        title: '새로운 반복 이벤트',
+        date: '2025-08-30',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 5, id: '1', endDate: '2025-09-12' },
+        notificationTime: 10,
+      },
+      {
+        id: '5',
+        title: '새로운 반복 이벤트',
+        date: '2025-09-04',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 5, id: '1', endDate: '2025-09-12' },
+        notificationTime: 10,
+      },
+      {
+        id: '6',
+        title: '새로운 반복 이벤트',
+        date: '2025-09-09',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 5, id: '1', endDate: '2025-09-12' },
+        notificationTime: 10,
+      },
+    ]);
+  });
+
+  it(`매주 반복되는 이벤트를 저장하면 일주일 간격으로 일정이 생성된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-08-17',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toEqual([
+      {
+        id: '2',
+        title: '새로운 반복 이벤트',
+        date: '2025-08-17',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, id: '1' },
+        notificationTime: 10,
+      },
+      {
+        id: '3',
+        title: '새로운 반복 이벤트',
+        date: '2025-08-24',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, id: '1' },
+        notificationTime: 10,
+      },
+      {
+        id: '4',
+        title: '새로운 반복 이벤트',
+        date: '2025-08-31',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, id: '1' },
+        notificationTime: 10,
+      },
+      {
+        id: '5',
+        title: '새로운 반복 이벤트',
+        date: '2025-09-07',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, id: '1' },
+        notificationTime: 10,
+      },
+      {
+        id: '6',
+        title: '새로운 반복 이벤트',
+        date: '2025-09-14',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, id: '1' },
+        notificationTime: 10,
+      },
+      {
+        id: '7',
+        title: '새로운 반복 이벤트',
+        date: '2025-09-21',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, id: '1' },
+        notificationTime: 10,
+      },
+      {
+        id: '8',
+        title: '새로운 반복 이벤트',
+        date: '2025-09-28',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, id: '1' },
+        notificationTime: 10,
+      },
+    ]);
+  });
+  it(`3주마다 반복되는 일정을 저장하면 3주 간격으로 일정이 생성된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 3, endDate: '2025-12-31' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toEqual([
+      {
+        id: '2',
+        title: '새로운 반복 이벤트',
+        date: '2025-10-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 3, id: '1', endDate: '2025-12-31' },
+        notificationTime: 10,
+      },
+      {
+        id: '3',
+        title: '새로운 반복 이벤트',
+        date: '2025-11-06',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 3, id: '1', endDate: '2025-12-31' },
+        notificationTime: 10,
+      },
+      {
+        id: '4',
+        title: '새로운 반복 이벤트',
+        date: '2025-11-27',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 3, id: '1', endDate: '2025-12-31' },
+        notificationTime: 10,
+      },
+      {
+        id: '5',
+        title: '새로운 반복 이벤트',
+        date: '2025-12-18',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 3, id: '1', endDate: '2025-12-31' },
+        notificationTime: 10,
+      },
+    ]);
+  });
+
+  it(`매달 반복되는 일정을 저장하면 한달 간격으로 일정이 생성된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2026-03-01' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toEqual([
+      {
+        id: '2',
+        title: '새로운 반복 이벤트',
+        date: '2025-10-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2026-03-01' },
+        notificationTime: 10,
+      },
+      {
+        id: '3',
+        title: '새로운 반복 이벤트',
+        date: '2025-11-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2026-03-01' },
+        notificationTime: 10,
+      },
+      {
+        id: '4',
+        title: '새로운 반복 이벤트',
+        date: '2025-12-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2026-03-01' },
+        notificationTime: 10,
+      },
+      {
+        id: '5',
+        title: '새로운 반복 이벤트',
+        date: '2026-01-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2026-03-01' },
+        notificationTime: 10,
+      },
+      {
+        id: '6',
+        title: '새로운 반복 이벤트',
+        date: '2026-02-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2026-03-01' },
+        notificationTime: 10,
+      },
+    ]);
+  });
+  it(`5달마다 반복되는 일정을 저장하면 5달 간격으로 일정이 생성된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 5, endDate: '2027-03-01' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events.slice(0, 5)).toEqual([
+      {
+        id: '2',
+        title: '새로운 반복 이벤트',
+        date: '2025-10-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 5, id: '1', endDate: '2027-03-01' },
+        notificationTime: 10,
+      },
+      {
+        id: '3',
+        title: '새로운 반복 이벤트',
+        date: '2026-03-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 5, id: '1', endDate: '2027-03-01' },
+        notificationTime: 10,
+      },
+      {
+        id: '4',
+        title: '새로운 반복 이벤트',
+        date: '2026-08-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 5, id: '1', endDate: '2027-03-01' },
+        notificationTime: 10,
+      },
+      {
+        id: '5',
+        title: '새로운 반복 이벤트',
+        date: '2027-01-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 5, id: '1', endDate: '2027-03-01' },
+        notificationTime: 10,
+      },
+    ]);
+  });
+
+  it(`매년 반복되는 일정을 저장하면 1년 간격으로 일정이 생성된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2021-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toEqual([
+      {
+        id: '2',
+        title: '새로운 반복 이벤트',
+        date: '2021-10-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'yearly', interval: 1, id: '1' },
+        notificationTime: 10,
+      },
+      {
+        id: '3',
+        title: '새로운 반복 이벤트',
+        date: '2022-10-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'yearly', interval: 1, id: '1' },
+        notificationTime: 10,
+      },
+      {
+        id: '4',
+        title: '새로운 반복 이벤트',
+        date: '2023-10-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'yearly', interval: 1, id: '1' },
+        notificationTime: 10,
+      },
+      {
+        id: '5',
+        title: '새로운 반복 이벤트',
+        date: '2024-10-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'yearly', interval: 1, id: '1' },
+        notificationTime: 10,
+      },
+    ]);
+  });
+  it(`3년마다 반복되는 일정을 저장하면 3년 간격으로 일정이 생성된다.`, async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+    const newEvent: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 3, endDate: '2031-11-14' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toEqual([
+      {
+        id: '2',
+        title: '새로운 반복 이벤트',
+        date: '2025-10-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'yearly', interval: 3, id: '1', endDate: '2031-11-14' },
         notificationTime: 10,
       },
       {
@@ -1410,7 +946,7 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'yearly', interval: 3, id: '1' },
+        repeat: { type: 'yearly', interval: 3, id: '1', endDate: '2031-11-14' },
         notificationTime: 10,
       },
       {
@@ -1422,73 +958,13 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'yearly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '5',
-        title: '새로운 반복 이벤트',
-        date: '2034-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '6',
-        title: '새로운 반복 이벤트',
-        date: '2037-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '7',
-        title: '새로운 반복 이벤트',
-        date: '2040-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '8',
-        title: '새로운 반복 이벤트',
-        date: '2043-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 3, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '9',
-        title: '새로운 반복 이벤트',
-        date: '2046-10-16',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 3, id: '1' },
+        repeat: { type: 'yearly', interval: 3, id: '1', endDate: '2031-11-14' },
         notificationTime: 10,
       },
     ]);
   });
 
-  it(`2월 29일의 일정을 '매년' 반복으로 설정하면, 평년의 2월은 제외하고 저장한다.`, async () => {
+  it(`2월 29일마다 반복되는 일정을 저장하면 평년의 2월은 제외하고 일정이 생성된다.`, async () => {
     setupMockHandlerCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
@@ -1500,7 +976,7 @@ describe('반복 일정 저장', () => {
       description: '새로운 이벤트입니다.',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'yearly', interval: 1 },
+      repeat: { type: 'yearly', interval: 1, endDate: '2034-03-01' },
       notificationTime: 10,
     };
 
@@ -1518,7 +994,7 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
+        repeat: { type: 'yearly', interval: 1, id: '1', endDate: '2034-03-01' },
         notificationTime: 10,
       },
       {
@@ -1530,7 +1006,7 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
+        repeat: { type: 'yearly', interval: 1, id: '1', endDate: '2034-03-01' },
         notificationTime: 10,
       },
       {
@@ -1542,61 +1018,13 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '5',
-        title: '새로운 반복 이벤트',
-        date: '2036-02-29',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '6',
-        title: '새로운 반복 이벤트',
-        date: '2040-02-29',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '7',
-        title: '새로운 반복 이벤트',
-        date: '2044-02-29',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '8',
-        title: '새로운 반복 이벤트',
-        date: '2048-02-29',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'yearly', interval: 1, id: '1' },
+        repeat: { type: 'yearly', interval: 1, id: '1', endDate: '2034-03-01' },
         notificationTime: 10,
       },
     ]);
   });
 
-  it(`30일의 일정을 '매월' 반복으로 설정하면, 30일이 존재하지 않는 달은 제외하고 저장한다.`, async () => {
+  it(`30일마다 반복되는 일정을 저장하면 30일이 없는 달은 제외하고 일정이 생성된다.`, async () => {
     setupMockHandlerCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
@@ -1608,15 +1036,13 @@ describe('반복 일정 저장', () => {
       description: '새로운 이벤트입니다.',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'monthly', interval: 1 },
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-05-31' },
       notificationTime: 10,
     };
 
     await act(async () => {
       await result.current.saveRepeatedEvents(newEvent);
     });
-
-    let lastId = result.current.events.length + 1;
 
     expect(result.current.events.slice(0, 5)).toEqual([
       {
@@ -1628,7 +1054,7 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2025-05-31' },
         notificationTime: 10,
       },
       {
@@ -1640,7 +1066,7 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2025-05-31' },
         notificationTime: 10,
       },
       {
@@ -1652,7 +1078,7 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2025-05-31' },
         notificationTime: 10,
       },
       {
@@ -1664,86 +1090,12 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '6',
-        title: '새로운 반복 이벤트',
-        date: '2025-06-30',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-    expect(result.current.events.slice(-5)).toEqual([
-      {
-        id: String(lastId - 4),
-        title: '새로운 반복 이벤트',
-        date: '2048-08-30',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 3),
-        title: '새로운 반복 이벤트',
-        date: '2048-09-30',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 2),
-        title: '새로운 반복 이벤트',
-        date: '2048-10-30',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 1),
-        title: '새로운 반복 이벤트',
-        date: '2048-11-30',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-30',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2025-05-31' },
         notificationTime: 10,
       },
     ]);
   });
-  it(`31일의 일정을 '매월' 반복으로 설정하면, 31일이 존재하지 않는 달은 제외하고 저장한다.`, async () => {
+  it(`31마다 반복되는 일정을 저장하면 31일이 없는 달은 제외하고 일정이 생성된다.`, async () => {
     setupMockHandlerCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
@@ -1755,7 +1107,7 @@ describe('반복 일정 저장', () => {
       description: '새로운 이벤트입니다.',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'monthly', interval: 1 },
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-07-31' },
       notificationTime: 10,
     };
 
@@ -1765,7 +1117,7 @@ describe('반복 일정 저장', () => {
 
     let lastId = result.current.events.length + 1;
 
-    expect(result.current.events.slice(0, 5)).toEqual([
+    expect(result.current.events).toEqual([
       {
         id: '2',
         title: '새로운 반복 이벤트',
@@ -1775,7 +1127,7 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2025-07-31' },
         notificationTime: 10,
       },
       {
@@ -1787,7 +1139,7 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2025-07-31' },
         notificationTime: 10,
       },
       {
@@ -1799,7 +1151,7 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2025-07-31' },
         notificationTime: 10,
       },
       {
@@ -1811,86 +1163,11 @@ describe('반복 일정 저장', () => {
         description: '새로운 이벤트입니다.',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: '6',
-        title: '새로운 반복 이벤트',
-        date: '2025-08-31',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-    ]);
-    expect(result.current.events.slice(-5)).toEqual([
-      {
-        id: String(lastId - 4),
-        title: '새로운 반복 이벤트',
-        date: '2048-05-31',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 3),
-        title: '새로운 반복 이벤트',
-        date: '2048-07-31',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 2),
-        title: '새로운 반복 이벤트',
-        date: '2048-08-31',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId - 1),
-        title: '새로운 반복 이벤트',
-        date: '2048-10-31',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
-        notificationTime: 10,
-      },
-      {
-        id: String(lastId),
-        title: '새로운 반복 이벤트',
-        date: '2048-12-31',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '새로운 이벤트입니다.',
-        location: '회의실 A',
-        category: '업무',
-        repeat: { type: 'monthly', interval: 1, id: '1' },
+        repeat: { type: 'monthly', interval: 1, id: '1', endDate: '2025-07-31' },
         notificationTime: 10,
       },
     ]);
   });
 
-  // TODO: 종료 날짜 포함
   // TODO: 반복 일정을 수정
 });
