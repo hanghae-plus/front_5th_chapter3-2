@@ -414,4 +414,19 @@ describe('반복 일정 테스트', () => {
 
     expect(repeatIcon).not.toBeInTheDocument();
   });
+
+  it('반복 간격이 0보다 작을 때 반복 간격은 1 이상이어야 합니다라는 경고 메시지가 표시된다.', async () => {
+    const { user } = setup(<App />);
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 회의');
+    await user.clear(screen.getByLabelText('설명'));
+    await user.type(screen.getByLabelText('설명'), '회의 내용 변경');
+    await user.clear(screen.getByLabelText('반복 간격'));
+    await user.type(screen.getByLabelText('반복 간격'), '0');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    expect(screen.getByText('반복 간격은 1 이상이어야 합니다.')).toBeInTheDocument();
+  });
 });
