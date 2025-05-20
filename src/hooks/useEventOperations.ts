@@ -19,8 +19,6 @@ export const useEventOperations = (
       }
       const { events } = await response.json();
       setEvents(events);
-
-      console.log('🔁 서버에서 불러온 이벤트:', events);
     } catch (error) {
       console.error('Error fetching events:', error);
       toast({
@@ -111,6 +109,7 @@ export const useEventOperations = (
         headers: {
           'Content-Type': 'application/json',
         },
+
         body: JSON.stringify({ eventIds }),
       });
 
@@ -119,6 +118,7 @@ export const useEventOperations = (
       }
 
       await fetchEvents();
+
       toast({
         title: '반복 일정이 삭제되었습니다.',
         status: 'info',

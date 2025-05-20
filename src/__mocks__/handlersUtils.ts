@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 
 import { server } from '../setupTests';
 import { Event } from '../types';
+import { mockEvents } from './mockEvent';
 
 // ! Hard 여기 제공 안함
 export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
@@ -182,36 +183,28 @@ export const setupMockHandlerDeletion = () => {
 };
 
 export const setupMockHandlerEventListDeletion = () => {
-  let mockEvents = [
-    {
-      category: '업무',
-      date: '2025-10-15',
-      description: '기존 팀 미팅',
-      endTime: '10:00',
-      id: '1',
-      location: '회의실 B',
-      notificationTime: 10,
-      repeat: {
-        interval: 0,
-        type: 'none',
-      },
-      startTime: '09:00',
-      title: '기존 회의',
-    },
-  ];
-
   server.use(
     http.get('/api/events', () => {
       return HttpResponse.json({ events: mockEvents });
     }),
     http.delete('/api/events-list', async ({ request }) => {
-      const body = (await request.json()) as { eventIds: string[] };
+      try {
+        const body = (await request.json()) as { eventIds: string[] };
 
-      const filtered = mockEvents.filter((e) => !body.eventIds.includes(e.id));
-      mockEvents.length = 0;
-      mockEvents.push(...filtered);
+        if (!Array.isArray(body.eventIds)) {
+          return HttpResponse.json({ error: 'eventIds가 배열이 아닙니다' }, { status: 400 });
+        }
 
-      return HttpResponse.json(null, { status: 204 });
+        const filtered = mockEvents.filter((e) => !body.eventIds.includes(e.id));
+
+        mockEvents.length = 0;
+        mockEvents.push(...filtered);
+
+        return new HttpResponse(null, { status: 204 });
+      } catch (err) {
+        console.error('❗ DELETE /api/events-list 에러:', err);
+        return HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      }
     })
   );
 };

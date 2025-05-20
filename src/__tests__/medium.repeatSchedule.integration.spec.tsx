@@ -6,7 +6,6 @@ import {
   setupMockHandlerEventListDeletion,
   setupMockHandlerEventListUpdating,
 } from '../__mocks__/handlersUtils';
-import mockEvents from '../__mocks__/response/events.json';
 import EventItem from '../components/EventItem';
 import { useEventOperations } from '../hooks/useEventOperations';
 import { Event } from '../types';
@@ -465,27 +464,6 @@ describe('반복 일정 단일 수정', () => {
 });
 
 describe('반복 일정 단일 삭제', () => {
-  // ✅ 테스트마다 mockEvents 초기화
-  afterEach(() => {
-    const events = mockEvents.events;
-    events.length = 0;
-    events.push({
-      id: '1',
-      title: '기존 회의',
-      date: '2025-10-15',
-      startTime: '09:00',
-      endTime: '10:00',
-      location: '회의실 B',
-      category: '업무',
-      description: '기존 팀 미팅',
-      notificationTime: 10,
-      repeat: {
-        type: 'none',
-        interval: 0,
-      },
-    });
-  });
-
   it('반복 그룹에서 하나의 일정만 삭제하면, 해당 일정만 삭제된다.', async () => {
     setupMockHandlerEventListDeletion();
 
@@ -493,8 +471,10 @@ describe('반복 일정 단일 삭제', () => {
 
     await act(() => Promise.resolve(null));
 
+    console.log('RRR', result.current.events[0].id);
+
     await act(async () => {
-      await result.current.deleteRepeatEvents(['1']);
+      await result.current.deleteRepeatEvents([String(result.current.events[0].id)]);
     });
 
     await act(() => Promise.resolve(null));

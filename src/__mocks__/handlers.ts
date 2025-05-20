@@ -90,6 +90,6 @@ export const handlers = [
     events.length = 0;
     events.push(...filtered);
 
-    return HttpResponse.json(null, { status: 204 });
+    return new HttpResponse(null, { status: 204 });
   }),
 ];
