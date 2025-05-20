@@ -138,7 +138,7 @@ export function generateRepeats(
   repeat: RepeatInfo,
   maxCount: number = 1000
 ): Date[] {
-  const { type, interval, endDate } = repeat;
+  const { type, interval, endDate, count } = repeat;
 
   if (endDate) {
     const end = new Date(endDate);
@@ -149,6 +149,18 @@ export function generateRepeats(
         return generateWeeklyRepeats(startDate, end, interval);
       case 'monthly':
         return generateMonthlyRepeats(startDate, end, interval);
+      default:
+        throw new Error(`Unsupported repeat type: ${type}`);
+    }
+  } else if (count) {
+    // 종료일 없이 count만 주어진 경우
+    switch (type) {
+      case 'daily':
+        return generateDailyRepeatsByCount(startDate, interval, count);
+      case 'weekly':
+        return generateWeeklyRepeatsByCount(startDate, interval, count);
+      case 'monthly':
+        return generateMonthlyRepeatsByCount(startDate, interval, count);
       default:
         throw new Error(`Unsupported repeat type: ${type}`);
     }

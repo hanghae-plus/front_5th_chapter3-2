@@ -123,13 +123,13 @@ describe('반복 종료', () => {
     const repeat = {
       type: 'daily',
       interval: 2,
-      endDate: '2025-05-25',
+      count: 2,
     } as RepeatInfo;
 
     const result = generateRepeats(start, repeat);
     const dates = result.map((d) => d.toISOString().slice(0, 10));
 
-    expect(dates).toEqual(['2025-05-20', '2025-05-22', '2025-05-24']);
+    expect(dates).toEqual(['2025-05-20', '2025-05-22']);
   });
 
   it('종료 조건이 "없음"일 경우, 무한 반복이 가능하다.', () => {

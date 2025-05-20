@@ -184,7 +184,7 @@ describe('반복 간격 설정', () => {
     expect(savedDates.length).toBe(4);
   });
 
-  it('3개월마다 반복 주기의 간격을 선택할 수 있다.', async () => {
+  it('3개월마다 반복 일정이 저장되고, 올바른 간격으로 생성된다.', async () => {
     setupMockHandlerEventListCreation();
     const { result } = renderHook(() => useEventOperations(false, true));
 
@@ -228,7 +228,7 @@ describe('반복 간격 설정', () => {
 });
 
 describe('반복 일정 표시', () => {
-  it('반복 일정이면 제목 앞에 🔁이 표시된다.', async () => {
+  it('반복 일정으로 저장된 이벤트는 제목 앞에 🔁 아이콘이 붙어 UI에 표시된다.', async () => {
     setupMockHandlerEventListCreation();
 
     const testEvent = {
@@ -266,18 +266,52 @@ describe('반복 일정 표시', () => {
 });
 
 describe('반복 종료', () => {
-  it('종료 조건이 "특정 날짜"일 경우, 해당 날짜까지만 반복된다.', () => {
-    const start = new Date('2025-05-01');
-    const repeat = {
-      type: 'daily',
-      interval: 1,
-      endDate: '2025-05-05',
-    } as RepeatInfo;
+  it('반복 종료 조건이 "특정 날짜"일 경우, 해당 날짜까지만 반복 일정이 저장된다.', async () => {
+    setupMockHandlerEventListCreation();
 
-    const result = generateRepeats(start, repeat);
-    const dates = result.map((d) => d.toISOString().slice(0, 10));
+    const { result } = renderHook(() => useEventOperations(false, true));
+    await act(() => Promise.resolve(null));
 
-    expect(dates).toEqual(['2025-05-01', '2025-05-02', '2025-05-03', '2025-05-04', '2025-05-05']);
+    const startDate = new Date('2025-05-01');
+    const endDate = new Date('2025-05-05');
+
+    const baseEvent = {
+      id: '',
+      title: '종료 조건 테스트',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: endDate.toISOString().slice(0, 10),
+      },
+      notificationTime: 10,
+    } as Omit<Event, 'id' | 'date'>;
+
+    const events = generateRepeats(startDate, baseEvent.repeat).map((date) => ({
+      ...baseEvent,
+      id: '',
+      date: date.toISOString().slice(0, 10),
+    }));
+
+    for (const event of events) {
+      await act(async () => {
+        await result.current.saveEvent(event);
+      });
+    }
+
+    const savedDates = result.current.events.map((e) => e.date);
+
+    expect(savedDates).toEqual([
+      '2025-05-01',
+      '2025-05-02',
+      '2025-05-03',
+      '2025-05-04',
+      '2025-05-05',
+    ]);
   });
 
   it('종료 조건이 "반복 횟수"일 경우, 지정된 횟수만큼 반복된다.', () => {
