@@ -95,7 +95,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
       onSave?.();
       toast({
-        title: editing ? '일정이 수정되었습니다.' : '일정이 추가되었습니다.',
+        title: '일정이 추가되었습니다.',
         status: 'success',
         duration: 3000,
         isClosable: true,

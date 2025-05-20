@@ -369,7 +369,32 @@ describe('반복 일정 테스트', () => {
   it('반복 일정을 수정하면 단일 일정으로 변경되며 반복 일정 아이콘도 사라진다.', async () => {
     const { user } = setup(<App />);
 
-    setupMockHandlerUpdating();
+    setupMockHandlerUpdating([
+      {
+        id: '1',
+        title: '새 회의',
+        date: '2025-10-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+      {
+        id: '2',
+        title: '새 회의',
+        date: '2025-12-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+    ]);
 
     await user.click(await screen.findByLabelText('Edit event'));
 
@@ -382,10 +407,10 @@ describe('반복 일정 테스트', () => {
 
     const eventList = within(screen.getByTestId('event-list'));
 
-    expect(eventList.getByText('반복')).not.toBeInTheDocument();
+    expect(eventList.queryByText('반복')).not.toBeInTheDocument();
 
     const monthView = within(screen.getByTestId('month-view'));
-    const repeatIcon = monthView.getByLabelText('repeat-icon');
+    const repeatIcon = monthView.queryByLabelText('repeat-icon');
 
     expect(repeatIcon).not.toBeInTheDocument();
   });
