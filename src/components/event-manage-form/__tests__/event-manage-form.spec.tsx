@@ -67,27 +67,33 @@ describe('1. 반복 유형 선택 - 일정 생성 또는 수정 시 반복 유�
     description: '반복 일정 1 설명',
     location: '집',
     category: '개인',
-    repeat: { type: 'daily', interval: 2, endDate: '2025-06-30' },
+    repeat: { type: 'none', interval: 0 },
     notificationTime: 0,
   };
 
-  it('매일 유형 선택', async () => {
+  it('(생성) 매일 유형 선택', async () => {
     setupMockHandlerList([]);
     const { user } = setup(<App />);
 
-    await saveSchedule(user, { ...common });
+    await saveSchedule(user, {
+      ...common,
+      repeat: { type: 'daily', interval: 1, endDate: '2025-05-20' },
+    });
 
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getByText('2025-05-10')).toBeInTheDocument();
+    expect(eventList.getByText('2025-05-11')).toBeInTheDocument();
     expect(eventList.getByText('2025-05-12')).toBeInTheDocument();
-    expect(eventList.getByText('2025-05-14')).toBeInTheDocument();
   });
 
-  it('매주 유형 선택', async () => {
+  it('(생성) 매주 유형 선택', async () => {
     setupMockHandlerList([]);
     const { user } = setup(<App />);
 
-    await saveSchedule(user, { ...common, repeat: { ...common.repeat, type: 'weekly' } });
+    await saveSchedule(user, {
+      ...common,
+      repeat: { type: 'weekly', interval: 2, endDate: '2025-06-30' },
+    });
 
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getByText('2025-05-10')).toBeInTheDocument();
@@ -98,7 +104,7 @@ describe('1. 반복 유형 선택 - 일정 생성 또는 수정 시 반복 유�
     expect(eventList.getByText('2025-06-07')).toBeInTheDocument(); // 6월 달력
   });
 
-  it('매월 유형 선택', async () => {
+  it('(생성) 매월 유형 선택', async () => {
     setupMockHandlerList([]);
     const { user } = setup(<App />);
 
@@ -118,26 +124,116 @@ describe('1. 반복 유형 선택 - 일정 생성 또는 수정 시 반복 유�
 
     expect(eventList.getByText('2025-07-10')).toBeInTheDocument(); // 7월 달력
   });
-  it('매년 유형 선택', () => {
-    expect(1).toBe(1);
+
+  it('(생성) 매년 유형 선택', async () => {
+    setupMockHandlerList([]);
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      ...common,
+      repeat: { type: 'yearly', interval: 1, endDate: '2027-12-31' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('2025-05-10')).toBeInTheDocument();
+
+    // 이게 최선인가..
+    // vi.setSystemTime() 처리방법은 없는 가..
+    for (let i = 0; i < 12; i++) {
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+    }
+
+    expect(eventList.getByText('2026-05-10')).toBeInTheDocument();
   });
 });
 
 describe('2. 반복 간격 설정 - 각 반복 유형에 대해 간격을 설정할 수 있다.', () => {
-  it('2일 마다', () => {
-    expect(1).toBe(1);
+  const common: Event = {
+    id: '1',
+    title: '반복 일정 1',
+    date: '2025-05-10',
+    startTime: '10:00',
+    endTime: '11:00',
+    description: '반복 일정 1 설명',
+    location: '집',
+    category: '개인',
+    repeat: { type: 'none', interval: 0 },
+    notificationTime: 0,
+  };
+
+  it('2일 마다', async () => {
+    setupMockHandlerList([]);
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      ...common,
+      repeat: { type: 'daily', interval: 2, endDate: '2025-06-30' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('2025-05-10')).toBeInTheDocument();
+    expect(eventList.getByText('2025-05-12')).toBeInTheDocument();
+    expect(eventList.getByText('2025-05-14')).toBeInTheDocument();
   });
-  it('3주 마다', () => {
-    expect(1).toBe(1);
+
+  it('3주 마다', async () => {
+    setupMockHandlerList([]);
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      ...common,
+      repeat: { type: 'weekly', interval: 3, endDate: '2025-06-30' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('2025-05-10')).toBeInTheDocument();
+    expect(eventList.getByText('2025-05-31')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(eventList.getByText('2025-06-21')).toBeInTheDocument();
   });
-  it('2개월 마다', () => {
-    expect(1).toBe(1);
+
+  it('2개월 마다', async () => {
+    setupMockHandlerList([]);
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      ...common,
+      repeat: { type: 'monthly', interval: 2, endDate: '2025-10-31' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('2025-05-10')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(eventList.getByText('2025-07-10')).toBeInTheDocument(); // 7월 달력
   });
 });
 
 describe('3. 반복 일정 표시 - 캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표기한다.', () => {
-  it('ex) 반복 일정의 경우 반복 아이콘이 포함된다', () => {
-    expect(1).toBe(1);
+  it('ex) 반복 일정의 경우 반복 아이콘이 포함된다', async () => {
+    setupMockHandlerList([]);
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '반복 일정 1',
+      date: '2025-05-10',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '반복 일정 1 설명',
+      location: '집',
+      category: '개인',
+      repeat: { type: 'weekly', interval: 3, endDate: '2025-5-20' },
+    });
+
+    const monthView = screen.getByTestId('month-view');
+    console.log(screen);
+    const repeatIcons = within(monthView).getAllByTestId('repeat-icon');
+    // 구현중
+    expect(repeatIcons.length).toBe(2); // 잘못된 테스트
   });
 });
 
