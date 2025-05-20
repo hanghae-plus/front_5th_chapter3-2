@@ -32,6 +32,19 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
 
       mockEvents.splice(index, 1);
       return new HttpResponse(null, { status: 204 });
+    }),
+    http.put('/api/events/:id', async ({ params, request }) => {
+      const { id } = params;
+      const updatedEvent = (await request.json()) as Event;
+
+      const modifiedEvent = {
+        ...updatedEvent,
+        repeat: { type: 'none', interval: 0 },
+      };
+
+      mockEvents.map((event) => (event.id === id ? modifiedEvent : event));
+
+      return HttpResponse.json(modifiedEvent);
     })
   );
 };

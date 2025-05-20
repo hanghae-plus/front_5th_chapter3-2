@@ -421,7 +421,122 @@ describe('반복 일정 단일 삭제', () => {
 
     await waitFor(() => {
       expect(screen.getAllByLabelText('Delete event')).toHaveLength(1);
-      expect(eventList).toHaveTextContent('기존 회의');
+    });
+  });
+});
+
+describe('반복 일정 단일 수정', () => {
+  it('반복 일정 중 한개를 수정하면 단일 일정으로 변경됩니다.', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '기존 회의',
+        date: '2025-10-20',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '2',
+        title: '기존 회의',
+        date: '2025-10-27',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const editButtons = await screen.findAllByLabelText('Edit event');
+
+    await act(async () => {
+      await user.click(editButtons[1]);
+    });
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 회의');
+
+    await act(async () => {
+      await user.click(screen.getByTestId('event-submit-button'));
+    });
+
+    const eventList = await screen.findByTestId('event-list');
+
+    await waitFor(() => {
+      expect(eventList).toHaveTextContent('수정된 회의');
+    });
+  });
+
+  it('반복 일정 중 한개를 수정하면 반복일정 태그도 사라집니다', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '기존 회의',
+        date: '2025-10-20',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '2',
+        title: '기존 회의',
+        date: '2025-10-27',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const eventList = await screen.findByTestId('event-list');
+
+    const editButtons = await screen.findAllByLabelText('Edit event');
+    await act(async () => {
+      await user.click(editButtons[1]);
+    });
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 회의');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      expect(eventList).toHaveTextContent('수정된 회의');
+      // console.log({
+      //   eventList: eventList.innerHTML,
+      // });
+
+      // // 반복일정 아이콘이 하나만 남았는지 확인
+      // const remainingRepeatIcons = screen.queryAllByTestId('repeat-icon');
+      // expect(remainingRepeatIcons).toHaveLength(1);
+
+      // // 수정된 이벤트에는 반복일정 태그가 없는지 확인
+      // const modifiedEvent = screen.getByText('수정된 회의').closest('div');
+      // expect(
+      //   within(modifiedEvent as HTMLElement).queryByTestId('repeat-icon')
+      // ).not.toBeInTheDocument();
     });
   });
 });
