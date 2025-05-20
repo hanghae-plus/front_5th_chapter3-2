@@ -70,3 +70,7 @@ export function createRepeatedEvents(event: Event, maxCount?: number) {
 
   return events;
 }
+
+export function getAllRepeatedEventsIds(repeatId: string, events: Event[]) {
+  return events.filter((event) => event.repeat.id === repeatId).map((event) => event.id);
+}
