@@ -1,4 +1,4 @@
-import { type Event } from '../../types';
+import { RepeatType, type Event } from '../../types';
 import {
   generateRepeatDates,
   getRepeatTypeLabel,
@@ -26,7 +26,7 @@ describe('getRepeatTypeLabel', () => {
   });
 
   it('알 수 없는 타입에 대해 기본값 또는 "반복 없음"을 반환한다', () => {
-    expect(getRepeatTypeLabel('unknown')).toBe('반복 없음');
+    expect(getRepeatTypeLabel('unknown' as RepeatType)).toBe('반복 없음');
   });
 });
 
