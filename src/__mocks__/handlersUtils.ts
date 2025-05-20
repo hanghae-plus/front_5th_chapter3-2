@@ -31,10 +31,9 @@ export const setupMockHandlerEventListCreation = (initEvents = [] as Event[]) =>
     http.post('/api/events-list', async ({ request }) => {
       const body = (await request.json()) as { events: Event[] };
       const events = body.events as Event[];
-
       const repeatId = randomUUID();
 
-      const newEvents = events.map((event, idx) => {
+      const newEvents = events.map((event) => {
         const isRepeatEvent = event.repeat?.type !== 'none';
         return {
           ...event,
