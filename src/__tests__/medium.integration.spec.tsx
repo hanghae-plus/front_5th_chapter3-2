@@ -357,7 +357,7 @@ const saveScheduleWithRepeatInfo = async (
 };
 
 describe('반복 일정 등록', () => {
-  it('반복 유형: 매일, 반복 간격 1일, 반복 종료일: 2025-10-03 을 등록하면 달력에 정확히 표시된다.', async () => {
+  it('반복 유형: 매일, 반복 간격 1일, 반복 종료일: 2025-10-03 을 등록하면 이벤트 리스트와 캘린더 뷰에 정확히 표시된다.', async () => {
     setupMockHandlerCreationForEventList();
 
     const { user } = setup(<App />);
@@ -382,5 +382,91 @@ describe('반복 일정 등록', () => {
     expect(eventList.getByText('2025-10-02')).toBeInTheDocument();
     expect(eventList.getByText('2025-10-03')).toBeInTheDocument();
     expect(eventList.getAllByText('반복: 1일마다 (종료: 2025-10-03)')).toHaveLength(3);
+
+    const monthView = within(screen.getByTestId('month-view'));
+    expect(monthView.getAllByText('새 회의')).toHaveLength(3);
+    expect(monthView.getAllByTestId('repeat-icon')).toHaveLength(3);
+
+    await user.selectOptions(screen.getByLabelText('view'), 'week');
+
+    const weekView = within(screen.getByTestId('week-view'));
+    expect(weekView.getAllByText('새 회의')).toHaveLength(3);
+    expect(monthView.getAllByTestId('repeat-icon')).toHaveLength(3);
+  });
+
+  it('반복 유형: 매주, 반복 간격 2주, 반복 종료일: 2025-10-29 을 등록하면 이벤트 리스트와 캘린더 뷰에 정확히 표시된다.', async () => {
+    setupMockHandlerCreationForEventList();
+
+    const { user } = setup(<App />);
+
+    await saveScheduleWithRepeatInfo(user, {
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'weekly',
+        interval: 2,
+        endDate: '2025-10-29',
+      },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('2025-10-01')).toBeInTheDocument();
+    expect(eventList.getByText('2025-10-15')).toBeInTheDocument();
+    expect(eventList.getByText('2025-10-29')).toBeInTheDocument();
+    expect(eventList.getAllByText('반복: 2주마다 (종료: 2025-10-29)')).toHaveLength(3);
+
+    const monthView = within(screen.getByTestId('month-view'));
+    expect(monthView.getAllByText('새 회의')).toHaveLength(3);
+    expect(monthView.getAllByTestId('repeat-icon')).toHaveLength(3);
+
+    await user.selectOptions(screen.getByLabelText('view'), 'week');
+
+    const weekView = within(screen.getByTestId('week-view'));
+    expect(weekView.getAllByText('새 회의')).toHaveLength(1);
+    expect(weekView.getAllByTestId('repeat-icon')).toHaveLength(1);
+  });
+
+  it('반복 유형: 매월, 반복 간격 3개월, 반복 종료일: 2026-04-01 을 등록하면 이벤트 리스트와 캘린더 뷰에 정확히 표시된다.', async () => {
+    setupMockHandlerCreationForEventList();
+
+    const { user } = setup(<App />);
+
+    await saveScheduleWithRepeatInfo(user, {
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 3,
+        endDate: '2026-04-01',
+      },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('2025-10-01')).toBeInTheDocument();
+    expect(eventList.getAllByText('반복: 3월마다 (종료: 2026-04-01)')).toHaveLength(1);
+
+    await user.click(await screen.findByLabelText('Next')); // 11월
+    await user.click(await screen.findByLabelText('Next')); // 12월
+    await user.click(await screen.findByLabelText('Next')); // 1월
+    expect(eventList.getByText('2026-01-01')).toBeInTheDocument();
+
+    await user.click(await screen.findByLabelText('Next')); // 2월
+    await user.click(await screen.findByLabelText('Next')); // 3월
+    await user.click(await screen.findByLabelText('Next')); // 4월
+    expect(eventList.getByText('2026-04-01')).toBeInTheDocument();
+
+    const monthView = within(screen.getByTestId('month-view'));
+    expect(monthView.getByText('새 회의')).toBeInTheDocument();
+    expect(monthView.getAllByTestId('repeat-icon')).toHaveLength(1);
   });
 });
