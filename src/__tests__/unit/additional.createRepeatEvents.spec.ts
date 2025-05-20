@@ -78,4 +78,219 @@ describe('createRepeatEvents', () => {
       },
     ]);
   });
+
+  it('monthly 반복 저장, 1개월 간격', () => {
+    const event: EventForm = {
+      title: '새 회의',
+      date: '2025-03-05',
+      startTime: '10:00',
+      endTime: '13:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-05-05' },
+      notificationTime: 5,
+    };
+
+    const result = createRepeatEvents(event);
+    expect(result).toEqual([
+      {
+        title: '새 회의',
+        date: '2025-03-05',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-05-05' },
+        notificationTime: 5,
+      },
+      {
+        title: '새 회의',
+        date: '2025-04-05',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-05-05' },
+        notificationTime: 5,
+      },
+      {
+        title: '새 회의',
+        date: '2025-05-05',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-05-05' },
+        notificationTime: 5,
+      },
+    ]);
+  });
+
+  it('weekly 반복 저장, 2주 간격', () => {
+    const event: EventForm = {
+      title: '새 회의',
+      date: '2025-05-05',
+      startTime: '10:00',
+      endTime: '13:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 2, endDate: '2025-06-03' },
+      notificationTime: 5,
+    };
+
+    const result = createRepeatEvents(event);
+    expect(result).toEqual([
+      {
+        title: '새 회의',
+        date: '2025-05-05',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 2, endDate: '2025-06-03' },
+        notificationTime: 5,
+      },
+      {
+        title: '새 회의',
+        date: '2025-05-19',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 2, endDate: '2025-06-03' },
+        notificationTime: 5,
+      },
+      {
+        title: '새 회의',
+        date: '2025-06-02',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 2, endDate: '2025-06-03' },
+        notificationTime: 5,
+      },
+    ]);
+  });
+
+  it('daily 반복 저장, 3일 간격', () => {
+    const event: EventForm = {
+      title: '새 회의',
+      date: '2025-05-05',
+      startTime: '10:00',
+      endTime: '13:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 3, endDate: '2025-05-15' },
+      notificationTime: 5,
+    };
+
+    const result = createRepeatEvents(event);
+    expect(result).toEqual([
+      {
+        title: '새 회의',
+        date: '2025-05-05',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 3, endDate: '2025-05-15' },
+        notificationTime: 5,
+      },
+      {
+        title: '새 회의',
+        date: '2025-05-08',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 3, endDate: '2025-05-15' },
+        notificationTime: 5,
+      },
+      {
+        title: '새 회의',
+        date: '2025-05-11',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 3, endDate: '2025-05-15' },
+        notificationTime: 5,
+      },
+      {
+        title: '새 회의',
+        date: '2025-05-14',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 3, endDate: '2025-05-15' },
+        notificationTime: 5,
+      },
+    ]);
+  });
+
+  it('yearly 반복 저장, 2년 간격', () => {
+    const event: EventForm = {
+      title: '새 회의',
+      date: '2025-05-05',
+      startTime: '10:00',
+      endTime: '13:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 2, endDate: '2030-05-05' },
+      notificationTime: 5,
+    };
+
+    const result = createRepeatEvents(event);
+    expect(result).toEqual([
+      {
+        title: '새 회의',
+        date: '2025-05-05',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'yearly', interval: 2, endDate: '2030-05-05' },
+        notificationTime: 5,
+      },
+      {
+        title: '새 회의',
+        date: '2027-05-05',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'yearly', interval: 2, endDate: '2030-05-05' },
+        notificationTime: 5,
+      },
+      {
+        title: '새 회의',
+        date: '2029-05-05',
+        startTime: '10:00',
+        endTime: '13:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'yearly', interval: 2, endDate: '2030-05-05' },
+        notificationTime: 5,
+      },
+    ]);
+  });
 });
