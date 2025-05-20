@@ -1,5 +1,3 @@
-import { randomUUID } from 'crypto';
-
 import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
@@ -97,25 +95,18 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   // 반복 일정 저장
   const saveRepeatEvent = async (eventData: Event | EventForm) => {
     try {
-      let response;
-      const repeatInfoId = randomUUID();
-      const events = createRepeatEvents({
-        ...eventData,
-        repeat: { ...eventData.repeat, id: repeatInfoId },
-      });
+      // 단일 수정으로 일단 구현
       if (editing) {
-        response = await fetch(`/api/events-list`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ events }),
-        });
-      } else {
-        response = await fetch('/api/events-list', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ events }),
-        });
+        await saveEvent(eventData);
+        return;
       }
+      const events = createRepeatEvents({ ...eventData });
+      // console.log(events);
+      const response = await fetch('/api/events-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events }),
+      });
 
       if (!response.ok) {
         throw new Error('Failed to save repeat event');

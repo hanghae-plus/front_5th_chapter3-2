@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import { http, HttpResponse } from 'msw';
 
 import { server } from '@/setupTests';
@@ -98,7 +100,12 @@ export const setupMockHandlerList = (initEvents = [] as Event[]) => {
 
   server.use(
     http.get('/api/events', () => HttpResponse.json({ events: mockEvents })),
-
+    http.post('/api/events', async ({ request }) => {
+      const newEvent = (await request.json()) as Event;
+      newEvent.id = String(mockEvents.length + 1); // 간단한 ID 생성
+      mockEvents.push(newEvent);
+      return HttpResponse.json(newEvent, { status: 201 });
+    }),
     // server.js에 추가된 API 목록
 
     // POST /api/events-list
@@ -108,13 +115,14 @@ export const setupMockHandlerList = (initEvents = [] as Event[]) => {
       const { events: newEvents } = (await request.json()) as { events: Event[] };
 
       newEvents.forEach((_, index) => {
-        newEvents[index].id = String(mockEvents.length + 1 + index);
+        newEvents[index].id = randomUUID();
       });
 
       mockEvents.push(...newEvents);
       return HttpResponse.json(newEvents, { status: 201 });
     }),
 
+    // 동작을 제대로 하지 않는 것 같다..
     http.put('/api/events-list', async ({ request }) => {
       let isUpdated = false;
       const newEvents = [...mockEvents];
