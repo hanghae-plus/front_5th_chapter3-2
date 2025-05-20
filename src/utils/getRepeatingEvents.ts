@@ -1,42 +1,49 @@
 import { Event, EventForm } from '../types';
-import { formatDate, getDaysInMonth } from './dateUtils';
-//TODO: 해당 월로 넘어가면 그 때 생성 제너레이터?
+import { formatDate } from './dateUtils';
+//TODO: 해당 월로 넘어가면 그 때 생성 제너레이터? 다음 버튼을 클릭하면 다음달에 적용
 
 const WEEK_NUM = 7;
 
 function* dailyEventGenerator(eventData: Event | EventForm) {
   const date = new Date(eventData.date);
-
-  const repeatInterval = eventData.repeat.interval || 1;
+  const { interval, endDate } = eventData.repeat;
+  const repeatInterval = interval || 1;
 
   while (true) {
+    if (endDate && date > new Date(endDate)) break;
     yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
     date.setDate(date.getDate() + repeatInterval);
   }
 }
 
 function* weeklyEventGenerator(eventData: Event | EventForm) {
+  const { interval, endDate } = eventData.repeat;
+
   const date = new Date(eventData.date);
-  const repeatInterval = eventData.repeat.interval || 1;
+  const repeatInterval = interval || 1;
   const week = repeatInterval * WEEK_NUM;
 
   while (true) {
+    if (endDate && date > new Date(endDate)) break;
     yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
     date.setDate(date.getDate() + week);
   }
 }
 
 function* monthEventGenerator(eventData: Event | EventForm) {
+  const { interval, endDate } = eventData.repeat;
+
   const baseDate = new Date(eventData.date);
   const baseDay = baseDate.getDate();
   const date = new Date(eventData.date);
 
-  const repeatInterval = eventData.repeat.interval || 1;
+  const repeatInterval = interval || 1;
 
   while (true) {
+    if (endDate && date > new Date(endDate)) break;
+
     yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
     const currentMonth = date.getMonth() + repeatInterval;
-
     date.setMonth(currentMonth);
 
     if (date.getDate() < baseDay) {
@@ -46,14 +53,18 @@ function* monthEventGenerator(eventData: Event | EventForm) {
 }
 
 function* yearEventGenerator(eventData: Event | EventForm) {
+  const { interval, endDate } = eventData.repeat;
+
   const baseDate = new Date(eventData.date);
   const baseMonth = baseDate.getMonth();
 
   const date = new Date(eventData.date);
 
-  const repeatInterval = eventData.repeat.interval || 1;
+  const repeatInterval = interval || 1;
 
   while (true) {
+    if (endDate && date > new Date(endDate)) break;
+
     yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
     date.setFullYear(date.getFullYear() + repeatInterval);
 
@@ -65,14 +76,12 @@ function* yearEventGenerator(eventData: Event | EventForm) {
 
 export const getRepeatingEvents = (eventData: Event | EventForm) => {
   const eventList: Event[] = [];
-  const eventDate = new Date(eventData.date);
-  const days = getDaysInMonth(eventDate.getFullYear(), eventDate.getMonth() + 1);
-  const limitedNum = new Date(eventData.date).getDate();
 
   if (eventData.repeat.type === 'daily') {
     const event = dailyEventGenerator(eventData);
 
-    for (let i = limitedNum; i <= days; i++) {
+    // 일단 3개월
+    for (let i = 0; i <= 90; i++) {
       const { value, done } = event.next();
       if (done) break;
       eventList.push(value);
@@ -80,7 +89,7 @@ export const getRepeatingEvents = (eventData: Event | EventForm) => {
   } else if (eventData.repeat.type === 'weekly') {
     const event = weeklyEventGenerator(eventData);
 
-    for (let i = limitedNum; i <= days; i++) {
+    for (let i = 0; i <= 90; i++) {
       const { value, done } = event.next();
       if (done) break;
       eventList.push(value);
