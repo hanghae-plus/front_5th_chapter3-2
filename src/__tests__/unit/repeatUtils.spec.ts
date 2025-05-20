@@ -136,7 +136,7 @@ describe('repeatUtils', () => {
       expect(events[2].date).toBe('2026-02-28');
     });
 
-    it('endDate가 설정되지 않으면, 무한 반복으로 간주하여 (예제에서는) 최대 N개까지만 생성하거나 빈 배열을 반환한다 (정책 결정 필요)', () => {
+    it('endDate가 설정되지 않으면, 무한 반복으로 간주하여 (예제에서는) 최대 N개까지만 생성하거나 빈 배열을 반환한다', () => {
       // 이 테스트는 정책에 따라 달라집니다.
       // 여기서는 endDate가 없으면 빈 배열을 반환하도록 가정 (또는 특정 최대 개수 제한)
       const noEndDateRepeatInfo: RepeatInfo = { type: 'daily', interval: 1 }; // endDate 없음
