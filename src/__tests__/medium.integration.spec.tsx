@@ -222,6 +222,42 @@ describe('반복 간격 설정', () => {
   });
 });
 
+// TODO: 이벤트 추가할 때 반복 체크 박스 누르면 반복 유형 event.repeat.type none 에서 바로 초기값 바뀌게!!!
+describe('반복 일정 표시', () => {
+  it('캘린더 뷰에서 반복 일정은 일정 제목 앞에 반복 아이콘으로 구분되어 표시되어야 한다.', async () => {
+    setupMockHandlerUpdating();
+    setup(<App />);
+    const calendarView = await screen.findByTestId('calendar-view');
+    const repeatIcon = within(calendarView).queryByLabelText('반복 아이콘');
+    expect(repeatIcon).toBeInTheDocument();
+  });
+  it('이벤트 리스트에서 반복 일정은 일정 제목 앞에 반복 아이콘으로 구분되어 표시되어야 한다.', async () => {
+    setupMockHandlerUpdating();
+    setup(<App />);
+    const eventList = await screen.findByTestId('event-list');
+    const repeatIcon = within(eventList).queryByLabelText('반복 아이콘');
+    expect(repeatIcon).toBeInTheDocument();
+  });
+});
+
+describe('반복 종료', () => {
+  it('특정 날짜까지 반복되도록 설정할 수 있어야 한다', () => {});
+
+  it('특정 횟수만큼 반복되도록 설정할 수 있어야 한다', () => {});
+
+  it('종료 없이 반복되도록 설정할 수 있어야 한다', () => {});
+});
+
+describe('반복 일정 수정', () => {
+  it('반복 일정을 수정하면 단일 일정으로 변경되어야 한다', () => {});
+
+  it('반복 일정 수정 후 반복 아이콘이 사라져야 한다', () => {});
+});
+
+describe('반복 일정 삭제', () => {
+  it('반복 일정을 삭제하면 해당 일정만 삭제되어야 한다', () => {});
+});
+
 describe('일정 CRUD 및 기본 기능', () => {
   it('입력한 새로운 일정 정보에 맞춰 모든 필드가 이벤트 리스트에 정확히 저장된다.', async () => {
     setupMockHandlerCreation();
