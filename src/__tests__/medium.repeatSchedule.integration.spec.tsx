@@ -486,7 +486,7 @@ describe('반복 일정 단일 삭제', () => {
     });
   });
 
-  it('반복 그룹에서 하나의 일정만 삭제하면, 해당 일정만 삭제되고 나머지는 유지된다.', async () => {
+  it('반복 그룹에서 하나의 일정만 삭제하면, 해당 일정만 삭제된다.', async () => {
     setupMockHandlerEventListDeletion();
 
     const { result } = renderHook(() => useEventOperations(false, true));
