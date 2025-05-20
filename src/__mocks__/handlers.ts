@@ -19,21 +19,41 @@ export const handlers = [
     const updatedEvent = (await request.json()) as Event;
     const index = events.findIndex((event) => event.id === id);
 
-    if (index !== -1) {
-      return HttpResponse.json({ ...events[index], ...updatedEvent });
-    }
-
-    return new HttpResponse(null, { status: 404 });
+    return index !== -1
+      ? HttpResponse.json({ ...events[index], ...updatedEvent })
+      : new HttpResponse(null, { status: 404 });
   }),
 
   http.delete('/api/events/:id', ({ params }) => {
     const { id } = params;
     const index = events.findIndex((event) => event.id === id);
 
-    if (index !== -1) {
-      return new HttpResponse(null, { status: 204 });
-    }
+    return index !== -1
+      ? new HttpResponse(null, { status: 204 })
+      : new HttpResponse(null, { status: 404 });
+  }),
 
-    return new HttpResponse(null, { status: 404 });
+  http.post('/api/events-list', async ({ request }) => {
+    const newEvent = (await request.json()) as Event;
+    newEvent.id = String(events.length + 1);
+    return HttpResponse.json(newEvent, { status: 201 });
+  }),
+
+  http.put('/api/events-list', async ({ request }) => {
+    const updatedEvent = (await request.json()) as Event;
+    const index = events.findIndex((event) => event.id === updatedEvent.repeat.id);
+
+    return index !== -1
+      ? HttpResponse.json({ ...events[index], ...updatedEvent })
+      : new HttpResponse(null, { status: 404 });
+  }),
+
+  http.delete('/api/events-list/:id', ({ params }) => {
+    const { id } = params;
+    const index = events.findIndex((event) => event.id !== id);
+
+    return index !== -1
+      ? new HttpResponse(null, { status: 204 })
+      : new HttpResponse(null, { status: 404 });
   }),
 ];

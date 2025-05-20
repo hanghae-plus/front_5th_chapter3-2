@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { server } from '../setupTests';
-import { Event } from '../types';
+import { Event, RepeatType } from '../types';
 
 // ! Hard 여기 제공 안함
 export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
@@ -14,6 +14,16 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
     http.post('/api/events', async ({ request }) => {
       const newEvent = (await request.json()) as Event;
       newEvent.id = String(mockEvents.length + 1); // 간단한 ID 생성
+      mockEvents.push(newEvent);
+      return HttpResponse.json(newEvent, { status: 201 });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const newEvent = (await request.json()) as Event;
+      newEvent.id = String(mockEvents.length + 1);
+      if (newEvent.repeat.type !== 'none') {
+        newEvent.repeat.id = String(mockEvents.length + 1);
+      }
+
       mockEvents.push(newEvent);
       return HttpResponse.json(newEvent, { status: 201 });
     })
@@ -63,6 +73,11 @@ export const setupMockHandlerUpdating = () => {
   );
 };
 
+/**
+ *
+ * export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+ */
+
 export const setupMockHandlerDeletion = () => {
   const mockEvents: Event[] = [
     {
@@ -89,6 +104,80 @@ export const setupMockHandlerDeletion = () => {
 
       mockEvents.splice(index, 1);
       return new HttpResponse(null, { status: 204 });
+    })
+  );
+};
+
+/**
+ * export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+ */
+
+export const setupMockHandlerRepeat = ({ repeatType }: { repeatType: RepeatType }) => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '반복 일정 회의1',
+      date: '2025-05-19',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복 일정 테스트',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { id: '1', type: repeatType, interval: 1 },
+      notificationTime: 10,
+    },
+    {
+      id: '2',
+      title: '반복 일정 회의2',
+      date: '2025-05-20',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복 일정 테스트',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { id: '1', type: repeatType, interval: 1 },
+      notificationTime: 10,
+    },
+    {
+      id: '3',
+      title: '반복 일정 회의3',
+      date: '2025-05-21',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복 일정 테스트',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { id: '1', type: repeatType, interval: 1 },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+
+    http.put('/api/events-list', async ({ request }) => {
+      const { events: eventsToUpdate } = (await request.json()) as { events: Event[] };
+      let isUpdated = false;
+
+      const newEvents = [...mockEvents];
+      eventsToUpdate.forEach((event) => {
+        const eventIndex = mockEvents.findIndex((target) => target.id === event.id);
+        if (eventIndex > -1) {
+          isUpdated = true;
+          newEvents[eventIndex] = { ...mockEvents[eventIndex], ...event };
+        }
+      });
+
+      if (isUpdated) {
+        // mockEvents 배열 업데이트
+        mockEvents.length = 0;
+        mockEvents.push(...newEvents);
+        return HttpResponse.json({ events: mockEvents });
+      }
+
+      return new HttpResponse(null, { status: 404 });
     })
   );
 };
