@@ -429,7 +429,6 @@ describe('반복 이벤트 저장', () => {
 
   it('반복 일정을 삭제하면 해당 일정만 삭제된다.', async () => {
     setupMockHandlerEventsListCreation();
-    setupMockHandlerDeletion();
 
     const newRepeatEvent: Event = {
       id: '1',
@@ -447,6 +446,14 @@ describe('반복 이벤트 저장', () => {
     const { result } = renderHook(() => useEventOperations(false));
 
     await act(async () => {
+      await result.current.saveRepeatEvent(newRepeatEvent);
+    });
+
+    await act(() => Promise.resolve(null));
+
+    setupMockHandlerDeletion(result.current.events);
+
+    await act(async () => {
       await result.current.deleteEvent('1');
     });
 
@@ -457,6 +464,6 @@ describe('반복 이벤트 저장', () => {
       { ...newRepeatEvent, id: '3', date: '2025-06-19' },
     ];
 
-    expect(result.current.events).toEqual([]);
+    expect(result.current.events).toEqual(expectedEvents);
   });
 });
