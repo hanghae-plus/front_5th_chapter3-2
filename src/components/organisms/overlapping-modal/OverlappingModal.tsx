@@ -12,19 +12,19 @@ import React, { useRef } from 'react';
 
 import { Event } from '@/types';
 
-interface AlertModalProps {
+interface OverlappingModalProps {
   isOpen: boolean;
   onCloseModal: React.Dispatch<React.SetStateAction<boolean>>;
   overlappingEvents: Event[];
   onSaveOverlapEvent: () => void;
 }
 
-export const AlertModal = ({
+export const OverlappingModal = ({
   isOpen,
   onCloseModal,
   overlappingEvents,
   onSaveOverlapEvent,
-}: AlertModalProps) => {
+}: OverlappingModalProps) => {
   const cancelRef = useRef<HTMLButtonElement>(null);
   return (
     <AlertDialog

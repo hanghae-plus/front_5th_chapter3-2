@@ -1,11 +1,13 @@
 import { Box, Flex, useToast } from '@chakra-ui/react';
 
 import { AlertContainer } from '@/components/organisms/alert-container';
-import { AlertModal } from '@/components/organisms/alert-modal';
+import { LeapDayUnsupportedModal } from '@/components/organisms/leap-day-unsurpported-modal';
+import { OverlappingModal } from '@/components/organisms/overlapping-modal';
 import { AddScheduleTemplate } from '@/components/templates/add-schedule/AddScheduleTemplate.tsx';
 import { ViewScheduleTemplate } from '@/components/templates/view-schedule';
 import { useEventForm } from '@/hooks/useEventForm.ts';
 import { useEventOperations } from '@/hooks/useEventOperations.ts';
+import { useLeapMonthModal } from '@/hooks/useLeapMonthModal';
 import { useNotifications } from '@/hooks/useNotifications.ts';
 import { useOverlapModal } from '@/hooks/useOverlapModal';
 import { convertFormToEventData, convertFormToEventDataRepeating } from '@/utils/eventFormUtils';
@@ -31,6 +33,8 @@ export function MainPage() {
   const { notifications, notifiedEvents, removeNotification } = useNotifications(events);
   const { isOverlapModalOpen, overlappingEvents, openModal, closeModal, isOverlapping } =
     useOverlapModal();
+  const { isLeapMonthModalOpen, isLeapDayYearlyRepeat, setIsLeapMonthModalOpen } =
+    useLeapMonthModal();
 
   const toast = useToast();
 
@@ -56,6 +60,10 @@ export function MainPage() {
     }
 
     if (isRepeating) {
+      if (isLeapDayYearlyRepeat(eventForm)) {
+        return setIsLeapMonthModalOpen(true);
+      }
+
       const eventData = convertFormToEventDataRepeating(eventForm, editingEvent);
       if (isOverlapping(eventData[0], events)) {
         openModal(findOverlappingEvents(eventData[0], events));
@@ -103,12 +111,18 @@ export function MainPage() {
         />
       </Flex>
 
-      <AlertModal
+      <OverlappingModal
         isOpen={isOverlapModalOpen}
         onCloseModal={closeModal}
         overlappingEvents={overlappingEvents}
         onSaveOverlapEvent={handleSaveOverlapEvent}
       />
+      <LeapDayUnsupportedModal
+        isOpen={isLeapMonthModalOpen}
+        onCloseModal={setIsLeapMonthModalOpen}
+        formData={eventForm}
+      />
+
       {notifications.length > 0 && (
         <AlertContainer notifications={notifications} removeNotification={removeNotification} />
       )}

@@ -110,8 +110,82 @@ describe('8th basic integration test - 반복 일정', () => {
       expect(within(eventList).getAllByText(formData.title)[0]).toBeInTheDocument();
       expect(within(eventList).getAllByText(/1.*주.*마다/)[0]).toBeInTheDocument();
     });
-    it('윤달의 마지막 날 이벤트를 반복 설정할 시 확인 Modal이 표시된다.', async () => {});
-    it('31일 이벤트를 반복 설정할 시 확인 Modal이 표시된다.', async () => {});
+    it.only('윤달의 마지막 날 이벤트를 반복 설정할 시 확인 Modal이 표시된다.', async () => {
+      const { handler, getHandler } = setupMockHandlerCreation(mockEvents);
+      server.use(handler, getHandler);
+      const user = userEvent.setup();
+      renderComponent();
+
+      // * 1. 기본 정보 입력
+      await user.type(screen.getByLabelText('제목'), formData.title);
+      await user.type(screen.getByLabelText('날짜'), '2024-02-29');
+      await user.type(screen.getByLabelText('시작 시간'), formData.startTime);
+      await user.type(screen.getByLabelText('종료 시간'), formData.endTime);
+      await user.type(screen.getByLabelText('설명'), formData.description);
+      await user.type(screen.getByLabelText('위치'), formData.location);
+      await user.selectOptions(screen.getByLabelText('카테고리'), formData.category);
+
+      // * 2. 반복 설정
+      const isRepeatingCheckbox = screen.getByLabelText('반복 설정');
+      await user.click(isRepeatingCheckbox);
+
+      // * 3. 반복 유형 선택
+      const repeatTypeSelector = screen.getByLabelText('반복 유형');
+      await user.selectOptions(repeatTypeSelector, 'yearly');
+
+      // * 4. 반복 간격 선택
+      const repeatIntervalSelector = screen.getByLabelText('반복 간격');
+      await user.clear(repeatIntervalSelector);
+      await user.type(repeatIntervalSelector, '1');
+
+      // * 5. 저장
+      const submitButton = screen.getByTestId('event-submit-button');
+      await user.click(submitButton);
+
+      const alertHeader = await screen.findByText('윤달 반복 경고');
+      const alertDialog = await screen.findByRole('alertdialog');
+
+      expect(alertHeader).toBeInTheDocument();
+      expect(alertDialog).toBeInTheDocument();
+    });
+    it('31일 이벤트를 반복 설정할 시 확인 Modal이 표시된다.', async () => {
+      const { handler, getHandler } = setupMockHandlerCreation(mockEvents);
+      server.use(handler, getHandler);
+      const user = userEvent.setup();
+      renderComponent();
+
+      // * 1. 기본 정보 입력
+      await user.type(screen.getByLabelText('제목'), formData.title);
+      await user.type(screen.getByLabelText('날짜'), '2024-02-31');
+      await user.type(screen.getByLabelText('시작 시간'), formData.startTime);
+      await user.type(screen.getByLabelText('종료 시간'), formData.endTime);
+      await user.type(screen.getByLabelText('설명'), formData.description);
+      await user.type(screen.getByLabelText('위치'), formData.location);
+      await user.selectOptions(screen.getByLabelText('카테고리'), formData.category);
+
+      // * 2. 반복 설정
+      const isRepeatingCheckbox = screen.getByLabelText('반복 설정');
+      await user.click(isRepeatingCheckbox);
+
+      // * 3. 반복 유형 선택
+      const repeatTypeSelector = screen.getByLabelText('반복 유형');
+      await user.selectOptions(repeatTypeSelector, 'monthly');
+
+      // * 4. 반복 간격 선택
+      const repeatIntervalSelector = screen.getByLabelText('반복 간격');
+      await user.clear(repeatIntervalSelector);
+      await user.type(repeatIntervalSelector, '3');
+
+      // * 5. 저장
+      const submitButton = screen.getByTestId('event-submit-button');
+      await user.click(submitButton);
+
+      const alertHeader = await screen.findByText('31일 경고');
+      const alertDialog = await screen.findByRole('alertdialog');
+
+      expect(alertHeader).toBeInTheDocument();
+      expect(alertDialog).toBeInTheDocument();
+    });
   });
 
   describe('1. (필수) 반복 유형 선택', () => {
