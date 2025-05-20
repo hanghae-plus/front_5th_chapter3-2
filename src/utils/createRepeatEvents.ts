@@ -6,7 +6,7 @@ export const createRepeatEvents = (eventData: EventForm) => {
   const startDate = new Date(eventData.date);
   const maxEndDate = new Date('2025-09-30');
   const repeatEndDate = endDate ? new Date(endDate) : maxEndDate;
-  const isLastDayOfMonth = isLastDay(startDate);
+  const startDateIsLastDayOfMonth = isLastDayOfMonth(startDate);
 
   if (type === 'none' || interval === 0) {
     return [eventData];
@@ -18,7 +18,7 @@ export const createRepeatEvents = (eventData: EventForm) => {
     repeatEndDate,
     type,
     interval,
-    isLastDayOfMonth,
+    startDateIsLastDayOfMonth,
   });
 
   // 각 날짜에 대해 이벤트 객체 생성
@@ -30,7 +30,7 @@ export const createRepeatEvents = (eventData: EventForm) => {
   });
 };
 
-function isLastDay(date: Date) {
+export function isLastDayOfMonth(date: Date) {
   const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   return date.getDate() === lastDay;
 }
@@ -40,7 +40,7 @@ interface generateRecurringDatesParam {
   repeatEndDate: Date;
   type: string;
   interval: number;
-  isLastDayOfMonth: boolean;
+  startDateIsLastDayOfMonth: boolean;
 }
 
 function generateRecurringDates({
@@ -48,7 +48,7 @@ function generateRecurringDates({
   repeatEndDate,
   type,
   interval,
-  isLastDayOfMonth,
+  startDateIsLastDayOfMonth,
 }: generateRecurringDatesParam) {
   // 결과 배열 초기화
   const dates = [];
@@ -73,7 +73,7 @@ function generateRecurringDates({
       }
       case 'monthly': {
         currentDate.setMonth(currentDate.getMonth() + interval);
-        if (isLastDayOfMonth) {
+        if (startDateIsLastDayOfMonth) {
           currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
         }
 
@@ -89,7 +89,15 @@ function generateRecurringDates({
         break;
       }
       case 'yearly': {
-        currentDate.setFullYear(currentDate.getFullYear() + interval);
+        if (isLastDayOfMonth(new Date(currentDate))) {
+          currentDate = new Date(
+            currentDate.getFullYear() + interval,
+            currentDate.getMonth() + 1,
+            0
+          );
+        } else {
+          currentDate.setFullYear(currentDate.getFullYear() + interval);
+        }
         break;
       }
     }
