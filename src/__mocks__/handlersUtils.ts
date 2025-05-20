@@ -92,3 +92,49 @@ export const setupMockHandlerDeletion = () => {
     })
   );
 };
+
+export const setupMockHandlerListUpdating = (initEvents = [] as Event[]) => {
+  const mockEvents: Event[] = [...initEvents];
+
+  server.use(
+    http.get('/api/events-list', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+
+    http.put('/api/events-list', async ({ request }) => {
+      const { events: updatedEvents } = (await request.json()) as { events: Event[] };
+
+      updatedEvents.forEach((updated) => {
+        const index = mockEvents.findIndex((event) => event.id === updated.id);
+        if (index !== -1) {
+          mockEvents[index] = { ...mockEvents[index], ...updated };
+        }
+      });
+
+      return HttpResponse.json({ events: mockEvents });
+    })
+  );
+};
+
+export const setupMockHandlerListDeletion = (initEvents = [] as Event[]) => {
+  const mockEvents: Event[] = [...initEvents];
+
+  server.use(
+    http.get('/api/events-list', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+
+    http.delete('/api/events-list', async ({ request }) => {
+      const { eventIds } = (await request.json()) as { eventIds: string[] };
+
+      eventIds.forEach((id) => {
+        const index = mockEvents.findIndex((event) => event.id === id);
+        if (index !== -1) {
+          mockEvents.splice(index, 1);
+        }
+      });
+
+      return new HttpResponse(null, { status: 204 });
+    })
+  );
+};

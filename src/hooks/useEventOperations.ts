@@ -2,6 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import { makeRepeatEventList } from '../utils/makeRepeatUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -67,7 +68,9 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   };
 
   const saveRepeatEvent = async (eventData: Event | EventForm) => {
-    console.log(eventData);
+    // 반복 이벤트 리스트를 만들어주는 유틸함수로 전달
+    // editing인 경우(put), 추가인 경우 (post)
+    const repeatEventList = makeRepeatEventList(eventData);
   };
 
   const deleteEvent = async (id: string) => {
