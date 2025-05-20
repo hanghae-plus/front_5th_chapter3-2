@@ -326,9 +326,97 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 });
 
 describe('일정 반복 기능', () => {
-  it('반복 유형과 반복 주기를 설정할 수 있어야 한다', async () => {});
+  describe('반복 유형', () => {
+    it('반복 유형을 설정하지 않으면 기본값으로 "daily"이 설정되어야 한다', () => {
+      setup(<App />);
 
-  it('반복 주기는 최대 12회까지 설정할 수 있어야 한다', async () => {});
+      const repeatSelect = screen.getByLabelText('repeat-type');
+
+      expect(repeatSelect).toHaveValue('daily');
+    });
+
+    it('반복 유형을 설정하면 해당 값이 저장되어야 한다', async () => {
+      const { user } = setup(<App />);
+
+      const repeatSelect = screen.getByLabelText('repeat-type');
+
+      await user.selectOptions(repeatSelect, 'weekly');
+
+      expect(repeatSelect).toHaveValue('weekly');
+    });
+  });
+
+  describe('반복 주기', () => {
+    it('반복 주기를 설정하지 않으면 기본값으로 1이 설정되어야 한다.', () => {
+      setup(<App />);
+
+      const repeatInterval = screen.getByLabelText('repeat-interval');
+      expect(repeatInterval).toHaveValue(1);
+    });
+
+    it('반복 주기가 1 미만인 경우 경고 메시지가 표시되어야 한다', async () => {
+      setupMockHandlerCreation();
+
+      const { user } = setup(<App />);
+      const repeatInterval = screen.getByLabelText('repeat-interval');
+
+      await user.clear(repeatInterval);
+      await user.type(repeatInterval, '0');
+      await saveSchedule(user, {
+        title: '새 회의',
+        date: '2025-10-15',
+        startTime: '14:00',
+        endTime: '15:00',
+        description: '프로젝트 진행 상황 논의',
+        location: '회의실 A',
+        category: '업무',
+      });
+
+      expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
+    });
+
+    it('반복 주기가 12 초과인 경우 경고 메시지가 표시되어야 한다', async () => {
+      setupMockHandlerCreation();
+
+      const { user } = setup(<App />);
+      const repeatInterval = screen.getByLabelText('repeat-interval');
+
+      await user.clear(repeatInterval);
+      await user.type(repeatInterval, '13');
+      await saveSchedule(user, {
+        title: '새 회의',
+        date: '2025-10-15',
+        startTime: '14:00',
+        endTime: '15:00',
+        description: '프로젝트 진행 상황 논의',
+        location: '회의실 A',
+        category: '업무',
+      });
+
+      expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
+    });
+
+    it('반복 주기가 정수가 아닌 경우 경고 메시지가 표시되어야 한다', async () => {
+      setupMockHandlerCreation();
+
+      const { user } = setup(<App />);
+      const repeatInterval = screen.getByLabelText('repeat-interval');
+
+      await user.clear(repeatInterval);
+      await user.type(repeatInterval, '1ggg3');
+      await saveSchedule(user, {
+        title: '새 회의',
+        date: '2025-10-15',
+        startTime: '14:00',
+        endTime: '15:00',
+        description: '프로젝트 진행 상황 논의',
+        location: '회의실 A',
+        category: '업무',
+      });
+
+      expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
+    });
+  });
 
   describe('윤년 29일에 또는 31일에 매월 또는 매년 반복일정을 설정한 경우', () => {
     it('선택한 날짜가 존재하지 않는 달에는 해당 월의 마지막 날에 일정이 생성된다는 알림이 등장해야 한다.', () => {});

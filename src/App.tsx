@@ -118,6 +118,9 @@ function App() {
   const toast = useToast();
 
   const addOrUpdateEvent = async () => {
+    // !! 여기에 반복 유형
+    // 윤년 29일에 또는 31일에 매월 또는 매년 반복일정을 설정한 경우,
+    // 선택한 날짜가 존재하지 않는 달에는 해당 월의 마지막 날에 일정이 생성됩니다
     if (!title || !date || !startTime || !endTime) {
       toast({
         title: '필수 정보를 모두 입력해주세요.',
@@ -131,6 +134,16 @@ function App() {
     if (startTimeError || endTimeError) {
       toast({
         title: '시간 설정을 확인해주세요.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (repeatInterval < 1 || repeatInterval > 12) {
+      toast({
+        title: '반복 간격은 1에서 12 사이의 숫자여야 합니다.',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -381,6 +394,7 @@ function App() {
               <FormControl>
                 <FormLabel>반복 유형</FormLabel>
                 <Select
+                  aria-label="repeat-type"
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
@@ -394,9 +408,11 @@ function App() {
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
                   <Input
+                    aria-label="repeat-interval"
                     type="number"
                     value={repeatInterval}
                     onChange={(e) => setRepeatInterval(Number(e.target.value))}
+                    max={12}
                     min={1}
                   />
                 </FormControl>
