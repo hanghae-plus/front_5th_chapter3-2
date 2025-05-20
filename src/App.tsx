@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  InfoIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -118,9 +119,6 @@ function App() {
   const toast = useToast();
 
   const addOrUpdateEvent = async () => {
-    // !! 여기에 반복 유형
-    // 윤년 29일에 또는 31일에 매월 또는 매년 반복일정을 설정한 경우,
-    // 선택한 날짜가 존재하지 않는 달에는 해당 월의 마지막 날에 일정이 생성됩니다
     if (!title || !date || !startTime || !endTime) {
       toast({
         title: '필수 정보를 모두 입력해주세요.',
@@ -406,7 +404,20 @@ function App() {
               </FormControl>
               <HStack width="100%">
                 <FormControl>
-                  <FormLabel>반복 간격</FormLabel>
+                  <FormLabel>
+                    반복 간격
+                    <Tooltip
+                      label="반복 간격상 유효하지 않은 날짜인 경우, 해당 월의 마지막 날로 설정됩니다."
+                      placement="left"
+                    >
+                      <InfoIcon
+                        aria-label="repeat-interval-info"
+                        color="blue.500"
+                        style={{ marginLeft: '5px' }}
+                      />
+                    </Tooltip>
+                  </FormLabel>
+
                   <Input
                     aria-label="repeat-interval"
                     type="number"
@@ -416,6 +427,8 @@ function App() {
                     min={1}
                   />
                 </FormControl>
+              </HStack>
+              <HStack width="100%">
                 <FormControl>
                   <FormLabel>반복 종료일</FormLabel>
                   <Input

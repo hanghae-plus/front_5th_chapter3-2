@@ -416,6 +416,17 @@ describe('일정 반복 기능', () => {
 
       expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
     });
+
+    it('반복 간격 옆의 정보 아이콘을 호버하면, 반복 주기에 대한 설명이 표시되어야 한다', async () => {
+      const { user } = setup(<App />);
+      const infoIcon = screen.getByLabelText('repeat-interval-info');
+
+      await user.hover(infoIcon);
+
+      expect(
+        screen.getByText('반복 간격상 유효하지 않은 날짜인 경우, 해당 월의 마지막 날로 설정됩니다.')
+      ).toBeInTheDocument();
+    });
   });
 
   describe('윤년 29일에 또는 31일에 매월 또는 매년 반복일정을 설정한 경우', () => {
