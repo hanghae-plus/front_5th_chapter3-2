@@ -156,6 +156,7 @@ function App() {
       },
       notificationTime,
     };
+    console.log('🚀 ~ addOrUpdateEvent ~ eventData:', eventData);
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
@@ -391,6 +392,7 @@ function App() {
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
+                  <option value="none">선택</option>
                   <option value="daily">매일</option>
                   <option value="weekly">매주</option>
                   <option value="monthly">매월</option>

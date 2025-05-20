@@ -7,6 +7,37 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
   const toast = useToast();
 
+  const saveRepeatEvent = async (eventData: Event | EventForm) => {
+    try {
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save repeat event');
+      }
+
+      await fetchEvents();
+      onSave?.();
+      toast({
+        title: editing ? '반복 일정이 수정되었습니다.' : '반복 일정이 추가되었습니다.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error saving event:', error);
+      toast({
+        title: '반복 일정 저장 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   const fetchEvents = async () => {
     try {
       const response = await fetch('/api/events');
@@ -29,7 +60,17 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
       let response;
-      if (editing) {
+
+      const isRepeatEvent = (eventData as Event).repeat.type !== 'none';
+      console.log('🚀 ~ saveEvent ~ isRepeatEvent:', isRepeatEvent);
+
+      if (isRepeatEvent) {
+        response = await fetch('/api/events-list', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventData),
+        });
+      } else if (editing) {
         response = await fetch(`/api/events/${(eventData as Event).id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },

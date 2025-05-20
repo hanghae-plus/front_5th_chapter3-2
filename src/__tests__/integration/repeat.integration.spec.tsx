@@ -39,8 +39,6 @@ describe.only('반복 일정', () => {
   it('2월 29일에 매년 반복일정을 설정하면, 윤년이 아닌 해에는 2월 28일에 생성되는지 확인한다.', async () => {
     vi.setSystemTime(new Date('2025-02-28 08:49:59'));
 
-    setupMockHandlerCreation();
-
     const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
