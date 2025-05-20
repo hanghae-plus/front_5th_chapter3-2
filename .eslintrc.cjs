@@ -20,7 +20,7 @@ module.exports = {
     ecmaVersion: 2022,
   },
   rules: {
-    'no-unused-vars': 'off', // 기본 규칙은 비활성화
+    'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': [
       'warn',
       {

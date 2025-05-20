@@ -94,27 +94,27 @@ describe('8th basic integration test - 반복 일정', () => {
 
       // * 4. 반복 간격 선택
       const repeatIntervalSelector = screen.getByLabelText('반복 간격');
-      await user.type(repeatIntervalSelector, '2');
+      await user.clear(repeatIntervalSelector);
+      await user.type(repeatIntervalSelector, '1');
 
-      // * 종료 날짜 선택
-      const endDateSelector = screen.getByLabelText('종료 날짜');
-      await user.type(endDateSelector, '2024-02-15');
+      // * 5. 종료 날짜 선택
+      const endDateSelector = screen.getByLabelText('반복 종료일');
+      await user.type(endDateSelector, '2024-02-28');
 
-      // * 5. 저장
+      // * 6. 저장
       const submitButton = screen.getByTestId('event-submit-button');
       await user.click(submitButton);
-
-      // * 5. 결과 확인
+      // * 7. 결과 확인
       const eventList = await screen.findByTestId('event-list');
-      expect(within(eventList).getAllByText(formData.title).length).toBe(2);
-      expect(within(eventList).getByText(formData.title)).toBeInTheDocument();
-      expect(within(eventList).getByText(/2.*일.*마다/)).toBeInTheDocument();
+      expect(within(eventList).getAllByText(formData.title).length).toBe(4);
+      expect(within(eventList).getAllByText(formData.title)[0]).toBeInTheDocument();
+      expect(within(eventList).getAllByText(/1.*주.*마다/)[0]).toBeInTheDocument();
     });
     it('윤달의 마지막 날 이벤트를 반복 설정할 시 확인 Modal이 표시된다.', async () => {});
     it('31일 이벤트를 반복 설정할 시 확인 Modal이 표시된다.', async () => {});
   });
 
-  describe.only('1. (필수) 반복 유형 선택', () => {
+  describe('1. (필수) 반복 유형 선택', () => {
     it('일정 생성 시 반복 유형을 선택할 수 있다.', async () => {
       const { handler, getHandler } = setupMockHandlerCreation(mockEvents);
       server.use(handler, getHandler);
@@ -178,7 +178,7 @@ describe('8th basic integration test - 반복 일정', () => {
     });
   });
 
-  describe.only('2. (필수) 반복 간격 설정', () => {
+  describe('2. (필수) 반복 간격 설정', () => {
     it('일정 생성 시 반복 간격을 선택할 수 있다.', async () => {
       const { handler, getHandler } = setupMockHandlerCreation(mockEvents);
       server.use(handler, getHandler);
@@ -204,6 +204,7 @@ describe('8th basic integration test - 반복 일정', () => {
 
       // * 4. 반복 간격 선택
       const repeatIntervalSelector = screen.getByLabelText('반복 간격');
+      await user.clear(repeatIntervalSelector);
       await user.type(repeatIntervalSelector, '2');
 
       // * 5. 저장
@@ -237,13 +238,14 @@ describe('8th basic integration test - 반복 일정', () => {
 
       // * 4. 반복 간격 선택
       const repeatIntervalSelector = screen.getByLabelText('반복 간격');
+      await user.clear(repeatIntervalSelector);
       await user.type(repeatIntervalSelector, '4');
 
-      // * 4. 저장
+      // * 5. 저장
       const submitButton = screen.getByTestId('event-submit-button');
       await user.click(submitButton);
 
-      // * 5. 결과 확인
+      // * 6. 결과 확인
       const eventList = await screen.findByTestId('event-list');
       expect(within(eventList).getByText(mockEvents[0].title)).toBeInTheDocument();
       expect(within(eventList).getByText(/4.*년.*마다/)).toBeInTheDocument();

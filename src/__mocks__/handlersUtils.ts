@@ -14,25 +14,28 @@ export const setupMockHandlerRepeatingEvents = (initEvents: Event[] = []) => {
 
   //* 반복 이벤트 생성 핸들러
   const handler = http.post('/api/events-list', async ({ request }) => {
-    const { events } = (await request.json()) as { events: Omit<Event, 'id'>[] };
-    const repeatId = `repeat-${Date.now()}`;
+    const reqData = await request.json();
+    const { events } = Array.isArray(reqData)
+      ? { events: reqData }
+      : (reqData as { events: Omit<Event, 'id'>[] });
 
-    const newEvents = events.map((event: Omit<Event, 'id'>) => {
+    events.forEach((event: Omit<Event, 'id'>) => {
       const isRepeatEvent = event.repeat?.type !== 'none';
+      const repeatId = isRepeatEvent ? `repeat-${Date.now()}` : undefined;
+
       const newEvent = {
         id: String(store.getEvents().length + 1),
         ...event,
         repeat: {
           ...event.repeat,
-          id: isRepeatEvent ? repeatId : undefined,
+          id: repeatId,
         },
       };
 
       store.addEvent(newEvent);
-      return newEvent;
     });
 
-    return HttpResponse.json(newEvents);
+    return HttpResponse.json({ events: store.getEvents() });
   });
 
   return {
@@ -47,6 +50,7 @@ export const setupMockHandlerCreation = (initEvents: Event[] = []) => {
   //* 이벤트 생성 핸들러
   const handler = http.post('/api/events', async ({ request }) => {
     const eventData = (await request.json()) as Omit<Event, 'id'>;
+    console.log(eventData);
     const newEvent = {
       id: String(store.getEvents().length + 1),
       ...eventData,

@@ -105,3 +105,45 @@ export function formatDate(currentDate: Date, day?: number) {
     fillZero(day ?? currentDate.getDate()),
   ].join('-');
 }
+
+export const formatDateToYYYYMMDD = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export const calculateRepeatNextDate = (
+  currentDate: Date,
+  iteration: number,
+  repeatType: string,
+  interval: number,
+  dayOfMonth: number
+): Date => {
+  const nextDate = new Date(currentDate);
+
+  switch (repeatType) {
+    case 'daily':
+      nextDate.setDate(nextDate.getDate() + (iteration + 1) * interval);
+      break;
+    case 'weekly': {
+      nextDate.setDate(nextDate.getDate() + (iteration + 1) * interval * 7);
+      break;
+    }
+    case 'monthly': {
+      nextDate.setMonth(nextDate.getMonth() + (iteration + 1) * interval);
+      const lastDayOfMonth = new Date(nextDate.getFullYear(), nextDate.getMonth() + 1, 0).getDate();
+      if (dayOfMonth > lastDayOfMonth) {
+        nextDate.setDate(lastDayOfMonth);
+      } else {
+        nextDate.setDate(dayOfMonth);
+      }
+      break;
+    }
+    case 'yearly':
+      nextDate.setFullYear(nextDate.getFullYear() + (iteration + 1) * interval);
+      break;
+  }
+
+  return nextDate;
+};

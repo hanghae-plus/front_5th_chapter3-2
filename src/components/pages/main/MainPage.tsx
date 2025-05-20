@@ -8,7 +8,7 @@ import { useEventForm } from '@/hooks/useEventForm.ts';
 import { useEventOperations } from '@/hooks/useEventOperations.ts';
 import { useNotifications } from '@/hooks/useNotifications.ts';
 import { useOverlapModal } from '@/hooks/useOverlapModal';
-import { convertFormToEventData } from '@/utils/eventFormUtils';
+import { convertFormToEventData, convertFormToEventDataRepeating } from '@/utils/eventFormUtils';
 import { findOverlappingEvents } from '@/utils/eventOverlap';
 
 export function MainPage() {
@@ -24,8 +24,9 @@ export function MainPage() {
     resetForm,
     editEvent,
   } = useEventForm();
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent, saveRepeatingEvents } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
   const { notifications, notifiedEvents, removeNotification } = useNotifications(events);
   const { isOverlapModalOpen, overlappingEvents, openModal, closeModal, isOverlapping } =
@@ -54,13 +55,24 @@ export function MainPage() {
       return;
     }
 
-    const eventData = convertFormToEventData(eventForm, isRepeating, editingEvent);
-
-    if (isOverlapping(eventData, events)) {
-      openModal(findOverlappingEvents(eventData, events));
+    if (isRepeating) {
+      const eventData = convertFormToEventDataRepeating(eventForm, editingEvent);
+      if (isOverlapping(eventData[0], events)) {
+        openModal(findOverlappingEvents(eventData[0], events));
+      } else {
+        await saveRepeatingEvents(eventData);
+        resetForm();
+      }
+      return;
     } else {
-      await saveEvent(eventData);
-      resetForm();
+      const eventData = convertFormToEventData(eventForm, isRepeating, editingEvent);
+
+      if (isOverlapping(eventData, events)) {
+        openModal(findOverlappingEvents(eventData, events));
+      } else {
+        await saveEvent(eventData);
+        resetForm();
+      }
     }
   };
 

@@ -47,6 +47,7 @@ const formData = {
   description: '스터디 모임',
   location: '스터디 장소',
   category: '개인',
+  repeat: { type: 'none', interval: 0 },
 };
 const renderComponent = () => {
   return render(

@@ -68,10 +68,11 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
   const saveRepeatingEvents = async (eventData: Event[] | EventForm[]) => {
     try {
+      console.log('Sending repeating events:', eventData);
       const response = await fetch('/api/events-list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(eventData),
+        body: JSON.stringify({ events: eventData }),
       });
 
       if (!response.ok) {

@@ -12,7 +12,10 @@ export const useEventForm = (initialEvent?: Event) => {
   const [eventForm, setEventForm] = useState<EventForm>(() =>
     initialEvent ? convertEventToForm(initialEvent) : DEFAULT_EVENT_FORM
   );
-  const [isRepeating, setIsRepeating] = useState(initialEvent?.repeat.type !== 'none');
+  const [isRepeating, setIsRepeating] = useState(() => {
+    console.log('initialEvent: ', initialEvent?.repeat.type);
+    return initialEvent?.repeat?.type && initialEvent.repeat.type !== 'none' ? true : false;
+  });
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
@@ -25,7 +28,6 @@ export const useEventForm = (initialEvent?: Event) => {
     key: keyof Event | keyof RepeatInfo,
     value: string | number | RepeatInfo
   ) => {
-    // RepeatInfo의 키인 경우(type, interval, endDate)
     if (key === 'type' || key === 'interval' || key === 'endDate') {
       setEventForm((prev) => ({
         ...prev,
@@ -35,7 +37,6 @@ export const useEventForm = (initialEvent?: Event) => {
         },
       }));
     } else {
-      // Event의 키인 경우(title, date, startTime 등)
       setEventForm((prev) => ({
         ...prev,
         [key]: value,

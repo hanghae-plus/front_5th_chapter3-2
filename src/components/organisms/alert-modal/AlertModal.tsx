@@ -1,4 +1,3 @@
-// AlertModal.tsx
 import {
   AlertDialog,
   AlertDialogBody,
