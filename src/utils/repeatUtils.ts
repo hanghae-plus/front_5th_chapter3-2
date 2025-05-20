@@ -7,7 +7,7 @@ import { formatDate } from './dateUtils';
 const MAX_REPEAT_END_DATE = '2025-09-30';
 
 /**
- * 윤년인지 확인합니다.
+ * 윤년인지 확인.
  */
 export function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
@@ -17,12 +17,12 @@ export function isLeapYear(year: number): boolean {
  * 해당 연월의 마지막 날짜를 반환합니다.
  */
 export function getLastDayOfMonth(year: number, month: number): number {
-  // JavaScript의 Date 객체에서 month는 0부터 시작하므로, 다음달의 0일(이전달의 마지막 날)을 구합니다.
+  // JavaScript의 Date 객체에서 month는 0부터 시작하므로, 다음달의 0일(이전달의 마지막 날)을 구함.
   return new Date(year, month, 0).getDate();
 }
 
 /**
- * 주어진 날짜에 이벤트를 생성해야 하는지 확인합니다.
+ * 주어진 날짜에 이벤트를 생성해야 하는지 확인.
  */
 export function shouldCreateEventForDate(eventData: EventForm, targetDate: Date): boolean {
   const { date, repeat } = eventData;
@@ -114,7 +114,7 @@ export function shouldCreateEventForDate(eventData: EventForm, targetDate: Date)
 }
 
 /**
- * 반복 일정에 대한 모든 이벤트 객체를 생성합니다.
+ * 반복 일정에 대한 모든 이벤트 객체를 생성.
  */
 export function createRepeatingEvents(eventData: EventForm): EventForm[] {
   if (eventData.repeat.type === 'none') {
