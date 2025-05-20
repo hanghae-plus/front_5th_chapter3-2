@@ -2,28 +2,40 @@ import { Event, EventForm } from '../types';
 import { formatDate, getDaysInMonth } from './dateUtils';
 //TODO: 해당 월로 넘어가면 그 때 생성 제너레이터?
 
-const dailyNum = 1;
-const weeklyNum = 7;
+const WEEK_NUM = 7;
 
-function* eventGenerator(eventData: Event | EventForm, repeatNum: number) {
+function* dailyEventGenerator(eventData: Event | EventForm) {
   const date = new Date(eventData.date);
+
+  const repeatInterval = eventData.repeat.interval || 1;
 
   while (!eventData.repeat.endDate) {
     yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
-    date.setDate(date.getDate() + repeatNum);
+    date.setDate(date.getDate() + repeatInterval);
+  }
+}
+
+function* weeklyEventGenerator(eventData: Event | EventForm) {
+  const date = new Date(eventData.date);
+  const repeatInterval = eventData.repeat.interval || 1;
+  const week = repeatInterval * WEEK_NUM;
+
+  while (!eventData.repeat.endDate) {
+    yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
+    date.setDate(date.getDate() + week);
   }
 }
 
 function* monthEventGenerator(eventData: Event | EventForm) {
   const baseDate = new Date(eventData.date);
   const baseDay = baseDate.getDate();
-
   const date = new Date(eventData.date);
-  date.getDate();
+
+  const repeatInterval = eventData.repeat.interval || 1;
 
   while (!eventData.repeat.endDate) {
     yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
-    const currentMonth = date.getMonth() + 1;
+    const currentMonth = date.getMonth() + repeatInterval;
 
     date.setMonth(currentMonth);
 
@@ -39,9 +51,11 @@ function* yearEventGenerator(eventData: Event | EventForm) {
 
   const date = new Date(eventData.date);
 
+  const repeatInterval = eventData.repeat.interval || 1;
+
   while (!eventData.repeat.endDate) {
     yield { ...eventData, id: 'fixed-id', date: formatDate(date) };
-    date.setFullYear(date.getFullYear() + 1);
+    date.setFullYear(date.getFullYear() + repeatInterval);
 
     if (date.getMonth() !== baseMonth) {
       date.setMonth(baseMonth, 28);
@@ -56,7 +70,7 @@ export const getRepeatingEvents = (eventData: Event | EventForm) => {
   const limitedNum = new Date(eventData.date).getDate();
 
   if (eventData.repeat.type === 'daily') {
-    const event = eventGenerator(eventData, dailyNum);
+    const event = dailyEventGenerator(eventData);
 
     for (let i = limitedNum; i <= days; i++) {
       const { value, done } = event.next();
@@ -64,7 +78,7 @@ export const getRepeatingEvents = (eventData: Event | EventForm) => {
       eventList.push(value);
     }
   } else if (eventData.repeat.type === 'weekly') {
-    const event = eventGenerator(eventData, weeklyNum);
+    const event = weeklyEventGenerator(eventData);
 
     for (let i = limitedNum; i <= days; i++) {
       const { value, done } = event.next();
