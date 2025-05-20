@@ -176,3 +176,35 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 
   expect(result.current.events).toHaveLength(1);
 });
+
+describe('반복 일정 기능', () => {
+  it('반복 일정 저장 시 입력한 정보를 반영한 반복 일정이 생성된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '반복 일정',
+      date: '2025-01-01',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '반복 일정',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    expect(result.current.events).toEqual([
+      { ...newEvent, id: '1' },
+      { ...newEvent, date: '2025-01-02', id: '2' },
+    ]);
+  })
+})
