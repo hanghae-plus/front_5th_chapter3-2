@@ -186,7 +186,7 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
   expect(result.current.events).toHaveLength(1);
 });
 
-describe('반복 일정 저장', () => {
+describe('반복 일정 생성', () => {
   it('매일 반복되는 일정이 올바르게 저장된다.', async () => {
     setupMockHandlerEventListCreation();
     const { result } = renderHook(() => useEventOperations(false));
@@ -279,7 +279,99 @@ describe('반복 일정 저장', () => {
     ]);
   });
 
-  it('매달 반복되는 일정이 올바르게 저장된다', async () => {
+  it('세 달마다 반복되는 일정이 올바르게 저장된다', async () => {
+    setupMockHandlerEventListCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '병원 정기 검진',
+      date: '2025-05-01',
+      startTime: '13:00',
+      endTime: '18:00',
+      description: '경희대병원',
+      location: '병원',
+      category: '개인',
+      repeat: { type: 'monthly', interval: 3, endDate: '2026-03-01' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(4);
+
+    expect(result.current.events).toEqual([
+      {
+        ...newEvent,
+      },
+      {
+        ...newEvent,
+        id: '2',
+        date: '2025-08-01',
+      },
+      {
+        ...newEvent,
+        id: '3',
+        date: '2025-11-01',
+      },
+      {
+        ...newEvent,
+        id: '4',
+        date: '2026-02-01',
+      },
+    ]);
+  });
+
+  it('격년 반복되는 일정이 올바르게 저장된다', async () => {
+    setupMockHandlerEventListCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '격년 크리스마스',
+      date: '2024-12-25',
+      startTime: '13:00',
+      endTime: '18:00',
+      description: '크리수마스 파뤼',
+      location: '우리집',
+      category: '개인',
+      repeat: { type: 'yearly', interval: 2, endDate: '2030-12-31' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(4);
+
+    expect(result.current.events).toEqual([
+      {
+        ...newEvent,
+      },
+      {
+        ...newEvent,
+        id: '2',
+        date: '2026-12-25',
+      },
+      {
+        ...newEvent,
+        id: '3',
+        date: '2028-12-25',
+      },
+      {
+        ...newEvent,
+        id: '4',
+        date: '2030-12-25',
+      },
+    ]);
+  });
+
+  it('31일에 매월 반복되는 일정을 설정하면 31일이 있는 달만 일정이 생성된다', async () => {
     setupMockHandlerEventListCreation();
     const { result } = renderHook(() => useEventOperations(false));
     await act(() => Promise.resolve(null));
@@ -320,21 +412,21 @@ describe('반복 일정 저장', () => {
     ]);
   });
 
-  it('매년 반복되는 일정이 올바르게 저장된다', async () => {
+  it('2월 29일에 매년 반복되는 일정을 설정하면 윤년에만 일정이 생성된다.', async () => {
     setupMockHandlerEventListCreation();
     const { result } = renderHook(() => useEventOperations(false));
     await act(() => Promise.resolve(null));
 
     const newEvent: Event = {
       id: '1',
-      title: '윤년 계산',
-      date: '2024-02-29',
+      title: '31일은 베라데이',
+      date: '2025-05-31',
       startTime: '13:00',
       endTime: '18:00',
-      description: '윤년',
+      description: '베라데이',
       location: '우리집',
       category: '개인',
-      repeat: { type: 'yearly', interval: 1, endDate: '2032-03-01' },
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-10-01' },
       notificationTime: 10,
     };
 
@@ -351,13 +443,25 @@ describe('반복 일정 저장', () => {
       {
         ...newEvent,
         id: '2',
-        date: '2028-02-29',
+        date: '2025-07-31',
       },
       {
         ...newEvent,
         id: '3',
-        date: '2032-02-29',
+        date: '2025-08-31',
       },
     ]);
   });
+});
+
+describe('반복 일정 수정', () => {
+  it('반복 일정 중 하나를 수정하면 반복 아이콘이 사라지며 단일 일정으로 변경된다.', () => {});
+
+  it('반복 일정 전체 수정을 하면 같은 반복 일정이 다 일괄 수정된다.', () => {});
+});
+
+describe('반복 일정 삭제', () => {
+  it('반복 일정 중 하나를 삭제하면 해당 일정만 삭제된다.', () => {});
+
+  it('반복 일정 전체 삭제를 하면 같은 반복 일정이 다 삭제된다.', () => {});
 });
