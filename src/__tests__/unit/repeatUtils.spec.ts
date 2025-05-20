@@ -8,55 +8,57 @@ import {
 describe('repeatUtils', () => {
   describe('adjustDateForRepeat', () => {
     it('요청된 일이 해당 월에 존재하면 그대로 반환한다 (예: 3월 15일)', () => {
-      expect(adjustDateForRepeat(2025, 2, 15, 15)).toBe('2025-03-15'); // month is 0-indexed
+      expect(adjustDateForRepeat(2025, 2, 15)).toBe('2025-03-15'); // month is 0-indexed
     });
 
     it('요청된 일이 해당 월의 마지막 날보다 크면 해당 월의 마지막 날로 조정한다 (예: 1월 31일 -> 2월은 28일)', () => {
-      expect(adjustDateForRepeat(2025, 1, 31, 31)).toBe('2025-02-28'); // 2025년 2월
+      expect(adjustDateForRepeat(2025, 1, 31)).toBe('2025-02-28'); // 2025년 2월
     });
 
     it('윤년의 2월 29일을 요청하면 2월 29일을 반환한다', () => {
-      expect(adjustDateForRepeat(2024, 1, 29, 29)).toBe('2024-02-29'); // 2024년은 윤년
+      expect(adjustDateForRepeat(2024, 1, 29)).toBe('2024-02-29'); // 2024년은 윤년
     });
 
     it('평년의 2월 29일을 요청하면 (원래 시작일이 29일) 2월 28일로 조정한다', () => {
-      expect(adjustDateForRepeat(2025, 1, 29, 29)).toBe('2025-02-28');
+      expect(adjustDateForRepeat(2025, 1, 29)).toBe('2025-02-28');
     });
 
     it('4월 30일을 요청하면 (원래 시작일이 30일) 4월 30일을 반환한다', () => {
-      expect(adjustDateForRepeat(2025, 3, 30, 30)).toBe('2025-04-30');
+      expect(adjustDateForRepeat(2025, 3, 30)).toBe('2025-04-30');
     });
     it('4월 31일을 요청하면 (원래 시작일이 31일) 4월 30일로 조정한다', () => {
-      expect(adjustDateForRepeat(2025, 3, 31, 31)).toBe('2025-04-30');
+      expect(adjustDateForRepeat(2025, 3, 31)).toBe('2025-04-30');
     });
   });
 
   describe('calculateNextRepeatDate', () => {
     it('매일 반복 시 interval만큼 다음 날짜를 반환한다', () => {
-      expect(calculateNextRepeatDate('2025-05-01', 'daily', 1)).toBe('2025-05-02');
-      expect(calculateNextRepeatDate('2025-05-01', 'daily', 3)).toBe('2025-05-04');
-      expect(calculateNextRepeatDate('2025-02-27', 'daily', 2)).toBe('2025-03-01'); // 월 변경
+      // 일일 반복은 originalStartDay의 영향이 적지만, 일관성을 위해 전달
+      expect(calculateNextRepeatDate('2025-05-01', 'daily', 1, 1)).toBe('2025-05-02');
+      expect(calculateNextRepeatDate('2025-05-01', 'daily', 3, 1)).toBe('2025-05-04');
+      expect(calculateNextRepeatDate('2025-02-27', 'daily', 2, 27)).toBe('2025-03-01');
     });
 
     it('매주 반복 시 interval만큼 다음 주 같은 요일의 날짜를 반환한다', () => {
-      expect(calculateNextRepeatDate('2025-05-01', 'weekly', 1)).toBe('2025-05-08'); // 7일 후
-      expect(calculateNextRepeatDate('2025-05-01', 'weekly', 2)).toBe('2025-05-15'); // 14일 후
+      // 주간 반복도 originalStartDay의 영향이 적음
+      expect(calculateNextRepeatDate('2025-05-01', 'weekly', 1, 1)).toBe('2025-05-08');
+      expect(calculateNextRepeatDate('2025-05-01', 'weekly', 2, 1)).toBe('2025-05-15');
     });
 
     it('매월 반복 시 interval만큼 다음 달 같은 일자로 반환하며, 월말 처리를 한다', () => {
-      // adjustDateForRepeat 함수가 정확하다는 가정하에, calculateNextRepeatDate는 이를 호출할 것임
-      // 여기서는 다음 달로 넘어가는지만 간단히 테스트하거나, adjustDateForRepeat의 테스트에 의존
-      expect(calculateNextRepeatDate('2025-01-15', 'monthly', 1)).toBe('2025-02-15');
-      expect(calculateNextRepeatDate('2025-01-31', 'monthly', 1)).toBe('2025-02-28'); // 월말 조정
-      expect(calculateNextRepeatDate('2024-01-31', 'monthly', 1)).toBe('2024-02-29'); // 윤년 월말 조정
-      expect(calculateNextRepeatDate('2025-01-15', 'monthly', 2)).toBe('2025-03-15'); // 두 달 후
+      expect(calculateNextRepeatDate('2025-01-15', 'monthly', 1, 15)).toBe('2025-02-15');
+      expect(calculateNextRepeatDate('2025-01-31', 'monthly', 1, 31)).toBe('2025-02-28'); // 월말 조정
+      expect(calculateNextRepeatDate('2024-01-31', 'monthly', 1, 31)).toBe('2024-02-29'); // 윤년 월말 조정
+      expect(calculateNextRepeatDate('2025-01-15', 'monthly', 2, 15)).toBe('2025-03-15');
+      // 실패했던 케이스와 유사한 상황: 2월 28일 다음 +1달 (원래 시작일 31일) -> 3월 31일 기대
+      expect(calculateNextRepeatDate('2025-02-28', 'monthly', 1, 31)).toBe('2025-03-31');
     });
 
     it('매년 반복 시 interval만큼 다음 해 같은 날짜로 반환하며, 윤년 월말 처리를 한다', () => {
-      expect(calculateNextRepeatDate('2025-03-15', 'yearly', 1)).toBe('2026-03-15');
-      expect(calculateNextRepeatDate('2024-02-29', 'yearly', 1)).toBe('2025-02-28'); // 윤년 -> 평년
-      expect(calculateNextRepeatDate('2023-02-28', 'yearly', 1)).toBe('2024-02-28'); // 평년 -> 윤년 (29일로 바뀌진 않음)
-      expect(calculateNextRepeatDate('2024-02-29', 'yearly', 2)).toBe('2026-02-28'); // 2년 후
+      expect(calculateNextRepeatDate('2025-03-15', 'yearly', 1, 15)).toBe('2026-03-15');
+      expect(calculateNextRepeatDate('2024-02-29', 'yearly', 1, 29)).toBe('2025-02-28');
+      expect(calculateNextRepeatDate('2023-02-28', 'yearly', 1, 28)).toBe('2024-02-28');
+      expect(calculateNextRepeatDate('2024-02-29', 'yearly', 2, 29)).toBe('2026-02-28');
     });
   });
 
