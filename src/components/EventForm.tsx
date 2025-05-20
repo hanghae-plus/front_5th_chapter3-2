@@ -13,7 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { ChangeEvent, FC } from 'react';
 
-import { EventFormProps } from '../types/eventFormType';
+import { EventFormProps } from '../types';
 // eslint-disable-next-line import/order
 import RepeatForm from './RepeatForm';
 

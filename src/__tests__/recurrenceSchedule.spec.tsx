@@ -1,3 +1,6 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+
+import EventForm from '../components/EventForm';
 import { Event, RepeatInfo } from '../types';
 import { formatEventTitle } from '../utils/eventUtils';
 import {
@@ -144,6 +147,7 @@ describe('반복 종료', () => {
     const result = generateRepeats(start, repeat);
 
     const dates = result.slice(0, 10).map((d) => d.toISOString().slice(0, 10));
+
     expect(dates).toEqual([
       '2025-05-22',
       '2025-05-23',
@@ -156,5 +160,42 @@ describe('반복 종료', () => {
       '2025-05-30',
       '2025-05-31',
     ]);
+  });
+});
+
+describe('반복 일정 단일 수정', () => {
+  it('반복 일정 체크 해제 시 🔁 아이콘이 사라진다.', () => {
+    render(<EventForm />);
+
+    const checkbox = screen.getByLabelText(/반복 일정/i);
+    const checkboxWrapper = checkbox.closest('label');
+
+    console.log('chec', checkbox);
+
+    // 체크 → 체크 해제
+    fireEvent.click(checkbox); // ON
+    expect(checkboxWrapper).toHaveAttribute('data-checked');
+
+    fireEvent.click(checkbox); // OFF
+    expect(checkboxWrapper).not.toHaveAttribute('data-checked');
+  });
+
+  it('반복일정을 수정하면 단일 일정으로 변경된다.', () => {
+    const originalEvent = {
+      id: 'abc',
+      title: '매일 아침 회의',
+      date: '2025-05-22',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-06-22',
+      },
+      isRepeating: true,
+    };
+
+    const updatedEvent = updateRepeatToNone(originalEvent);
+
+    expect(updatedEvent.repeat.type).toBe('none');
+    expect(updatedEvent.isRepeating).toBe(false); // UI용 부가 확인
   });
 });

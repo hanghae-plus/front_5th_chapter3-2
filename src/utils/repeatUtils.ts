@@ -51,6 +51,22 @@ export function generateMonthlyRepeats(startDate: Date, endDate: Date, interval:
   return result;
 }
 
+export function generateMonthlyRepeatsByCount(
+  startDate: Date,
+  interval: number,
+  count: number
+): Date[] {
+  const result: Date[] = [];
+  let current = new Date(startDate);
+
+  for (let i = 0; i < count; i++) {
+    result.push(new Date(current));
+    current.setMonth(current.getMonth() + interval);
+  }
+
+  return result;
+}
+
 /**daily 반복 일정 */
 export function generateDailyRepeats(startDate: Date, endDate: Date, interval: number): Date[] {
   const result: Date[] = [];
@@ -59,6 +75,22 @@ export function generateDailyRepeats(startDate: Date, endDate: Date, interval: n
   while (currentDate <= endDate) {
     result.push(new Date(currentDate));
     currentDate.setDate(currentDate.getDate() + interval);
+  }
+
+  return result;
+}
+
+export function generateDailyRepeatsByCount(
+  startDate: Date,
+  interval: number,
+  count: number
+): Date[] {
+  const result: Date[] = [];
+  let current = new Date(startDate);
+
+  for (let i = 0; i < count; i++) {
+    result.push(new Date(current));
+    current.setDate(current.getDate() + interval);
   }
 
   return result;
@@ -76,6 +108,22 @@ export function generateWeeklyRepeats(startDate: Date, endDate: Date, interval: 
   return result;
 }
 
+export function generateWeeklyRepeatsByCount(
+  startDate: Date,
+  interval: number,
+  count: number
+): Date[] {
+  const result: Date[] = [];
+  let current = new Date(startDate);
+
+  for (let i = 0; i < count; i++) {
+    result.push(new Date(current));
+    current.setDate(current.getDate() + 7 * interval);
+  }
+
+  return result;
+}
+
 /**
  * 주어진 반복 설정에 따라 반복 일정을 생성합니다.
  *
@@ -85,18 +133,36 @@ export function generateWeeklyRepeats(startDate: Date, endDate: Date, interval: 
  *
  */
 
-export function generateRepeats(startDate: Date, repeat: RepeatInfo): Date[] {
+export function generateRepeats(
+  startDate: Date,
+  repeat: RepeatInfo,
+  maxCount: number = 1000
+): Date[] {
   const { type, interval, endDate } = repeat;
-  const end = new Date(endDate!);
 
-  switch (type) {
-    case 'daily':
-      return generateDailyRepeats(startDate, end, interval);
-    case 'weekly':
-      return generateWeeklyRepeats(startDate, end, interval);
-    case 'monthly':
-      return generateMonthlyRepeats(startDate, end, interval);
-    default:
-      throw new Error(`Unsupported repeat type: ${type}`);
+  if (endDate) {
+    const end = new Date(endDate);
+    switch (type) {
+      case 'daily':
+        return generateDailyRepeats(startDate, end, interval);
+      case 'weekly':
+        return generateWeeklyRepeats(startDate, end, interval);
+      case 'monthly':
+        return generateMonthlyRepeats(startDate, end, interval);
+      default:
+        throw new Error(`Unsupported repeat type: ${type}`);
+    }
+  } else {
+    // 종료 조건이 없으면 maxCount 만큼 반복
+    switch (type) {
+      case 'daily':
+        return generateDailyRepeatsByCount(startDate, interval, maxCount);
+      case 'weekly':
+        return generateWeeklyRepeatsByCount(startDate, interval, maxCount);
+      case 'monthly':
+        return generateMonthlyRepeatsByCount(startDate, interval, maxCount);
+      default:
+        throw new Error(`Unsupported repeat type: ${type}`);
+    }
   }
 }

@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import { http, HttpResponse } from 'msw';
 
 import { server } from '../setupTests';
@@ -16,6 +18,37 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
       newEvent.id = String(mockEvents.length + 1); // 간단한 ID 생성
       mockEvents.push(newEvent);
       return HttpResponse.json(newEvent, { status: 201 });
+    })
+  );
+};
+
+export const setupMockHandlerEventListCreation = (initEvents = [] as Event[]) => {
+  const mockEvents: Event[] = [...initEvents];
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const body = (await request.json()) as { events: Event[] };
+      const events = body.events as Event[];
+
+      const repeatId = randomUUID();
+
+      const newEvents = events.map((event, idx) => {
+        const isRepeatEvent = event.repeat?.type !== 'none';
+        return {
+          ...event,
+          id: randomUUID(),
+          repeat: {
+            ...event.repeat,
+            id: isRepeatEvent ? repeatId : undefined,
+          },
+        };
+      });
+
+      mockEvents.push(...newEvents);
+
+      return HttpResponse.json(newEvents, { status: 201 });
     })
   );
 };
