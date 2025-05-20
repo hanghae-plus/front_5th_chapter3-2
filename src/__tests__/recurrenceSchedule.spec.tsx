@@ -52,14 +52,42 @@ describe('반복 유형 선택', () => {
     expect(savedDates).toEqual(['2024-02-29', '2028-02-29', '2032-02-29']);
   });
 
-  it('31일에 매월 반복 신청을 하면 31일이 없는 달은 일정을 생성하지 않는다.', () => {
+  it('31일에 매월 반복 신청을 하면 31일이 없는 달은 일정을 생성하지 않는다.', async () => {
+    setupMockHandlerEventListCreation();
+    const { result } = renderHook(() => useEventOperations(false, true));
+
+    await act(() => Promise.resolve(null));
+
     const startDate = new Date('2025-1-31');
     const endDate = new Date('2025-06-30');
 
-    const result = generateMonthlyRepeats(startDate, endDate, 1);
-    const dates = result.map((d) => d.toISOString().slice(0, 10));
+    const baseEvent = {
+      id: '',
+      title: '매월 31일 일정',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '',
+      location: '',
+      category: '정기',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-06-30' },
+      notificationTime: 10,
+    } as Omit<Event, 'id' | 'date'>;
 
-    expect(dates).toEqual(['2025-01-31', '2025-03-31', '2025-05-31']);
+    // 31일이 존재하는 달만 반복 이벤트 생성
+    const events = generateMonthlyRepeats(startDate, endDate, 1).map((date) => ({
+      ...baseEvent,
+      id: '',
+      date: date.toISOString().slice(0, 10),
+    }));
+
+    for (const event of events) {
+      await act(async () => {
+        await result.current.saveEvent(event);
+      });
+    }
+    const savedDates = result.current.events.map((e) => e.date);
+
+    expect(savedDates).toEqual(['2025-01-31', '2025-03-31', '2025-05-31']);
   });
 });
 
