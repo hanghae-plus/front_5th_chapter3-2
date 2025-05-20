@@ -54,6 +54,8 @@ export function getRepeatedEvents(event: EventForm) {
   const { type, interval, endDate } = repeat;
   const finalEndDate = endDate ? new Date(endDate) : new Date('2048-12-31');
   const repeatedEvents: EventForm[] = [];
+  let originMonth = new Date(date).getMonth(),
+    originDate = new Date(date).getDate();
   let currentDate = new Date(date);
 
   switch (type) {
@@ -75,14 +77,30 @@ export function getRepeatedEvents(event: EventForm) {
       while (currentDate <= finalEndDate) {
         repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
 
-        currentDate.setMonth(currentDate.getMonth() + interval);
+        const currentMonth = currentDate.getMonth();
+        const nextDate = currentDate;
+        nextDate.setMonth(nextDate.getMonth() + interval);
+
+        if (currentMonth !== currentDate.getMonth()) {
+          currentDate.setDate(originDate);
+        }
+        currentDate.setMonth(nextDate.getMonth());
       }
       break;
     case 'yearly':
       while (currentDate <= finalEndDate) {
-        repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+        if (currentDate.getDate() === originDate) {
+          repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+        }
 
-        currentDate.setFullYear(currentDate.getFullYear() + interval);
+        const nextDate = currentDate;
+        nextDate.setFullYear(nextDate.getFullYear() + interval);
+
+        if (originMonth !== currentDate.getMonth()) {
+          currentDate.setMonth(originMonth);
+          currentDate.setDate(originDate);
+        }
+        currentDate.setFullYear(nextDate.getFullYear());
       }
       break;
   }
