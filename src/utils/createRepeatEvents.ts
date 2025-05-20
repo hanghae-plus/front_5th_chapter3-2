@@ -22,20 +22,39 @@ const getNextRepeatDate = (baseDate: Date, type: RepeatType, i: number): Date =>
 }
 
 export const createRepeatEvents = (event: Event): Event[] => {
-  
-  const { type, interval } = event.repeat;
-  const baseDate = new Date(event.date);
+  const { repeat } = event;
+  if (!repeat || repeat.type === 'none') {
+    return [];
+  }
 
-  // 원래 일정 포함 + 추가 반복 일정
-  // ex) interval이 1이면 두 개의 이벤트(원래 일정 + 1회 반복)를 생성
-  const repeatEvents = Array.from({ length: interval + 1 }, (_, i) => ({
-    ...event,
-    date: formatDate(getNextRepeatDate(baseDate, type, i)),
-    repeat: {
-      ...event.repeat,
-      id: `repeat-${i + 1}`
+  const repeatEvents: Event[] = [];
+
+  const startDate = new Date(event.date);
+  const maxDate = new Date('2025-09-30'); // endDate가 주어지지 않았을 때 반복 이벤트의 최대 날짜 설정 (2025년 9월 30일)
+  const endDate = repeat.endDate ? new Date(repeat.endDate) : maxDate;
+  
+  let currentDate = new Date(startDate);
+  let eventIdCounter = 1;
+  const repeatGroupId = `repeat-${event.id}`;
+  
+  while (currentDate <= endDate && currentDate <= maxDate) {
+    const newEvent: Event = {
+      ...event,
+      id: `${eventIdCounter}`,
+      date: formatDate(currentDate),
+      repeat: {
+        ...event.repeat,
+        id: repeatGroupId,
+      },
     }
-  }));
+    repeatEvents.push(newEvent);
+    
+    const nextDate = getNextRepeatDate(currentDate, repeat.type, repeat.interval || 1);
+    if (!nextDate || nextDate > endDate || nextDate > maxDate) break;
+
+    currentDate = nextDate;
+    eventIdCounter++;
+  }
 
   return repeatEvents;
 }; 
