@@ -240,6 +240,66 @@ describe('반복 유형 선택', () => {
     expect(result.current.events[result.current.events.length - 1].repeat.type).toBe('weekly');
     expect(result.current.events[result.current.events.length - 1].repeat.interval).toBe(1);
   });
+
+  it('반복 유형이 매월이고 윤년 2024년 2월 29일에 반복 일정을 선택했을 때, 2025년 3월 01일에 반복 일정이 생성된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2024-02-29',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 6, endDate: '2025-03-01' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvents(newEvent);
+    });
+
+    console.log(result.current.events);
+    expect(result.current.events).toHaveLength(3);
+    expect(result.current.events[0].date).toBe('2024-02-29');
+    expect(result.current.events[1].date).toBe('2024-08-29');
+    expect(result.current.events[2].date).toBe('2025-03-01');
+  });
+
+  it('반복 유형이 매년이고 윤년 2024년 2월 29일에 반복 일정을 선택했을 때, 2025년 3월 01일에 반복 일정이 생성된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2024-02-29',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1, endDate: '2025-03-01' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvents(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(2);
+    expect(result.current.events[0].date).toBe('2024-02-29');
+    expect(result.current.events[1].date).toBe('2025-03-01');
+  });
 });
 
 describe('반복 간격 설정', () => {
