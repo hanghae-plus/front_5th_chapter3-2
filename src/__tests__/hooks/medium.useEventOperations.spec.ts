@@ -426,4 +426,37 @@ describe('반복 이벤트 저장', () => {
 
     expect(result.current.events).toEqual(expectedEvents);
   });
+
+  it('반복 일정을 삭제하면 해당 일정만 삭제된다.', async () => {
+    setupMockHandlerEventsListCreation();
+    setupMockHandlerDeletion();
+
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-02-19',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 2, endDate: '2025-08-03' },
+      notificationTime: 5,
+    };
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(async () => {
+      await result.current.deleteEvent('1');
+    });
+
+    await act(() => Promise.resolve(null));
+
+    const expectedEvents = [
+      { ...newRepeatEvent, id: '2', date: '2025-04-19' },
+      { ...newRepeatEvent, id: '3', date: '2025-06-19' },
+    ];
+
+    expect(result.current.events).toEqual([]);
+  });
 });
