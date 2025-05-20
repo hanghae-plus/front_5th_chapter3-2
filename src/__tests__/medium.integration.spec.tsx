@@ -334,76 +334,251 @@ describe('일정 충돌', () => {
 
 describe('반복 유형 선택', () => {
   it('일정 생성시 반복 유형을 매일로 선택할 수 있다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 유형을 '매일'로 선택
-    // 4. 일정 저장
-    // 5. 저장된 일정이 매일 반복으로 표시되는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '매일 반복',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '매일 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('매일 반복')).toBeInTheDocument();
+    expect(eventList.getByTestId('repeat-icon')).toBeInTheDocument();
+    expect(eventList.getByText('반복 유형: 매일')).toBeInTheDocument();
   });
 
   it('일정 생성시 반복 유형을 매주로 선택할 수 있다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 유형을 '매주'로 선택
-    // 4. 일정 저장
-    // 5. 저장된 일정이 매주 반복으로 표시되는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '매주 반복',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '매주 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1 },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('매주 반복')).toBeInTheDocument();
+    expect(eventList.getByTestId('repeat-icon')).toBeInTheDocument();
+    expect(eventList.getByText('반복 유형: 매주')).toBeInTheDocument();
   });
 
   it('일정 생성시 반복 유형을 매월로 선택할 수 있다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 유형을 '매월'로 선택
-    // 4. 일정 저장
-    // 5. 저장된 일정이 매월 반복으로 표시되는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '매월 반복',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '매월 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('매월 반복')).toBeInTheDocument();
+    expect(eventList.getByTestId('repeat-icon')).toBeInTheDocument();
+    expect(eventList.getByText('반복 유형: 매월')).toBeInTheDocument();
   });
 
   it('일정 생성시 반복 유형을 매년으로 선택할 수 있다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 유형을 '매년'으로 선택
-    // 4. 일정 저장
-    // 5. 저장된 일정이 매년 반복으로 표시되는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '매년 반복',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '매년 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1 },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('매년 반복')).toBeInTheDocument();
+    expect(eventList.getByTestId('repeat-icon')).toBeInTheDocument();
+    expect(eventList.getByText('반복 유형: 매년')).toBeInTheDocument();
   });
 
   it('윤년 29일에 반복 일정을 설정하는 경우, 해당 날짜(29일)가 있는 경우만 반복한다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 날짜를 2024-02-29(윤년)로 설정
-    // 3. 반복 체크박스 활성화
-    // 4. 반복 유형을 '매월'로 선택
-    // 5. 일정 저장
-    // 6. 2024-03-29, 2024-04-29 등에만 일정이 표시되는지 확인
-    // 7. 2024-03-30, 2024-04-30 등에는 일정이 표시되지 않는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '윤년 29일 반복',
+      date: '2024-02-29',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '윤년 29일 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+    });
+
+    // 2024-03-29에 일정이 있는지 확인
+    await user.selectOptions(screen.getByLabelText('view'), 'month');
+    await user.type(screen.getByLabelText('date'), '2024-03-29');
+    const marchEventList = within(screen.getByTestId('event-list'));
+    expect(marchEventList.getByText('윤년 29일 반복')).toBeInTheDocument();
+
+    // 2024-03-30에는 일정이 없는지 확인
+    await user.type(screen.getByLabelText('date'), '2024-03-30');
+    const march30EventList = within(screen.getByTestId('event-list'));
+    expect(march30EventList.queryByText('윤년 29일 반복')).not.toBeInTheDocument();
   });
 
   it('31일에 매달 반복일정을 설정한다면 해당 날짜(31일)가 있는 경우만 반복한다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 날짜를 2024-01-31로 설정
-    // 3. 반복 체크박스 활성화
-    // 4. 반복 유형을 '매월'로 선택
-    // 5. 일정 저장
-    // 6. 2024-01-31, 2024-03-31 등에만 일정이 표시되는지 확인
-    // 7. 2024-02-29, 2024-04-30 등에는 일정이 표시되지 않는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '31일 반복',
+      date: '2024-01-31',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '31일 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+    });
+
+    // 2024-03-31에 일정이 있는지 확인
+    await user.selectOptions(screen.getByLabelText('view'), 'month');
+    await user.type(screen.getByLabelText('date'), '2024-03-31');
+    const marchEventList = within(screen.getByTestId('event-list'));
+    expect(marchEventList.getByText('31일 반복')).toBeInTheDocument();
+
+    // 2024-02-29에는 일정이 없는지 확인
+    await user.type(screen.getByLabelText('date'), '2024-02-29');
+    const febEventList = within(screen.getByTestId('event-list'));
+    expect(febEventList.queryByText('31일 반복')).not.toBeInTheDocument();
   });
 
   it('수정시 반복 유형이 올바르게 변경된다 (매일 → 매월).', async () => {
-    // 1. 매일 반복 일정 생성
-    // 2. 해당 일정의 수정 버튼 클릭
-    // 3. 반복 유형을 '매월'로 변경
-    // 4. 일정 저장
-    // 5. 저장된 일정이 매월 반복으로 표시되는지 확인 (수정을 선택한 일자 이후에 대해서만 변경)
+    const { user } = setup(<App />);
+
+    // 매일 반복 일정 생성
+    await saveRecurringSchedule(user, {
+      title: '반복 일정 수정 테스트',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복 일정 수정 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+    });
+
+    // 수정 버튼 클릭
+    const editButton = await screen.findByLabelText('Edit event');
+    await user.click(editButton);
+
+    // 반복 유형을 매월로 변경
+    await user.click(screen.getByLabelText('반복 설정'));
+    await user.selectOptions(screen.getByLabelText('반복 유형'), 'monthly');
+
+    // 저장
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    // 변경된 반복 유형 확인
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('반복 유형: 매월')).toBeInTheDocument();
   });
 
   it('일정 생성시 이미 존재하는 일정과 반복 일정이 겹치는 경우 경고가 표시된다.', async () => {
-    // 1. 기존 일정 생성 (2025-10-15 09:00-10:00)
-    // 2. 새로운 반복 일정 생성 시도 (2025-10-15 09:30-10:30, 매일 반복)
-    // 3. 겹침 경고가 표시되는지 확인
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '기존 일정',
+        date: '2025-10-15',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 일정',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+
+    // 겹치는 반복 일정 생성 시도
+    await saveRecurringSchedule(user, {
+      title: '겹치는 반복 일정',
+      date: '2025-10-15',
+      startTime: '09:30',
+      endTime: '10:30',
+      description: '겹치는 반복 일정',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+    });
+
+    // 겹침 경고 확인
+    expect(screen.getByText('일정 겹침 경고')).toBeInTheDocument();
+    expect(screen.getByText(/다음 일정과 겹칩니다/)).toBeInTheDocument();
+    expect(screen.getByText('기존 일정 (2025-10-15 09:00-10:00)')).toBeInTheDocument();
   });
 
   it('일정 수정시 이미 존재하는 일정과 반복 일정이 겹치는 경우 경고가 표시된다.', async () => {
-    // 1. 기존 일정 생성 (2025-10-15 09:00-10:00)
-    // 2. 반복 일정 생성 (2025-10-16 09:00-10:00, 매일 반복)
-    // 3. 반복 일정의 시간을 09:30-10:30으로 수정 시도
-    // 4. 겹침 경고가 표시되는지 확인
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '기존 일정',
+        date: '2025-10-15',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 일정',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+
+    // 반복 일정 생성
+    await saveRecurringSchedule(user, {
+      title: '수정할 반복 일정',
+      date: '2025-10-16',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '수정할 반복 일정',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+    });
+
+    // 수정 버튼 클릭
+    const editButton = await screen.findByLabelText('Edit event');
+    await user.click(editButton);
+
+    // 시간 수정하여 겹치게 만들기
+    await user.clear(screen.getByLabelText('시작 시간'));
+    await user.type(screen.getByLabelText('시작 시간'), '09:30');
+    await user.clear(screen.getByLabelText('종료 시간'));
+    await user.type(screen.getByLabelText('종료 시간'), '10:30');
+
+    // 저장
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    // 겹침 경고 확인
+    expect(screen.getByText('일정 겹침 경고')).toBeInTheDocument();
+    expect(screen.getByText(/다음 일정과 겹칩니다/)).toBeInTheDocument();
+    expect(screen.getByText('기존 일정 (2025-10-15 09:00-10:00)')).toBeInTheDocument();
   });
 });
 
