@@ -16,23 +16,32 @@ export function generateRepeatEvents(baseEvent: EventForm): Event[] {
   if (!repeat || repeat.type === 'none') return [baseEvent as Event];
 
   const interval = repeat.interval ?? 1;
-  const count = repeat.count ?? 4; // fallback: 4회 반복
+  const count = repeat.count ?? 10; // fallback: 4회 반복
 
   const endDate = repeat.endDate ? new Date(repeat.endDate) : new Date('2025-09-30'); // fallback: 2025년 9월 30일까지
+  endDate.setHours(23, 59, 59, 999); // 종료일을 하루의 끝으로 설정하여 포함 처리
 
   const startDay = start.getDate();
   const startMonth = start.getMonth();
 
   if (repeat.type === 'daily') {
-    for (let i = 0; i < count; i++) {
+    let i = 0;
+
+    while (i < count) {
       const newDate = new Date(start);
       newDate.setDate(start.getDate() + i * interval);
+
+      if (newDate > endDate) break;
+
       events.push({
         ...baseEvent,
         id: undefined,
         date: newDate.toISOString().split('T')[0],
       });
+
+      i++;
     }
+
     return events;
   }
 
