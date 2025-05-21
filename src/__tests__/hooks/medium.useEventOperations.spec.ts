@@ -7,6 +7,7 @@ import {
   setupMockHandlerUpdating,
   setupMockHandlerRecurringCreation,
   setupMockHandlerRecurringDeletion,
+  setupMockHandlerRecurringUpdating,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
 import { server } from '../../setupTests.ts';
@@ -1243,5 +1244,28 @@ describe('반복 일정', () => {
       },
     ]);
   });
-  // TODO: 반복 일정을 수정
+  it('반복 일정을 수정하면 업데이트 된 정보와 함께 단일 일정으로 저장된다.', async () => {
+    setupMockHandlerRecurringUpdating();
+
+    const { result } = renderHook(() => useEventOperations(true));
+
+    const updatedEvent: Event = {
+      id: '1',
+      date: '2025-10-15',
+      startTime: '09:00',
+      description: '기존 팀 미팅',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+      title: '수정된 반복 일정',
+      endTime: '11:00',
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(updatedEvent);
+    });
+
+    expect(result.current.events[0]).toEqual(updatedEvent);
+  });
 });
