@@ -6,6 +6,7 @@ import {
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
   setupMockHandlerRecurringCreation,
+  setupMockHandlerRecurringDeletion,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
 import { server } from '../../setupTests.ts';
@@ -1116,8 +1117,6 @@ describe('반복 일정', () => {
       await result.current.saveRepeatedEvents(newEvent);
     });
 
-    let lastId = result.current.events.length + 1;
-
     expect(result.current.events).toEqual([
       {
         id: '2',
@@ -1171,12 +1170,12 @@ describe('반복 일정', () => {
   });
 
   it('존재하는 반복 일정 삭제 시 에러없이 해당 아이템만 삭제된다.', async () => {
-    setupMockHandlerDeletion();
+    setupMockHandlerRecurringDeletion();
 
     const { result } = renderHook(() => useEventOperations(false));
 
     await act(async () => {
-      await result.current.deleteRepeatedEvents(['2']);
+      await result.current.deleteRepeatedEvents(['2', '3']);
     });
 
     await act(() => Promise.resolve(null));
@@ -1184,20 +1183,8 @@ describe('반복 일정', () => {
     expect(result.current.events).toEqual([
       {
         id: '1',
-        title: '삭제할 이벤트',
-        date: '2025-10-15',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '삭제할 이벤트입니다',
-        location: '어딘가',
-        category: '기타',
-        repeat: { type: 'none', interval: 0 },
-        notificationTime: 10,
-      },
-      {
-        id: '3',
         title: '삭제할 반복 이벤트',
-        date: '2025-10-17',
+        date: '2025-10-15',
         startTime: '09:00',
         endTime: '10:00',
         description: '삭제할 이벤트입니다',
