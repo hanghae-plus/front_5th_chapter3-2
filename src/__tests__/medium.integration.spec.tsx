@@ -12,7 +12,6 @@ import {
 import App from '../App';
 import { server } from '../setupTests';
 import { Event, EventForm } from '../types';
-
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
   const user = userEvent.setup();
@@ -486,6 +485,7 @@ describe('반복 일정 기능 통합 테스트', () => {
     expect(events[2].date).toBe('2025-08-12');
   });
 });
+
 describe('반복 일정 표시', () => {
   it('캘린더에 반복 일정은 반복 아이콘을, 일반 일정은 아이콘 없이 표시해야 한다', async () => {
     const mockEvents: Event[] = [
