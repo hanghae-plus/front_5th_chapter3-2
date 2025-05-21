@@ -97,6 +97,8 @@ function App() {
     endTimeError,
     editingEvent,
     setEditingEvent,
+    repeatCount,
+    setRepeatCount,
     handleStartTimeChange,
     handleEndTimeChange,
     resetForm,
@@ -151,6 +153,7 @@ function App() {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
         endDate: repeatEndDate || undefined,
+        count: repeatCount || undefined,
       },
       notificationTime,
     };
