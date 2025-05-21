@@ -45,8 +45,4 @@ jobs:
       - name: test basic
         run: |
           pnpm install
-          pnpm run test
-      - name: test e2e
-        run: |
-          pnpm install
-          pnpm run test:e2e
+          pnpm run test && pnpm run test:e2e
