@@ -109,14 +109,10 @@ export function formatDate(currentDate: Date, day?: number) {
   ].join('-');
 }
 
-export function isValidDate(dateStr: string): boolean {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  const date = new Date(year, month - 1, day);
-  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
-}
-
 export const getNewDateByInterval = (date: Date, type: RepeatType, interval: number): Date => {
   const newDate = new Date(date);
+  const originalMonth = newDate.getMonth();
+  const originalDay = newDate.getDate();
 
   switch (type) {
     case 'daily':
@@ -126,16 +122,29 @@ export const getNewDateByInterval = (date: Date, type: RepeatType, interval: num
       newDate.setDate(newDate.getDate() + interval * 7);
       break;
     case 'monthly': {
-      const initialDay = newDate.getDate();
       newDate.setMonth(newDate.getMonth() + interval);
-      if (newDate.getDate() !== initialDay) {
-        newDate.setDate(0);
+      newDate.setDate(originalDay);
+      break;
+    }
+    case 'yearly': {
+      if (originalMonth === 1 && originalDay === 29) {
+        let nextYear = newDate.getFullYear() + interval;
+        while (!isLeapYear(nextYear)) {
+          nextYear++;
+        }
+        newDate.setFullYear(nextYear);
+        if (newDate.getMonth() !== originalMonth || newDate.getDate() !== originalDay) {
+          newDate.setMonth(originalMonth, originalDay);
+        }
+      } else {
+        newDate.setFullYear(newDate.getFullYear() + interval);
       }
       break;
     }
-    case 'yearly':
-      newDate.setFullYear(newDate.getFullYear() + interval);
-      break;
   }
   return newDate;
+};
+
+export const isLeapYear = (year: number): boolean => {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 };
