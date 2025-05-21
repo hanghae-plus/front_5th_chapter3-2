@@ -1,5 +1,5 @@
-import { Event } from '../../types';
-import { getFilteredEvents } from '../../utils/eventUtils';
+import { Event, EventForm } from '../../types';
+import { getFilteredEvents, getRepeatEvents } from '../../utils/eventUtils';
 
 describe('getFilteredEvents', () => {
   const events: Event[] = [
@@ -112,5 +112,42 @@ describe('getFilteredEvents', () => {
   it('빈 이벤트 리스트에 대해 빈 배열을 반환한다', () => {
     const result = getFilteredEvents([], '', new Date('2025-07-01'), 'month');
     expect(result).toHaveLength(0);
+  });
+});
+
+describe('getRepeatEvents', () => {
+  it('매일 반복 이벤트를 생성한다. (endDate 없음)', () => {
+    const event: EventForm = {
+      title: '이벤트 1',
+      date: '2025-05-23',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: { type: 'daily', interval: 1 },
+
+      notificationTime: 0,
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(131);
+  });
+
+  it('매일 반복 이벤트를 생성한다. (endDate 있음)', () => {
+    const event: EventForm = {
+      title: '이벤트 1',
+      date: '2025-05-23',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-06-23' },
+      notificationTime: 0,
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(32);
   });
 });
