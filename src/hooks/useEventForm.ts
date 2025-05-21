@@ -16,12 +16,12 @@ export const useEventForm = (initialEvent?: Event) => {
   const [isRepeating, setIsRepeating] = useState(initialEvent?.repeat.type !== 'none');
   const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat.type || 'none');
   const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat.interval || 1);
-  const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
+  const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeatEnd?.endDate || '');
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
   const [repeatEndType, setRepeatEndType] = useState<RepeatEndType>(
-    initialEvent?.repeat.type !== 'none' ? 'endDate' : 'none'
+    initialEvent?.repeatEnd?.type || 'endDate'
   );
-  const [repeatEndCount, setRepeatEndCount] = useState(initialEvent?.repeatEndCount || 0);
+  const [repeatEndCount, setRepeatEndCount] = useState(initialEvent?.repeatEnd?.endCount || 0);
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
@@ -70,7 +70,7 @@ export const useEventForm = (initialEvent?: Event) => {
     setIsRepeating(event.repeat.type !== 'none');
     setRepeatType(event.repeat.type);
     setRepeatInterval(event.repeat.interval);
-    setRepeatEndCount(event.repeatEndCount || 0);
+    setRepeatEndCount(event.repeatEnd?.endCount || 0);
     setNotificationTime(event.notificationTime);
   };
 

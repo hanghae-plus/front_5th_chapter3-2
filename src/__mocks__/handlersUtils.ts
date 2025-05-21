@@ -62,7 +62,11 @@ export const setupMockHandlerUpdating = () => {
       description: '기존 팀 미팅',
       location: '회의실 B',
       category: '업무',
-      repeat: { type: 'weekly', interval: 1, endDate: '2025-10-23' },
+      repeat: { type: 'weekly', interval: 1 },
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-10-23',
+      },
       notificationTime: 10,
     },
     {
@@ -74,7 +78,11 @@ export const setupMockHandlerUpdating = () => {
       description: '기존 팀 미팅 2',
       location: '회의실 C',
       category: '업무 회의',
-      repeat: { type: 'weekly', interval: 1, endDate: '2025-10-23' },
+      repeat: { type: 'weekly', interval: 1 },
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-10-23',
+      },
       notificationTime: 5,
     },
   ];

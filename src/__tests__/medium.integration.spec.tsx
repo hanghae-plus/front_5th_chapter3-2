@@ -400,7 +400,11 @@ describe('반복 일정 단일 삭제', () => {
         description: '기존 팀 미팅',
         location: '회의실 B',
         category: '업무',
-        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        repeat: { type: 'weekly', interval: 1 },
+        repeatEnd: {
+          type: 'endDate',
+          endDate: '2025-10-30',
+        },
         notificationTime: 10,
       },
       {
@@ -412,7 +416,11 @@ describe('반복 일정 단일 삭제', () => {
         description: '기존 팀 미팅',
         location: '회의실 B',
         category: '업무',
-        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        repeat: { type: 'weekly', interval: 1 },
+        repeatEnd: {
+          type: 'endDate',
+          endDate: '2025-10-30',
+        },
         notificationTime: 10,
       },
     ]);
@@ -445,7 +453,11 @@ describe('반복 일정 단일 수정', () => {
         description: '기존 팀 미팅',
         location: '회의실 B',
         category: '업무',
-        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        repeat: { type: 'weekly', interval: 1 },
+        repeatEnd: {
+          type: 'endDate',
+          endDate: '2025-10-30',
+        },
         notificationTime: 10,
       },
       {
@@ -457,7 +469,11 @@ describe('반복 일정 단일 수정', () => {
         description: '기존 팀 미팅',
         location: '회의실 B',
         category: '업무',
-        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        repeat: { type: 'weekly', interval: 1 },
+        repeatEnd: {
+          type: 'endDate',
+          endDate: '2025-10-30',
+        },
         notificationTime: 10,
       },
     ]);
@@ -499,7 +515,11 @@ describe('반복 일정 단일 수정', () => {
         description: '기존 팀 미팅',
         location: '회의실 B',
         category: '업무',
-        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        repeat: { type: 'weekly', interval: 1 },
+        repeatEnd: {
+          type: 'endDate',
+          endDate: '2025-10-30',
+        },
         notificationTime: 10,
       },
       {
@@ -511,7 +531,11 @@ describe('반복 일정 단일 수정', () => {
         description: '기존 팀 미팅',
         location: '회의실 B',
         category: '업무',
-        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        repeat: { type: 'weekly', interval: 1 },
+        repeatEnd: {
+          type: 'endDate',
+          endDate: '2025-10-30',
+        },
         notificationTime: 10,
       },
     ]);
