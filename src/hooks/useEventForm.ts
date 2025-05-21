@@ -17,7 +17,7 @@ export const useEventForm = (initialEvent?: Event) => {
     initialEvent ? initialEvent.repeat.type !== 'none' : false
   );
   const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat.type || 'none');
-  const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat.interval || 1);
+  const [repeatInterval, setRepeatIntervalState] = useState(initialEvent?.repeat.interval || 1);
   const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
 
@@ -27,6 +27,14 @@ export const useEventForm = (initialEvent?: Event) => {
     startTimeError: null,
     endTimeError: null,
   });
+
+  const setRepeatInterval = (value: number) => {
+    if (value < 1) {
+      setRepeatIntervalState(1); // 1 미만이면 1로 설정
+    } else {
+      setRepeatIntervalState(value);
+    }
+  };
 
   useEffect(() => {
     if (isRepeating) {
