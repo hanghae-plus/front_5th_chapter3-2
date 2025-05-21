@@ -343,6 +343,7 @@ function App() {
                             return (
                               <Box
                                 key={event.id}
+                                data-testid={`event-${event.id}`}
                                 p={1}
                                 my={1}
                                 bg={isNotified ? 'red.100' : 'gray.100'}
@@ -352,9 +353,14 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {event.repeat.type !== 'none' && event.repeat.id && (
-                                    <Text mr={1}>🔁</Text>
-                                  )}{' '}
-                                  {/* 반복 아이콘 추가 */}
+                                    <Text
+                                      data-testid={`repeat-indicator-${event.id}`}
+                                      aria-label="반복 일정"
+                                      mr={1}
+                                    >
+                                      🔁
+                                    </Text>
+                                  )}
                                   {isNotified && <BellIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}

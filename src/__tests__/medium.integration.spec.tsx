@@ -487,5 +487,76 @@ describe('반복 일정 기능 통합 테스트', () => {
   });
 });
 describe('반복 일정 표시', () => {
-  it('캘린더에 반복 일정은 반복 아이콘을, 일반 일정은 아이콘 없이 표시해야 한다', async () => {});
+  it('캘린더에 반복 일정은 반복 아이콘을, 일반 일정은 아이콘 없이 표시해야 한다', async () => {
+    const mockEvents: Event[] = [
+      // 타입을 Event로 명시
+      {
+        id: 'event-repeat-1',
+        title: '매일 아침 조깅',
+        date: '2025-07-15',
+        startTime: '07:00',
+        endTime: '08:00',
+        description: '공원에서 조깅',
+        location: '중앙 공원',
+        category: '운동',
+        repeat: { type: 'daily', interval: 1, endDate: '2025-07-31', id: 'group1' },
+        notificationTime: 10, // notificationTime 필드 추가
+      },
+      {
+        id: 'event-single-1',
+        title: '치과 예약',
+        date: '2025-07-15',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '정기 검진 및 스케일링',
+        location: '서울치과',
+        category: '건강',
+        repeat: { type: 'none', interval: 1 },
+        notificationTime: 30,
+      },
+    ];
+
+    server.use(
+      http.get('/api/events', () => {
+        return HttpResponse.json({ events: mockEvents });
+      })
+    );
+
+    const { user } = setup(<App />);
+
+    // 1. 캘린더를 2025년 7월로 이동
+    // 기본 설정이 2025년 10월이므로, "이전" 버튼을 3번 클릭합니다.
+    const prevButton = screen.getByLabelText('Previous');
+    await user.click(prevButton); // 9월
+    await user.click(prevButton); // 8월
+    await user.click(prevButton); // 7월
+
+    // 2. 월 표시가 "2025년 7월"로 변경되었는지 확인
+    await waitFor(() => expect(screen.getByText(/2025년 7월/i)).toBeInTheDocument());
+
+    // 3. 특정 날짜(15일)의 셀을 찾습니다.
+    // getByText로 날짜 '15'를 찾고, 그 부모 td를 찾습니다.
+    const dayCells = await screen.findAllByText('15');
+    const dayCell15 = dayCells.find(
+      (cell) => cell.closest('td') !== null && within(cell.closest('td')!).getByText('15') === cell
+    );
+
+    if (!dayCell15) throw new Error('15일 날짜 셀을 찾을 수 없습니다.');
+    const dayCellContainer = dayCell15.closest('td');
+    if (!dayCellContainer) throw new Error('15일 날짜 셀의 부모 td를 찾을 수 없습니다.');
+
+    // 4. 반복 일정의 아이콘 확인
+    const repeatingEventBox = within(dayCellContainer).getByTestId(`event-${mockEvents[0].id}`);
+    expect(
+      within(repeatingEventBox).getByTestId(`repeat-indicator-${mockEvents[0].id}`)
+    ).toBeInTheDocument();
+    expect(within(repeatingEventBox).getByText(mockEvents[0].title)).toBeInTheDocument();
+
+    // 5. 일반 일정에는 아이콘이 없는지 확인
+    const singleEventBox = within(dayCellContainer).getByTestId(`event-${mockEvents[1].id}`);
+    expect(
+      within(singleEventBox).queryByTestId(`repeat-indicator-${mockEvents[1].id}`)
+    ).not.toBeInTheDocument();
+    expect(within(singleEventBox).getByText(mockEvents[1].title)).toBeInTheDocument();
+  });
 });
