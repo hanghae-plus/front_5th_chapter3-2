@@ -1,5 +1,5 @@
 import { Box, Flex } from '@chakra-ui/react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import CalendarHeader from './components/CalendarHeader';
 import CalendarView from './components/CalendarView';
@@ -131,11 +131,11 @@ function App() {
     notifiedEvents,
   };
 
-  useEffect(() => {
-    if (isRepeating) {
-      setRepeatType('daily');
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (isRepeating) {
+  //     setRepeatType('daily');
+  //   }
+  // }, []);
 
   return (
     <Box w="full" h="100vh" m="auto" p={5}>
