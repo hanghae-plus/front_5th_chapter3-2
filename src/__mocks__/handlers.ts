@@ -38,8 +38,8 @@ export const handlers = [
   }),
 
   http.post('/api/events-list', async ({ request }) => {
-    const newEvents = (await request.json()) as { event: Event[] };
-    const eventList: Event[] = newEvents.event.map((event, index) => ({
+    const newEvents = (await request.json()) as { events: Event[] };
+    const eventList: Event[] = newEvents.events.map((event, index) => ({
       ...event,
       id: String(events.length + index + 1),
     }));
@@ -47,10 +47,10 @@ export const handlers = [
   }),
 
   http.put('/api/events-list', async ({ request }) => {
-    const updatedEvents = (await request.json()) as { event: Event[] };
-    const eventList = [...updatedEvents.event];
+    const updatedEvents = (await request.json()) as { events: Event[] };
+    const eventList = [...updatedEvents.events];
     let isUpdated = false;
-    updatedEvents.event.forEach((event) => {
+    updatedEvents.events.forEach((event) => {
       const index = eventList.findIndex((target) => target.id === event.id);
       if (index !== -1) {
         isUpdated = true;
