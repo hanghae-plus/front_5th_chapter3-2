@@ -799,10 +799,28 @@ describe('반복 일정 단일 수정', () => {
 
 describe('반복 일정 단일 삭제', () => {
   it('반복일정을 삭제하면 해당 일정만 삭제한다.', async () => {
-    // 1. 반복 일정 생성
-    // 2. 해당 일정의 삭제 버튼 클릭
-    // 3. 삭제 확인
-    // 4. 해당 일정만 삭제되고 다른 반복 일정은 유지되는지 확인
+    const { user } = setup(<App />);
+
+    // 반복 일정 생성
+    await saveRecurringSchedule(user, {
+      title: '삭제할 반복 일정',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '삭제할 반복 일정',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+    });
+
+    // 삭제 버튼 클릭
+    const deleteButton = await screen.findByLabelText('Delete event');
+    await user.click(deleteButton);
+
+    // 다음 날짜로 이동하여 다른 반복 일정이 있는지 확인
+    await user.type(screen.getByLabelText('date'), '2025-10-16');
+    const nextDayList = within(screen.getByTestId('event-list'));
+    expect(nextDayList.getByText('삭제할 반복 일정')).toBeInTheDocument();
   });
 });
 
