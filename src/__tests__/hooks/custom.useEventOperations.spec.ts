@@ -1,5 +1,6 @@
-import { act, renderHook } from '@testing-library/react';
 import { randomUUID } from 'crypto';
+
+import { act, renderHook } from '@testing-library/react';
 
 import { setupMockHandlerList } from '@/__mocks__/handlersUtils.ts';
 import { useEventOperations } from '@/hooks/useEventOperations.ts';
@@ -127,5 +128,5 @@ it('반복 일정을 제거하면 해당 이벤트만 단일로 제거된다.', 
 
   // 삭제한 대상은 찾을 수 없음
   const targetEvent = result.current.events.findIndex(({ id }) => id === events[0].id);
-  expect(targetEvent).toEqual(-1);
+  expect(targetEvent).toBe(-1);
 });
