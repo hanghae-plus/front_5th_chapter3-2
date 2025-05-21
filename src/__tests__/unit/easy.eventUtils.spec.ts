@@ -149,5 +149,62 @@ describe('getRepeatEvents', () => {
 
     const result = getRepeatEvents(event);
     expect(result).toHaveLength(32);
+    expect(result[result.length - 1].date).toBe('2025-06-23');
+  });
+
+  it('매일 반복 이벤트를 생성한다. (endDate 있음. 간격 3일)', () => {
+    const event: EventForm = {
+      title: '이벤트 1',
+      date: '2025-05-23',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: { type: 'daily', interval: 3, endDate: '2025-06-23' },
+      notificationTime: 0,
+    };
+
+    const result = getRepeatEvents(event);
+
+    expect(result).toHaveLength(11);
+    expect(result[result.length - 1].date).toBe('2025-06-22');
+  });
+
+  it('매주 반복 이벤트를 생성한다. (endDate 없음)', () => {
+    const event: EventForm = {
+      title: '이벤트 1',
+      date: '2025-05-23',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: { type: 'weekly', interval: 1 },
+      notificationTime: 0,
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(19);
+    expect(result[result.length - 1].date).toBe('2025-09-26');
+  });
+
+  it('매주 반복 이벤트를 생성한다. (endDate 있음. 간격 2주)', () => {
+    const event: EventForm = {
+      title: '이벤트 1',
+      date: '2025-05-23',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: { type: 'weekly', interval: 2, endDate: '2025-08-23' },
+      notificationTime: 0,
+    };
+
+    const result = getRepeatEvents(event);
+
+    expect(result).toHaveLength(7);
+    expect(result[result.length - 1].date).toBe('2025-08-15');
   });
 });
