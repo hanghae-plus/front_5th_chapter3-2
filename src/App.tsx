@@ -273,6 +273,15 @@ function App() {
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
+                                  {event.repeat.type !== 'none' && (
+                                    <Text color="blue.500">
+                                      | 반복: {event.repeat.interval}
+                                      {event.repeat.type === 'daily' && '일'}
+                                      {event.repeat.type === 'weekly' && '주'}
+                                      {event.repeat.type === 'monthly' && '월'}
+                                      {event.repeat.type === 'yearly' && '년'}
+                                    </Text>
+                                  )}
                                 </HStack>
                               </Box>
                             );
