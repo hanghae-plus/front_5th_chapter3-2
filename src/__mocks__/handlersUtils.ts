@@ -20,8 +20,35 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
   );
 };
 
-export const setupMockHandlerUpdating = (initEvents = [] as Event[]) => {
-  const mockEvents: Event[] = [...initEvents];
+export const setupMockHandlerUpdating = () => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '기존 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '기존 팀 미팅',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { type: 'none', interval: 0, endType: 'none' },
+      notificationTime: 10,
+      isRecurring: undefined,
+    },
+    {
+      id: '2',
+      title: '기존 회의2',
+      date: '2025-10-15',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '기존 팀 미팅 2',
+      location: '회의실 C',
+      category: '업무 회의',
+      repeat: { type: 'none', interval: 0, endType: 'none' },
+      notificationTime: 5,
+      isRecurring: undefined,
+    },
+  ];
 
   server.use(
     http.get('/api/events', () => {
