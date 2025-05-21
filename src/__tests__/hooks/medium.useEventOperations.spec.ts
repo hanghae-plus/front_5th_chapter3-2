@@ -200,8 +200,12 @@ describe('반복 유형 선택', () => {
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 1, endDate: '2025-10-17' },
+      repeat: { type: 'daily', interval: 1 },
       notificationTime: 1,
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-10-17',
+      },
     };
 
     await act(async () => {
@@ -229,8 +233,12 @@ describe('반복 유형 선택', () => {
       description: '수정된 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'weekly', interval: 1, endDate: '2025-10-17' },
+      repeat: { type: 'weekly', interval: 1 },
       notificationTime: 1,
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-10-17',
+      },
     };
 
     await act(async () => {
@@ -257,8 +265,12 @@ describe('반복 유형 선택', () => {
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'monthly', interval: 6, endDate: '2025-03-01' },
+      repeat: { type: 'monthly', interval: 6 },
       notificationTime: 10,
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-03-01',
+      },
     };
 
     await act(async () => {
@@ -287,8 +299,12 @@ describe('반복 유형 선택', () => {
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'yearly', interval: 1, endDate: '2025-03-01' },
+      repeat: { type: 'yearly', interval: 1 },
       notificationTime: 10,
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-03-01',
+      },
     };
 
     await act(async () => {
@@ -318,8 +334,12 @@ describe('반복 간격 설정', () => {
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 1, endDate: '2025-10-20' },
+      repeat: { type: 'daily', interval: 1 },
       notificationTime: 10,
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-10-20',
+      },
     };
 
     await act(async () => {
@@ -345,8 +365,12 @@ describe('반복 간격 설정', () => {
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+      repeat: { type: 'weekly', interval: 1 },
       notificationTime: 10,
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-10-30',
+      },
     };
 
     await act(async () => {
@@ -377,8 +401,12 @@ describe('반복 간격 설정', () => {
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'monthly', interval: 1, endDate: '2025-12-30' },
+      repeat: { type: 'monthly', interval: 1 },
       notificationTime: 10,
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-12-30',
+      },
     };
 
     await act(async () => {
@@ -409,8 +437,12 @@ describe('반복 간격 설정', () => {
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'yearly', interval: 1, endDate: '2026-10-30' },
+      repeat: { type: 'yearly', interval: 1 },
       notificationTime: 10,
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2026-10-30',
+      },
     };
 
     await act(async () => {
@@ -443,20 +475,49 @@ describe('반복 종료', () => {
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 1, endDate: '2025-10-20' },
+      repeat: { type: 'daily', interval: 1 },
       notificationTime: 10,
-      repeatEndType: 'endCount',
-      repeatEndCount: 3,
+      repeatEnd: {
+        type: 'endCount',
+        endCount: 3,
+      },
     };
 
     await act(async () => {
       await result.current.saveRepeatEvents(newEvent);
     });
 
-    console.log({
-      events: result.current.events,
+    expect(result.current.events).toHaveLength(3);
+  });
+
+  it('종료일 선택시 특정 날짜까지 반복 일정이 생성된다', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+      notificationTime: 10,
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-10-20',
+      },
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvents(newEvent);
     });
 
-    expect(result.current.events).toHaveLength(3);
+    expect(result.current.events).toHaveLength(5);
   });
 });

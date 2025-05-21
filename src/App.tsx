@@ -157,9 +157,13 @@ function App() {
       repeat: {
         type: isRepeating ? (repeatType === 'none' ? 'daily' : repeatType) : 'none',
         interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
       },
       notificationTime,
+      repeatEnd: {
+        type: repeatEndType,
+        endDate: repeatEndDate || undefined,
+        endCount: repeatEndCount || undefined,
+      },
     };
 
     const overlapping = findOverlappingEvents(eventData, events);
@@ -515,7 +519,10 @@ function App() {
                         {event.repeat.type === 'monthly' && '월'}
                         {event.repeat.type === 'yearly' && '년'}
                         마다
-                        {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
+                        {event.repeatEnd?.type === 'endDate' &&
+                          ` (종료: ${event.repeatEnd?.endDate})`}
+                        {event.repeatEnd?.type === 'endCount' &&
+                          ` (종료: ${event.repeatEnd?.endCount ?? 0}회)`}
                       </Text>
                     )}
                     <Text>
@@ -587,9 +594,13 @@ function App() {
                     repeat: {
                       type: isRepeating ? (repeatType === 'none' ? 'daily' : repeatType) : 'none',
                       interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
                     },
                     notificationTime,
+                    repeatEnd: {
+                      type: repeatEndType,
+                      endDate: repeatEndDate || undefined,
+                      endCount: repeatEndCount || undefined,
+                    },
                   });
                 }}
                 ml={3}

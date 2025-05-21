@@ -51,14 +51,11 @@ export function getFilteredEvents(
 
 export function generateRepeatEvents(event: Event | EventForm) {
   const repeatEvents = [];
-  const repeatEndDate = event.repeat.endDate
-    ? new Date(event.repeat.endDate)
-    : new Date('2025-09-30');
   let currentDate = new Date(event.date);
 
-  if (event.repeatEndType === 'endCount' && event.repeatEndCount) {
+  if (event.repeatEnd?.type === 'endCount' && event.repeatEnd.endCount) {
     let count = 0;
-    while (count < event.repeatEndCount) {
+    while (count < event.repeatEnd.endCount) {
       repeatEvents.push({
         ...event,
         date: formatDate(currentDate),
@@ -67,6 +64,10 @@ export function generateRepeatEvents(event: Event | EventForm) {
       count++;
     }
   } else {
+    const repeatEndDate = event.repeatEnd?.endDate
+      ? new Date(event.repeatEnd.endDate)
+      : new Date('2025-09-30');
+
     while (currentDate <= repeatEndDate) {
       repeatEvents.push({
         ...event,
