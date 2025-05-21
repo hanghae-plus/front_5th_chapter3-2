@@ -358,4 +358,47 @@ describe('반복 일정 테스트', () => {
     await act(async () => await result.current.saveEvent(event));
     expect(result.current.events).toEqual([{ ...event, id: '1' }]);
   });
+  it('횟수로 매일 반복 - 3회', async () => {
+    setupMockHandlerCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    const event = createEvent({
+      repeat: { type: 'daily', interval: 1, endType: 'count', count: 3 },
+    });
+    await act(async () => await result.current.saveEvent(event));
+
+    expect(result.current.events).toEqual([
+      { ...event, id: '1', date: '2025-05-01' },
+      { ...event, id: '2', date: '2025-05-02' },
+      { ...event, id: '3', date: '2025-05-03' },
+    ]);
+  });
+
+  it('횟수로 격일 반복 - 3회', async () => {
+    setupMockHandlerCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    const event = createEvent({
+      repeat: { type: 'daily', interval: 2, endType: 'count', count: 3 },
+    });
+    await act(async () => await result.current.saveEvent(event));
+
+    expect(result.current.events).toEqual([
+      { ...event, id: '1', date: '2025-05-01' },
+      { ...event, id: '2', date: '2025-05-03' },
+      { ...event, id: '3', date: '2025-05-05' },
+    ]);
+  });
+
+  it('횟수로 주간 반복 - 2회', async () => {
+    setupMockHandlerCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    const event = createEvent({
+      repeat: { type: 'weekly', interval: 1, endType: 'count', count: 2 },
+    });
+    await act(async () => await result.current.saveEvent(event));
+
+    expect(result.current.events).toEqual([
+      { ...event, id: '1', date: '2025-05-01' },
+      { ...event, id: '2', date: '2025-05-08' },
+    ]);
+  });
 });
