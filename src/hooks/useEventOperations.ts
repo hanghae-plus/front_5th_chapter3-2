@@ -66,6 +66,10 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  const saveRepeatEvent = async (eventData: Event | EventForm) => {
+    console.log(eventData);
+  };
+
   const deleteEvent = async (id: string) => {
     try {
       const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
@@ -106,5 +110,5 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent };
+  return { events, fetchEvents, saveEvent, deleteEvent, saveRepeatEvent };
 };
