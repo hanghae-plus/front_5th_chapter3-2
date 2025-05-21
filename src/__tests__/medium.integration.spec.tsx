@@ -560,3 +560,245 @@ describe('반복 일정 표시', () => {
     expect(within(singleEventBox).getByText(mockEvents[1].title)).toBeInTheDocument();
   });
 });
+
+describe('반복 종료 조건 통합 테스트', () => {
+  let capturedRequestData: any = null;
+  let apiCalled = false;
+
+  beforeEach(() => {
+    capturedRequestData = null;
+    apiCalled = false;
+    server.use(
+      http.post('/api/events-list', async ({ request }) => {
+        apiCalled = true;
+        const jsonData = await request.json();
+        capturedRequestData = jsonData;
+        const responseEvents = capturedRequestData.events.map(
+          (event: EventForm, index: number) => ({
+            ...event,
+            id: `mock-event-${index}-${Date.now()}`,
+            repeat: {
+              ...event.repeat,
+              id: event.repeat.id || `mock-repeat-group-${Date.now()}`,
+            },
+          })
+        );
+        return HttpResponse.json(responseEvents, { status: 201 });
+      })
+    );
+  });
+
+  afterEach(() => {
+    server.resetHandlers();
+  });
+
+  // Helper function to set up basic event form
+  async function setupBasicForm(user: UserEvent) {
+    await fillBasicEventForm(user, {
+      title: '반복 일정 테스트',
+      date: '2025-07-01',
+    });
+
+    // 반복 설정 체크
+    await act(async () => {
+      await user.click(screen.getByLabelText('반복 일정'));
+    });
+
+    // 반복 유형: 매주
+    await act(async () => {
+      await user.selectOptions(screen.getByLabelText('반복 유형'), 'weekly');
+    });
+  }
+
+  it('날짜 지정 종료 조건 - 특정 날짜까지 반복 이벤트가 생성되어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    // 기본 폼 설정
+    await setupBasicForm(user);
+
+    // 종료 조건 - 날짜 지정
+    await act(async () => {
+      await user.selectOptions(screen.getByLabelText('종료 조건'), 'date');
+    });
+
+    // 종료일 설정
+    await act(async () => {
+      await user.type(screen.getByLabelText('반복 종료일'), '2025-07-29');
+    });
+
+    // 저장
+    await act(async () => {
+      await user.click(screen.getByTestId('event-submit-button'));
+    });
+
+    // API 호출 확인
+    await waitFor(() => {
+      expect(apiCalled).toBe(true);
+    });
+
+    // 전송된 데이터 확인
+    expect(capturedRequestData).not.toBeNull();
+    const events = capturedRequestData.events;
+
+    // 지정된 날짜까지 이벤트가 생성되었는지 확인 (7/1부터 매주 화요일: 7/1, 7/8, 7/15, 7/22, 7/29)
+    expect(events).toHaveLength(5);
+    expect(events[0].date).toBe('2025-07-01');
+    expect(events[4].date).toBe('2025-07-29');
+
+    // 모든 이벤트에 종료일이 설정되었는지 확인
+    events.forEach((event: any) => {
+      expect(event.repeat.endDate).toBe('2025-07-29');
+      expect(event.repeat.maxOccurrences).toBeUndefined();
+    });
+  });
+
+  it('횟수 지정 종료 조건 - 지정된 횟수만큼 반복 이벤트가 생성되어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    // 기본 폼 설정
+    await setupBasicForm(user);
+
+    // 종료 조건 - 횟수 지정
+    await act(async () => {
+      await user.selectOptions(screen.getByLabelText('종료 조건'), 'count');
+    });
+
+    // 반복 횟수 설정
+    await act(async () => {
+      const repeatCountInput = screen.getByLabelText('반복 횟수');
+      await user.clear(repeatCountInput);
+      await user.type(repeatCountInput, '3');
+    });
+
+    // 저장
+    await act(async () => {
+      await user.click(screen.getByTestId('event-submit-button'));
+    });
+
+    // API 호출 확인
+    await waitFor(() => {
+      expect(apiCalled).toBe(true);
+    });
+
+    // 전송된 데이터 확인
+    expect(capturedRequestData).not.toBeNull();
+    const events = capturedRequestData.events;
+
+    // 3회 반복 이벤트가 생성되었는지 확인
+    expect(events).toHaveLength(3);
+    expect(events[0].date).toBe('2025-07-01');
+    expect(events[1].date).toBe('2025-07-08');
+    expect(events[2].date).toBe('2025-07-15');
+
+    // 모든 이벤트에 maxOccurrences가 설정되었는지 확인
+    events.forEach((event: any) => {
+      expect(event.repeat.maxOccurrences).toBe(3);
+      // 안전을 위한 기본 종료일도 설정되어 있어야 함
+      expect(event.repeat.endDate).toBeDefined();
+    });
+  });
+
+  it('종료 없음 설정 - 기본 종료일까지 이벤트가 생성되어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    // 기본 폼 설정
+    await setupBasicForm(user);
+
+    // 종료 조건 - 종료 없음
+    await act(async () => {
+      await user.selectOptions(screen.getByLabelText('종료 조건'), 'never');
+    });
+
+    // 저장
+    await act(async () => {
+      await user.click(screen.getByTestId('event-submit-button'));
+    });
+
+    // API 호출 확인
+    await waitFor(() => {
+      expect(apiCalled).toBe(true);
+    });
+
+    // 전송된 데이터 확인
+    expect(capturedRequestData).not.toBeNull();
+    const events = capturedRequestData.events;
+
+    // 적절한 수의 이벤트가 생성되었는지 확인
+    expect(events.length).toBeGreaterThan(0);
+
+    // 모든 이벤트에 기본 종료일이 설정되었는지 확인
+    events.forEach((event: any) => {
+      expect(event.repeat.endDate).toBe('2025-09-30'); // 기본 종료일
+      expect(event.repeat.maxOccurrences).toBeUndefined();
+    });
+  });
+
+  it('종료 조건 변경 시 관련 입력 필드가 동적으로 표시되어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    // 기본 폼 설정
+    await setupBasicForm(user);
+
+    // 초기 상태에서는 '날짜 지정'으로 되어 있어 '반복 종료일' 필드가 표시됨
+    expect(screen.getByLabelText('반복 종료일')).toBeInTheDocument();
+    expect(screen.queryByLabelText('반복 횟수')).not.toBeInTheDocument();
+
+    // 종료 조건을 '횟수 지정'으로 변경
+    await act(async () => {
+      await user.selectOptions(screen.getByLabelText('종료 조건'), 'count');
+    });
+
+    // '반복 횟수' 필드가 표시되고 '반복 종료일' 필드가 사라짐
+    expect(screen.queryByLabelText('반복 종료일')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('반복 횟수')).toBeInTheDocument();
+
+    // 종료 조건을 '종료 없음'으로 변경
+    await act(async () => {
+      await user.selectOptions(screen.getByLabelText('종료 조건'), 'never');
+    });
+
+    // 두 필드 모두 표시되지 않음
+    expect(screen.queryByLabelText('반복 종료일')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('반복 횟수')).not.toBeInTheDocument();
+  });
+
+  it('반복 횟수에 0 이하의 값을 입력하면 기본값(10)으로 설정되어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    // 기본 폼 설정
+    await setupBasicForm(user);
+
+    // 종료 조건 - 횟수 지정
+    await act(async () => {
+      await user.selectOptions(screen.getByLabelText('종료 조건'), 'count');
+    });
+
+    // 반복 횟수에 0 입력
+    await act(async () => {
+      const repeatCountInput = screen.getByLabelText('반복 횟수');
+      await user.clear(repeatCountInput);
+      await user.type(repeatCountInput, '0');
+      // 포커스 이동으로 onBlur 트리거
+      await user.tab();
+    });
+
+    // 저장
+    await act(async () => {
+      await user.click(screen.getByTestId('event-submit-button'));
+    });
+
+    // API 호출 확인
+    await waitFor(() => {
+      expect(apiCalled).toBe(true);
+    });
+
+    // 전송된 데이터 확인
+    const events = capturedRequestData.events;
+
+    // 기본값인 10개의 이벤트가 생성되었는지 확인
+    expect(events.length).toBe(10);
+    events.forEach((event: any) => {
+      expect(event.repeat.maxOccurrences).toBe(10);
+    });
+  });
+});
