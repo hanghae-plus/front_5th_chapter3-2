@@ -52,6 +52,7 @@ function App() {
   const cancelRef = useRef(null);
 
   const handleEventSubmit = async () => {
+    const finalRepeatType = isRepeating ? (repeatType === 'none' ? 'daily' : repeatType) : 'none';
     const eventData = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -62,12 +63,12 @@ function App() {
       location,
       category,
       repeat: {
-        type: isRepeating ? repeatType : 'none',
+        type: isRepeating ? finalRepeatType : 'none',
         interval: repeatInterval,
         endDate: repeatEndDate || undefined,
       },
       notificationTime,
-    };
+    } as Event;
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
