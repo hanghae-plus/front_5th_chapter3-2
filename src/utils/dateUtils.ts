@@ -151,7 +151,7 @@ export const getNextLeapYear = (year: number, i: number): number => {
     }
   }
   return year;
-}
+};
 
 // 반복 타입에 따라 다음 날짜를 계산해 리턴
 export const getNextRepeatDate = (baseDate: Date, type: RepeatType, i: number): Date => {
@@ -182,4 +182,4 @@ export const getNextRepeatDate = (baseDate: Date, type: RepeatType, i: number): 
       break;
   }
   return nextDate;
-}
+};

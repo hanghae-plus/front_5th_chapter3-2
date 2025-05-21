@@ -23,7 +23,7 @@ const setup = (element: ReactElement) => {
 // ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> & Partial< Pick<Event, 'repeat'> >
+  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> & Partial<Pick<Event, 'repeat'>>
 ) => {
   const { title, date, startTime, endTime, location, description, category, repeat } = form;
 
@@ -64,7 +64,7 @@ describe('일정 CRUD 및 기본 기능', () => {
         type: 'daily',
         interval: 1,
         endDate: '2025-12-31',
-      }
+      },
     });
 
     const eventList = within(screen.getByTestId('event-list'));
@@ -75,7 +75,6 @@ describe('일정 CRUD 및 기본 기능', () => {
     expect(eventList.getByText('회의실 A')).toBeInTheDocument();
     expect(eventList.getByText('카테고리: 업무')).toBeInTheDocument();
 
-    
     expect(eventList.getByText(/반복:\s*1/)).toBeInTheDocument();
     expect(eventList.getByText(/일\s*마다/)).toBeInTheDocument();
     expect(eventList.getByText(/(종료:\s*2025-12-31)/)).toBeInTheDocument();

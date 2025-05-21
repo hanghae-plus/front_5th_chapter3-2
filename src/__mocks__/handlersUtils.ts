@@ -19,7 +19,7 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
     }),
 
     // 반복 이벤트 저장 핸들러: 전달받은 전체 반복 이벤트들의 배열을 저장
-    http.post('/api/events-list', async({ request }) => {
+    http.post('/api/events-list', async ({ request }) => {
       const { events: eventsToAdd } = (await request.json()) as { events: Event[] };
       const repeatId = `repeat-${mockEvents.length + 1}`;
       const newEvents = eventsToAdd.map((event, index) => ({

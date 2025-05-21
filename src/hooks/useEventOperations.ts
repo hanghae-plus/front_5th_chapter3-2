@@ -53,7 +53,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(eventData),
-          })
+          });
         }
       } else {
         // 편집 모드라면 PUT으로 업데이트
@@ -62,7 +62,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),
         });
-        
+
         if (!response.ok) {
           throw new Error('Failed to update event');
         }
