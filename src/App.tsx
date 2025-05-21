@@ -196,10 +196,16 @@ function App() {
       await saveEvent(eventData);
       resetForm();
     }
+    console.log('저장되는 이벤트:', eventData);
   };
 
   const renderWeekView = () => {
     const weekDates = getWeekDates(currentDate);
+    const weekStart = weekDates[0];
+    const weekEnd = weekDates[weekDates.length - 1];
+    // 반복일정까지 포함해서 전개
+    const expandedEvents = expandRecurringEvents(filteredEvents, weekStart, weekEnd);
+
     return (
       <VStack data-testid="week-view" align="stretch" w="full" spacing={4}>
         <Heading size="md">{formatWeek(currentDate)}</Heading>
@@ -218,7 +224,7 @@ function App() {
               {weekDates.map((date) => (
                 <Td key={date.toISOString()} height="100px" verticalAlign="top" width="14.28%">
                   <Text fontWeight="bold">{date.getDate()}</Text>
-                  {filteredEvents
+                  {expandedEvents
                     .filter((event) => new Date(event.date).toDateString() === date.toDateString())
                     .map((event) => {
                       const isNotified = notifiedEvents.includes(event.id);
@@ -392,7 +398,18 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              isChecked={isRepeating}
+              onChange={(e) => {
+                setIsRepeating(e.target.checked);
+                if (e.target.checked && repeatType === 'none') {
+                  setRepeatType('daily'); // 반복 켜면 기본값
+                }
+                if (!e.target.checked) {
+                  setRepeatType('none'); // 반복 끄면 none
+                }
+              }}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
