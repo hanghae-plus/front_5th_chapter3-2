@@ -16,7 +16,7 @@ export const useEventForm = (initialEvent?: Event) => {
   const [isRepeating, setIsRepeating] = useState(
     initialEvent?.repeat.type ? initialEvent?.repeat.type !== 'none' : false
   );
-  const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat.type || 'none');
+  const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat.type || 'daily');
   const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat.interval || 1);
   const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
@@ -64,10 +64,6 @@ export const useEventForm = (initialEvent?: Event) => {
     setDescription(event.description);
     setLocation(event.location);
     setCategory(event.category);
-    setIsRepeating(event.repeat.type !== 'none');
-    setRepeatType(event.repeat.type);
-    setRepeatInterval(event.repeat.interval);
-    setRepeatEndDate(event.repeat.endDate || '');
     setNotificationTime(event.notificationTime);
   };
 

@@ -113,3 +113,136 @@ export const setupMockHandlerCreationForEventList = (initEvents = [] as Event[])
     })
   );
 };
+
+export const setupMockHandlerUpdatingForEventList = () => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-10-03',
+      },
+      notificationTime: 10,
+    },
+    {
+      id: '2',
+      title: '새 회의',
+      date: '2025-10-02',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-10-03',
+      },
+      notificationTime: 10,
+    },
+    {
+      id: '3',
+      title: '새 회의',
+      date: '2025-10-03',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-10-03',
+      },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.put('/api/events/:id', async ({ params, request }) => {
+      const { id } = params;
+      const updatedEvent = (await request.json()) as Event;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
+      return HttpResponse.json(mockEvents[index]);
+    })
+  );
+};
+
+export const setupMockHandlerDeletionForEventList = () => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-10-03',
+      },
+      notificationTime: 10,
+    },
+    {
+      id: '2',
+      title: '새 회의',
+      date: '2025-10-02',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-10-03',
+      },
+      notificationTime: 10,
+    },
+    {
+      id: '3',
+      title: '새 회의',
+      date: '2025-10-03',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-10-03',
+      },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.delete('/api/events/:id', ({ params }) => {
+      const { id } = params;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      mockEvents.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
+    })
+  );
+};

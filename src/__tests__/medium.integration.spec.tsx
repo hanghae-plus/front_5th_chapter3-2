@@ -9,6 +9,8 @@ import {
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
   setupMockHandlerCreationForEventList,
+  setupMockHandlerUpdatingForEventList,
+  setupMockHandlerDeletionForEventList,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
@@ -468,5 +470,50 @@ describe('반복 일정 등록', () => {
     const monthView = within(screen.getByTestId('month-view'));
     expect(monthView.getByText('새 회의')).toBeInTheDocument();
     expect(monthView.getAllByTestId('repeat-icon')).toHaveLength(1);
+  });
+});
+
+describe('반복 일정 수정', () => {
+  it('반복 일정을 수정하면 반복 속성이 제거되고 이벤트 리스트와 캘린더 뷰에 수정된 이벤트가 표시된다.', async () => {
+    const { user } = setup(<App />);
+
+    setupMockHandlerUpdatingForEventList();
+
+    const editButton = (await screen.findAllByLabelText('Edit event'))[0];
+    await user.click(editButton);
+
+    await user.click(screen.getAllByText('일정 수정')[0]);
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정 회의');
+    await user.clear(screen.getByLabelText('설명'));
+    await user.type(screen.getByLabelText('설명'), '내용 변경');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('수정 회의')).toBeInTheDocument();
+    expect(eventList.getAllByText('반복: 1일마다 (종료: 2025-10-03)')).toHaveLength(2);
+
+    const monthView = within(screen.getByTestId('month-view'));
+    expect(monthView.getAllByText('새 회의')).toHaveLength(2);
+    expect(monthView.getAllByTestId('repeat-icon')).toHaveLength(2);
+  });
+});
+
+describe('반복 일정 삭제', () => {
+  it('반복 일정을 삭제하면 일정이 제거되고 이벤트 리스트와 캘린더 뷰에 나머지 일정이 표시된다.', async () => {
+    const { user } = setup(<App />);
+
+    setupMockHandlerDeletionForEventList();
+
+    const deleteButton = (await screen.findAllByLabelText('Delete event'))[0];
+    await user.click(deleteButton);
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getAllByText('반복: 1일마다 (종료: 2025-10-03)')).toHaveLength(2);
+
+    const monthView = within(screen.getByTestId('month-view'));
+    expect(monthView.getAllByText('새 회의')).toHaveLength(2);
+    expect(monthView.getAllByTestId('repeat-icon')).toHaveLength(2);
   });
 });
