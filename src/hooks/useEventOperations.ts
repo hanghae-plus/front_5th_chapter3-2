@@ -2,7 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
-import { generateRepeatEvents } from '../utils/eventUtils';
+import { generateRepeatEvents, getAllRepeatEventsIds } from '../utils/eventUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -125,6 +125,38 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     return response;
   };
 
+  const deleteAllRepeatEvents = async (repeatId: string) => {
+    try {
+      const allRepeatEventsIds = getAllRepeatEventsIds(repeatId, events);
+      const response = await fetch(`/api/events-list`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventIds: allRepeatEventsIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete all repeat events');
+      }
+
+      await fetchEvents();
+      onSave?.();
+      toast({
+        title: '반복 일정 모두 삭제 완료',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error deleting all repeat events:', error);
+      toast({
+        title: '반복 일정 모두 삭제 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   async function init() {
     await fetchEvents();
     toast({
@@ -139,5 +171,5 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent, saveRepeatEvents };
+  return { events, fetchEvents, saveEvent, deleteEvent, saveRepeatEvents, deleteAllRepeatEvents };
 };

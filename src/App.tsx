@@ -110,8 +110,9 @@ function App() {
     setRepeatEndCount,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent, deleteAllRepeatEvents } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -547,6 +548,30 @@ function App() {
                     />
                   </HStack>
                 </HStack>
+                {event.repeat.type !== 'none' && (
+                  <Button
+                    paddingX={2}
+                    paddingY={2}
+                    borderRadius="5px"
+                    backgroundColor="#f60002"
+                    marginTop={3}
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    width={140}
+                    onClick={() => deleteAllRepeatEvents(event.repeat.id ?? '')}
+                  >
+                    <Text
+                      textColor="white"
+                      fontSize="14px"
+                      fontWeight="bold"
+                      textAlign="center"
+                      aria-label="Repeat All Delete"
+                    >
+                      반복일정 모두 삭제
+                    </Text>
+                  </Button>
+                )}
               </Box>
             ))
           )}

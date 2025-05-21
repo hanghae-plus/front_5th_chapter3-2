@@ -131,3 +131,54 @@ export const setupMockHandlerDeletion = () => {
     })
   );
 };
+
+export const setupMockHandlerDeletionAllRepeatEvents = () => {
+  let mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '기존 회의',
+      date: '2025-10-20',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '기존 팀 미팅',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { id: 'repeat-id', type: 'weekly', interval: 1 },
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-10-30',
+      },
+      notificationTime: 10,
+    },
+    {
+      id: '2',
+      title: '기존 회의',
+      date: '2025-10-27',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '기존 팀 미팅',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { id: 'repeat-id', type: 'weekly', interval: 1 },
+      repeatEnd: {
+        type: 'endDate',
+        endDate: '2025-10-30',
+      },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.delete('/api/events-list', async ({ request }) => {
+      const { eventIds } = (await request.json()) as { eventIds: string[] };
+
+      const newEvents = mockEvents.filter((event) => !eventIds.includes(event.id));
+      mockEvents = [...newEvents];
+
+      return new HttpResponse(null, { status: 204 });
+    })
+  );
+};

@@ -7,6 +7,7 @@ import { ReactElement } from 'react';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
+  setupMockHandlerDeletionAllRepeatEvents,
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
@@ -599,5 +600,27 @@ describe('반복 종료', () => {
 
     expect(countInput).toBeInTheDocument();
     expect(countInput).toHaveAttribute('type', 'number');
+  });
+});
+
+describe('반복 일정 전체 수정 및 삭제', () => {
+  it('반복 일정의 전체 삭제시 반복 일정이 모두 삭제된다', async () => {
+    setupMockHandlerDeletionAllRepeatEvents();
+
+    const { user } = setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const repeatAllDeleteButtons = await screen.findAllByLabelText('Repeat All Delete');
+
+    await act(async () => {
+      await user.click(repeatAllDeleteButtons[1]);
+    });
+
+    const eventList = await screen.findByTestId('event-list');
+
+    await waitFor(() => {
+      expect(eventList).toHaveTextContent(/결과가 없습니다/i);
+    });
   });
 });

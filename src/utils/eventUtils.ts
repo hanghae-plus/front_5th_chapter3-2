@@ -79,3 +79,15 @@ export function generateRepeatEvents(event: Event | EventForm) {
 
   return repeatEvents;
 }
+
+export function getAllRepeatEventsIds(repeatId: string, events: Event[]) {
+  const result = events
+    .map((event) => {
+      if (event.repeat.id === repeatId) return event.id;
+
+      return null;
+    })
+    .filter(Boolean);
+
+  return result;
+}
