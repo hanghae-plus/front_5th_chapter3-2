@@ -9,12 +9,7 @@ import {
 import EventItem from '../components/EventItem';
 import { useEventOperations } from '../hooks/useEventOperations';
 import { Event } from '../types';
-import {
-  generateDailyRepeats,
-  generateMonthlyRepeats,
-  generateRepeats,
-  generateWeeklyRepeats,
-} from '../utils/repeatUtils';
+import { generateRepeats } from '../utils/repeatUtils';
 
 describe('반복 유형 선택 - 통합테스트', () => {
   it('2월 29일에 시작하는 연간 반복 일정은 윤년에만 생성되어 저장된다.', async () => {
@@ -82,12 +77,10 @@ describe('반복 간격 설정', () => {
 
     await act(() => Promise.resolve(null));
 
-    const startDate = new Date('2025-05-19');
-    const endDate = new Date('2025-05-30');
-
     const baseEvent = {
       id: '',
       title: '2일 간격 테스트',
+      date: '2025-05-19',
       startTime: '09:00',
       endTime: '10:00',
       description: '',
@@ -99,19 +92,11 @@ describe('반복 간격 설정', () => {
         endDate: '2025-05-30',
       },
       notificationTime: 10,
-    } as Omit<Event, 'id' | 'date'>;
+    } as Omit<Event, 'id'>;
 
-    const events = generateDailyRepeats(startDate, endDate, 2).map((date) => ({
-      ...baseEvent,
-      id: '',
-      date: date.toISOString().slice(0, 10),
-    }));
-
-    for (const event of events) {
-      await act(async () => {
-        await result.current.saveEvent(event);
-      });
-    }
+    await act(async () => {
+      await result.current.saveEvent(baseEvent);
+    });
 
     const savedDates = result.current.events.map((e) => e.date);
 
@@ -131,12 +116,10 @@ describe('반복 간격 설정', () => {
 
     await act(() => Promise.resolve(null));
 
-    const startDate = new Date('2025-05-19');
-    const endDate = new Date('2025-06-30');
-
     const baseEvent = {
       id: '',
       title: '2주 간격 테스트',
+      date: '2025-05-19',
       startTime: '09:00',
       endTime: '10:00',
       description: '',
@@ -148,19 +131,11 @@ describe('반복 간격 설정', () => {
         endDate: '2025-06-30',
       },
       notificationTime: 10,
-    } as Omit<Event, 'id' | 'date'>;
+    } as Omit<Event, 'id'>;
 
-    const events = generateWeeklyRepeats(startDate, endDate, 2).map((date) => ({
-      ...baseEvent,
-      id: '',
-      date: date.toISOString().slice(0, 10),
-    }));
-
-    for (const event of events) {
-      await act(async () => {
-        await result.current.saveEvent(event);
-      });
-    }
+    await act(async () => {
+      await result.current.saveEvent(baseEvent);
+    });
 
     const savedDates = result.current.events.map((e) => e.date);
 
@@ -173,12 +148,10 @@ describe('반복 간격 설정', () => {
 
     await act(() => Promise.resolve(null));
 
-    const startDate = new Date('2025-05-19');
-    const endDate = new Date('2025-12-30');
-
     const baseEvent = {
       id: '',
       title: '3개월 간격 테스트',
+      date: '2025-05-19',
       startTime: '09:00',
       endTime: '10:00',
       description: '',
@@ -186,23 +159,15 @@ describe('반복 간격 설정', () => {
       category: '반복',
       repeat: {
         type: 'monthly',
-        interval: 2,
+        interval: 3,
         endDate: '2025-12-30',
       },
       notificationTime: 10,
-    } as Omit<Event, 'id' | 'date'>;
+    } as Omit<Event, 'id'>;
 
-    const events = generateMonthlyRepeats(startDate, endDate, 3).map((date) => ({
-      ...baseEvent,
-      id: '',
-      date: date.toISOString().slice(0, 10),
-    }));
-
-    for (const event of events) {
-      await act(async () => {
-        await result.current.saveEvent(event);
-      });
-    }
+    await act(async () => {
+      await result.current.saveEvent(baseEvent);
+    });
 
     const savedDates = result.current.events.map((e) => e.date);
 
