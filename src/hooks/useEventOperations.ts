@@ -29,6 +29,9 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
+      // saveEvent는 단일 이벤트 수정 삭제만 수행, 반복 일정도 단일 이벤트로 전환
+      if (eventData.repeat.type !== 'none') eventData.repeat = { type: 'none', interval: 0 };
+
       let response;
       if (editing) {
         response = await fetch(`/api/events/${(eventData as Event).id}`, {
