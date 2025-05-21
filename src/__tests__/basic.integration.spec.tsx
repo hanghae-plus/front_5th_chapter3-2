@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { ReactElement } from 'react';
 
@@ -81,7 +81,36 @@ describe('반복 일정 CRUD 테스트', () => {
   });
 
   describe('반복 일정 단일 삭제', () => {
-    it('단일 일정을 삭제하면 해당 일정만 /api/events/:id로 삭제 요청된다', () => {});
-    it('삭제된 일정은 화면에서 사라지고, 나머지는 유지된다', () => {});
+    it('반복 일정 중 하나를 삭제하면 해당 일정만 사라지고 나머지는 유지된다', async () => {
+      const { user } = setup(<App />);
+
+      // 1. 반복 일정 생성
+      await user.click(screen.getByText('일정 추가'));
+      await user.type(screen.getByLabelText('제목'), '반복 회의');
+      await user.type(screen.getByLabelText('날짜'), '2025-05-01');
+      await user.type(screen.getByLabelText('시작 시간'), '09:00');
+      await user.type(screen.getByLabelText('종료 시간'), '10:00');
+      await user.type(screen.getByLabelText('설명'), '삭제 테스트');
+      await user.type(screen.getByLabelText('위치'), '회의실');
+      await user.selectOptions(screen.getByLabelText('카테고리'), '업무');
+      await user.selectOptions(screen.getByLabelText('반복 유형'), 'daily');
+      await user.type(screen.getByLabelText('반복 종료일'), '2025-05-03');
+      await user.click(screen.getByTestId('event-submit-button'));
+
+      const eventList = within(screen.getByTestId('event-list'));
+
+      // 2. 반복 일정이 3개 렌더링되었는지 확인
+      await screen.findAllByText('반복 회의');
+      expect(eventList.getAllByText('반복 회의')).toHaveLength(3);
+
+      // 3. 첫 번째 일정 삭제
+      const deleteButtons = await screen.findAllByLabelText('Delete event');
+      await user.click(deleteButtons[0]);
+
+      // 4. 삭제 후 2개만 남아 있어야 함
+      await waitFor(() => {
+        expect(eventList.getAllByText('반복 회의')).toHaveLength(2);
+      });
+    });
   });
 });
