@@ -767,12 +767,33 @@ describe('반복 종료', () => {
 
 describe('반복 일정 단일 수정', () => {
   it('반복일정을 수정하면 단일 일정으로 변경되고 반복 아이콘이 사라진다.', async () => {
-    // 1. 반복 일정 생성
-    // 2. 해당 일정의 수정 버튼 클릭
-    // 3. 일정 내용 수정
-    // 4. 일정 저장
-    // 5. 수정된 일정이 단일 일정으로 변경되었는지 확인
-    // 6. 반복 아이콘이 사라졌는지 확인
+    const { user } = setup(<App />);
+
+    // 반복 일정 생성
+    await saveRecurringSchedule(user, {
+      title: '수정할 반복 일정',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '수정할 반복 일정',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+    });
+
+    // 수정 버튼 클릭
+    const editButton = await screen.findByLabelText('Edit event');
+    await user.click(editButton);
+
+    // 반복 설정 해제
+    await user.click(screen.getByLabelText('반복 설정'));
+
+    // 저장
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    // 반복 아이콘이 사라졌는지 확인
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.queryByTestId('repeat-icon')).not.toBeInTheDocument();
   });
 });
 
