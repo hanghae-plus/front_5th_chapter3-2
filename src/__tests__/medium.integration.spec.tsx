@@ -383,8 +383,8 @@ describe('반복 일정 설정', () => {
     await user.click(screen.getByLabelText('Next'));
 
     const calendarAfter1Month = within(screen.getByTestId('month-view'));
-    expect(calendarAfter1Month.getAllByTestId('repeat-icon')).toHaveLength(0);
-    expect(calendarAfter1Month.getAllByText('반복되는 회의')).toHaveLength(0);
+    expect(calendarAfter1Month.queryByTestId('repeat-icon')).not.toBeInTheDocument();
+    expect(calendarAfter1Month.queryByText('반복되는 회의')).not.toBeInTheDocument();
   });
 
   it(`5일 간격으로 반복되는 일정을 생성하면 종료일까지 5일마다 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
@@ -480,7 +480,7 @@ describe('반복 일정 설정', () => {
     expect(calendarAfter1Month.getAllByTestId('repeat-icon')).toHaveLength(4);
     expect(calendarAfter1Month.getAllByText('새로 반복되는 회의')).toHaveLength(4);
   });
-  it(`매달 반복 설정된 일정을 저장하면 9월 30일까지 매달 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
+  it(`매달 반복 설정된 일정을 저장하면 설정한 종료일까지 매달 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
