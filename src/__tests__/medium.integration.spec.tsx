@@ -403,8 +403,10 @@ describe('반복 간격 선택', () => {
     const repeatInterval = screen.getByLabelText('repeat-interval');
     expect(repeatInterval).toHaveValue(1);
   });
+});
 
-  it('종료 날짜를 지정하지 않으면 2025-12-31로 설정된다.', async () => {
+describe('반복 종료 설정', () => {
+  it('종료 날짜를 지정하지 않으면 2025-09-30로 설정된다.', async () => {
     setupMockHandlerEventsListCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
@@ -434,9 +436,6 @@ describe('반복 간격 선택', () => {
       { ...newEvent, id: '3', date: '2025-07-21' },
       { ...newEvent, id: '4', date: '2025-08-21' },
       { ...newEvent, id: '5', date: '2025-09-21' },
-      { ...newEvent, id: '6', date: '2025-10-21' },
-      { ...newEvent, id: '7', date: '2025-11-21' },
-      { ...newEvent, id: '8', date: '2025-12-21' },
     ];
 
     expect(result.current.events).toEqual(expectedEvents);

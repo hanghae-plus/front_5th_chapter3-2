@@ -59,7 +59,7 @@ export const createRepeatEvents = (event: Event | EventForm) => {
   const { type, interval, endDate } = repeat;
 
   let currentDate = new Date(date);
-  const repeatEndDate = endDate ? new Date(endDate) : new Date('2025-12-31');
+  const repeatEndDate = endDate ? new Date(endDate) : new Date('2025-09-30');
   const repeatEvents: Event[] = [];
 
   while (currentDate <= repeatEndDate) {
