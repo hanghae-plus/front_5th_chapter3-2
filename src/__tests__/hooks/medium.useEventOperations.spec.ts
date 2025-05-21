@@ -186,7 +186,7 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 });
 
 // 반복 일정
-describe('반복 일정 저장', () => {
+describe('반복 일정', () => {
   it(`매일 반복되는 이벤트를 저장하면 하루 간격으로 일정이 생성된다.`, async () => {
     setupMockHandlerCreation();
 
@@ -1169,5 +1169,91 @@ describe('반복 일정 저장', () => {
     ]);
   });
 
+  it('존재하는 반복 일정 삭제 시 에러없이 해당 아이템만 삭제된다.', async () => {
+    setupMockHandlerDeletion();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(async () => {
+      await result.current.deleteRepeatedEvent(['2']);
+    });
+
+    await act(() => Promise.resolve(null));
+
+    expect(result.current.events).toEqual([
+      {
+        id: '1',
+        title: '삭제할 이벤트',
+        date: '2025-10-15',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '삭제할 이벤트입니다',
+        location: '어딘가',
+        category: '기타',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 10,
+      },
+      {
+        id: '3',
+        title: '삭제할 반복 이벤트',
+        date: '2025-10-17',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '삭제할 이벤트입니다',
+        location: '어딘가',
+        category: '기타',
+        repeat: { type: 'daily', interval: 1 },
+        notificationTime: 10,
+      },
+      {
+        id: '4',
+        title: '삭제할 반복 이벤트',
+        date: '2025-10-18',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '삭제할 이벤트입니다',
+        location: '어딘가',
+        category: '기타',
+        repeat: { type: 'daily', interval: 1 },
+        notificationTime: 10,
+      },
+      {
+        id: '5',
+        title: '삭제할 반복 이벤트',
+        date: '2025-10-19',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '삭제할 이벤트입니다',
+        location: '어딘가',
+        category: '기타',
+        repeat: { type: 'daily', interval: 1 },
+        notificationTime: 10,
+      },
+      {
+        id: '6',
+        title: '삭제할 반복 이벤트',
+        date: '2025-10-20',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '삭제할 이벤트입니다',
+        location: '어딘가',
+        category: '기타',
+        repeat: { type: 'daily', interval: 1 },
+        notificationTime: 10,
+      },
+      {
+        id: '7',
+        title: '삭제할 반복 이벤트',
+        date: '2025-10-21',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '삭제할 이벤트입니다',
+        location: '어딘가',
+        category: '기타',
+        repeat: { type: 'daily', interval: 1 },
+        notificationTime: 10,
+      },
+    ]);
+  });
   // TODO: 반복 일정을 수정
 });
