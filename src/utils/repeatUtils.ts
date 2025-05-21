@@ -67,23 +67,25 @@ export function generateRepeatingEvents(
   repeatInfo: RepeatInfo,
   repeatGroupId: string
 ): Event[] {
-  const { type: repeatType, interval, endDate: repeatEndDateStr } = repeatInfo;
+  const { type: repeatType, interval, endDate: repeatEndDateStr, maxOccurrences } = repeatInfo;
   const generatedEvents: Event[] = [];
 
   if (repeatType === 'none') {
     return generatedEvents;
   }
 
-  if (!repeatEndDateStr && repeatInfo.endDate === undefined) {
-    return [];
+  // 종료일이 없으면 생성 불가
+  if (!repeatEndDateStr) {
+    console.warn('No end date provided for repeating events.');
+    return generatedEvents;
   }
 
+  const repeatEndDate = new Date(repeatEndDateStr + 'T23:59:59');
   let currentDateStr = baseEvent.date;
-  const [startYear, startMonth, startDay] = baseEvent.date.split('-').map(Number);
-  const originalStartDayOfMonth = startDay; // <<-- 원래 반복 시작일의 '일'을 저장
 
-  const repeatEndDate = repeatEndDateStr ? new Date(repeatEndDateStr + 'T23:59:59') : null;
+  const originalStartDayOfMonth = Number(baseEvent.date.split('-')[2]);
 
+  // 첫 번째 이벤트 추가
   generatedEvents.push({
     ...baseEvent,
     id: generateSimpleId(),
@@ -94,9 +96,23 @@ export function generateRepeatingEvents(
     date: currentDateStr,
   });
 
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    // calculateNextRepeatDate 호출 시 originalStartDayOfMonth 전달
+  // maxOccurrences가 정의되어 있고 1 이하라면 첫 번째 이벤트만 반환
+  if (maxOccurrences !== undefined && maxOccurrences <= 1) {
+    return generatedEvents;
+  }
+
+  // 무한 루프 방지 및 종료 조건 적용
+  let iterations = 0;
+  const MAX_ITERATIONS = 366 * 3; // 약 3년치
+
+  do {
+    iterations++;
+
+    // 최대 반복 횟수 체크
+    if (maxOccurrences !== undefined && generatedEvents.length >= maxOccurrences) {
+      break;
+    }
+
     const nextDateStr = calculateNextRepeatDate(
       currentDateStr,
       repeatType,
@@ -105,10 +121,12 @@ export function generateRepeatingEvents(
     );
     const nextDateObj = new Date(nextDateStr);
 
-    if (repeatEndDate && nextDateObj > repeatEndDate) {
+    // 종료일 체크
+    if (nextDateObj > repeatEndDate) {
       break;
     }
 
+    // 날짜가 변경되지 않은 경우 체크 (무한 루프 방지)
     if (nextDateStr === currentDateStr) {
       console.warn('calculateNextRepeatDate did not advance the date. Breaking loop.', {
         currentDateStr,
@@ -129,11 +147,7 @@ export function generateRepeatingEvents(
         id: repeatGroupId,
       },
     });
+  } while (iterations < MAX_ITERATIONS);
 
-    if (generatedEvents.length >= 366 * 3) {
-      console.warn('Reached maximum number of repeating events.');
-      break;
-    }
-  }
   return generatedEvents;
 }

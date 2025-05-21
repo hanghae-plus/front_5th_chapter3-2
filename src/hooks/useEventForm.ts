@@ -5,6 +5,9 @@ import { getTimeErrorMessage } from '../utils/timeValidation';
 
 type TimeErrorRecord = Record<'startTimeError' | 'endTimeError', string | null>;
 
+// "종료 없음" 시 적용될 기본 종료일
+const DEFAULT_REPEAT_END_DATE_FOR_NO_END = '2025-09-30';
+
 export const useEventForm = (initialEvent?: Event) => {
   const [title, setTitle] = useState(initialEvent?.title || '');
   const [date, setDate] = useState(initialEvent?.date || '');
