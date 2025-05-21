@@ -1,0 +1,1 @@
+export { EventTag } from './EventTag';

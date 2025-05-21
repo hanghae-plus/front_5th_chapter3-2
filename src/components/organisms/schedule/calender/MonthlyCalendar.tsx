@@ -1,18 +1,6 @@
-import { BellIcon, RepeatIcon } from '@chakra-ui/icons';
-import {
-  Box,
-  Heading,
-  HStack,
-  Table,
-  Tbody,
-  Td,
-  Text,
-  Th,
-  Thead,
-  Tr,
-  VStack,
-} from '@chakra-ui/react';
+import { Heading, Table, Tbody, Td, Text, Th, Thead, Tr, VStack } from '@chakra-ui/react';
 
+import { EventTag } from '@/components/molecules/event-tag';
 import { Event } from '@/types';
 import { formatDate, formatMonth, getEventsForDay, getWeeksAtMonth } from '@/utils/dateUtils';
 
@@ -73,27 +61,7 @@ export const MonthlyCalendar = ({
                           const isNotified = notifiedEvents.includes(event.id);
                           const isRepeat = event.repeat.type !== 'none';
                           return (
-                            <Box
-                              key={event.id}
-                              p={1}
-                              my={1}
-                              bg={isNotified ? 'red.100' : isRepeat ? 'blue.100' : 'gray.100'}
-                              borderRadius="md"
-                              fontWeight={isNotified ? 'bold' : 'normal'}
-                              color={isNotified ? 'red.500' : isRepeat ? 'blue.500' : 'inherit'}
-                              data-testid="schedule-tag"
-                            >
-                              <HStack spacing={1}>
-                                {isNotified ? (
-                                  <BellIcon data-testid="bell-icon" />
-                                ) : isRepeat ? (
-                                  <RepeatIcon data-testid="repeat-icon" />
-                                ) : null}
-                                <Text fontSize="sm" noOfLines={1}>
-                                  {event.title}
-                                </Text>
-                              </HStack>
-                            </Box>
+                            <EventTag event={event} isNotified={isNotified} isRepeat={isRepeat} />
                           );
                         })}
                       </>
