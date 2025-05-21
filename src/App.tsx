@@ -103,8 +103,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, saveRepeatEvent, deleteEvent } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -160,7 +161,11 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      if (eventData.repeat.type !== 'none') {
+        await saveRepeatEvent(eventData);
+      } else {
+        await saveEvent(eventData);
+      }
       resetForm();
     }
   };
@@ -381,6 +386,7 @@ function App() {
               <FormControl>
                 <FormLabel>반복 유형</FormLabel>
                 <Select
+                  aria-label="repeat-type"
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
@@ -392,8 +398,8 @@ function App() {
               </FormControl>
               <HStack width="100%">
                 <FormControl>
-                  <FormLabel>반복 간격</FormLabel>
                   <Input
+                    aria-label="repeat-interval"
                     type="number"
                     value={repeatInterval}
                     onChange={(e) => setRepeatInterval(Number(e.target.value))}
@@ -546,22 +552,40 @@ function App() {
                 colorScheme="red"
                 onClick={() => {
                   setIsOverlapDialogOpen(false);
-                  saveEvent({
-                    id: editingEvent ? editingEvent.id : undefined,
-                    title,
-                    date,
-                    startTime,
-                    endTime,
-                    description,
-                    location,
-                    category,
-                    repeat: {
-                      type: isRepeating ? repeatType : 'none',
-                      interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
-                    },
-                    notificationTime,
-                  });
+                  if (isRepeating) {
+                    saveRepeatEvent({
+                      id: editingEvent ? editingEvent.id : undefined,
+                      title,
+                      date,
+                      startTime,
+                      endTime,
+                      description,
+                      location,
+                      category,
+                      repeat: {
+                        type: repeatType,
+                        interval: repeatInterval,
+                        endDate: repeatEndDate || undefined,
+                      },
+                      notificationTime,
+                    });
+                  } else {
+                    saveEvent({
+                      id: editingEvent ? editingEvent.id : undefined,
+                      title,
+                      date,
+                      startTime,
+                      endTime,
+                      description,
+                      location,
+                      category,
+                      repeat: {
+                        type: 'none',
+                        interval: 0,
+                      },
+                      notificationTime,
+                    });
+                  }
                 }}
                 ml={3}
               >
