@@ -70,7 +70,7 @@ const notificationOptions = [
   { value: 1440, label: '1일 전' },
 ];
 
-const isRepeatingEvent = (event: Event | EventForm) => {
+export const isRepeatingEvent = (event: Event | EventForm) => {
   return event.repeat.type !== 'none';
 };
 
@@ -206,6 +206,9 @@ export default function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {isRepeatingEvent(event) && (
+                              <RepeatIcon aria-label="반복 아이콘" color="blue.500" />
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -432,7 +435,7 @@ export default function App() {
           </Button>
         </VStack>
 
-        <VStack flex={1} spacing={5} align="stretch">
+        <VStack data-testid="calendar-view" flex={1} spacing={5} align="stretch">
           <Heading>일정 보기</Heading>
 
           <HStack mx="auto" justifyContent="space-between">
@@ -498,7 +501,7 @@ export default function App() {
                       <Text>{event.description}</Text>
                       <Text>{event.location}</Text>
                       <Text>카테고리: {event.category}</Text>
-                      {event.repeat.type !== 'none' && (
+                      {isRepeatingEvent(event) && (
                         <Text>
                           반복: {event.repeat.interval}
                           {event.repeat.type === 'daily' && '일'}
