@@ -16,7 +16,7 @@ const saveScheduleForm = async (page: Page, form: Omit<Event, 'id' | 'notificati
   await page.getByLabel('카테고리').selectOption(category);
 
   if (repeat.type !== 'none') {
-    const checkbox = page.getByLabel('반복 설정');
+    const checkbox = page.getByText('반복 설정');
 
     await checkbox.click();
     await page.getByLabel('반복 유형').selectOption(type);
@@ -56,4 +56,22 @@ test('다음 달의 일정과 미리 알림을 설정하면, 다음 달 버튼�
 
 test('2주 간격의 반복 일정을 다음 달 말일까지 등록하면, 반복 횟수에 따라 일정이 캘린더에 표시되고 다음 달 이동 버튼을 클릭해도 일정이 표기된다.', async ({
   page,
-}) => {});
+}) => {
+  await page.goto('http://localhost:5173/');
+  await saveScheduleForm(page, {
+    title: '새로 반복되는 일정',
+    date: '2025-05-07',
+    startTime: '14:00',
+    endTime: '15:00',
+    description: '팀 회의가 진행될 예정입니다',
+    location: '11층 회의실',
+    category: '업무',
+    repeat: { type: 'weekly', interval: 2, endDate: '2025-06-30' },
+  });
+
+  const eventList = page.getByTestId('event-list');
+  await expect(eventList.getByText('새로 반복되는 일정')).toHaveCount(2);
+
+  await page.getByLabel('Next').click();
+  await expect(eventList.getByText('새로 반복되는 일정')).toHaveCount(2);
+});
