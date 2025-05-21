@@ -108,3 +108,25 @@ export function formatDate(currentDate: Date, day?: number) {
     fillZero(day ?? currentDate.getDate()),
   ].join('-');
 }
+
+export function isLeapYear(year: number) {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+export function getNextLeapYear(yearOrDate: number | Date, repeatEndDate: Date) {
+  // 시작 연도 추출
+  let year = typeof yearOrDate === 'number' ? yearOrDate : yearOrDate.getFullYear();
+
+  const maxYear = repeatEndDate.getFullYear();
+  year++; // 바로 다음 해부터 검사
+
+  // maxYear를 넘지 않는 범위에서만 윤년 검사
+  while (year <= maxYear) {
+    if (isLeapYear(year)) {
+      return year;
+    }
+    year++;
+  }
+
+  return year--;
+}

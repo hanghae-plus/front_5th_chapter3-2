@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -88,7 +89,6 @@ function App() {
     repeatType,
     setRepeatType,
     repeatInterval,
-    setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
     notificationTime,
@@ -101,10 +101,13 @@ function App() {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    repeatIntervalError,
+    handleRepeatIntervalChange,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, saveRepeatEvent, deleteEvent } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -138,6 +141,12 @@ function App() {
       return;
     }
 
+    const repeatEventData = {
+      type: editingEvent ? 'none' : isRepeating ? repeatType : 'none',
+      interval: editingEvent ? 0 : repeatInterval,
+      endDate: editingEvent ? undefined : repeatEndDate || undefined,
+    };
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -147,11 +156,7 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat: repeatEventData,
       notificationTime,
     };
 
@@ -160,8 +165,50 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      if (eventData.repeat.type !== 'none') {
+        await saveRepeatEvent(eventData);
+      } else {
+        await saveEvent(eventData);
+      }
       resetForm();
+    }
+  };
+
+  const handleOverlapConfirm = () => {
+    setIsOverlapDialogOpen(false);
+    if (repeatType) {
+      saveRepeatEvent({
+        id: editingEvent ? editingEvent.id : undefined,
+        title,
+        date,
+        startTime,
+        endTime,
+        description,
+        location,
+        category,
+        repeat: {
+          type: repeatType,
+          interval: repeatInterval,
+          endDate: repeatEndDate || undefined,
+        },
+        notificationTime,
+      });
+    } else {
+      saveEvent({
+        id: editingEvent ? editingEvent.id : undefined,
+        title,
+        date,
+        startTime,
+        endTime,
+        description,
+        location,
+        category,
+        repeat: {
+          type: 'none',
+          interval: 0,
+        },
+        notificationTime,
+      });
     }
   };
 
@@ -201,6 +248,13 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {event.repeat.type !== 'none' && (
+                              <RepeatIcon
+                                aria-label="반복 일정 아이콘"
+                                color="gray.500"
+                                fontSize="sm"
+                              />
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -270,6 +324,13 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && (
+                                    <RepeatIcon
+                                      aria-label="repeat-icon"
+                                      color="gray.500"
+                                      fontSize="sm"
+                                    />
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -393,12 +454,18 @@ function App() {
               <HStack width="100%">
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
-                  <Input
-                    type="number"
-                    value={repeatInterval}
-                    onChange={(e) => setRepeatInterval(Number(e.target.value))}
-                    min={1}
-                  />
+                  <Tooltip
+                    label={repeatIntervalError}
+                    isOpen={!!repeatIntervalError}
+                    placement="top"
+                  >
+                    <Input
+                      type="number"
+                      value={repeatInterval}
+                      onChange={(e) => handleRepeatIntervalChange(e)}
+                      min={1}
+                    />
+                  </Tooltip>
                 </FormControl>
                 <FormControl>
                   <FormLabel>반복 종료일</FormLabel>
@@ -542,29 +609,7 @@ function App() {
               <Button ref={cancelRef} onClick={() => setIsOverlapDialogOpen(false)}>
                 취소
               </Button>
-              <Button
-                colorScheme="red"
-                onClick={() => {
-                  setIsOverlapDialogOpen(false);
-                  saveEvent({
-                    id: editingEvent ? editingEvent.id : undefined,
-                    title,
-                    date,
-                    startTime,
-                    endTime,
-                    description,
-                    location,
-                    category,
-                    repeat: {
-                      type: isRepeating ? repeatType : 'none',
-                      interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
-                    },
-                    notificationTime,
-                  });
-                }}
-                ml={3}
-              >
+              <Button colorScheme="red" ml={3} onClick={handleOverlapConfirm}>
                 계속 진행
               </Button>
             </AlertDialogFooter>
