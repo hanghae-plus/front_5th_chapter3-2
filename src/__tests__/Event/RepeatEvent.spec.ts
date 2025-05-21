@@ -549,3 +549,67 @@ describe('반복 일정 삭제', () => {
     });
   });
 });
+
+describe('반복 일정 수정', () => {
+  beforeEach(() => {
+    setupMockHandlerCreation();
+  });
+
+  test('반복 일정을 수정하면 단일 일정으로 변경된다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    // 1. 먼저 반복 일정 생성
+    const newEvent: EventForm = {
+      title: '매일 아침 회의',
+      date: '2025-05-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '아침 스크럼',
+      location: '회의실 A',
+      category: '회의',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-05-17',
+      },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    // 반복 일정이 생성되었는지 확인
+    expect(result.current.events).toHaveLength(3);
+    expect(result.current.events[0].repeat.type).toBe('daily');
+
+    // 2. 첫 번째 일정을 수정
+    const targetEvent = result.current.events[0];
+    const modifiedEvent = {
+      ...targetEvent,
+      title: '수정된 회의',
+      description: '수정된 설명',
+    };
+
+    // useEventOperations의 editing 모드를 true로 설정하여 다시 렌더링
+    const { result: editingResult } = renderHook(() => useEventOperations(true));
+    await act(async () => {
+      await editingResult.current.saveEvent(modifiedEvent);
+    });
+
+    // 3. 수정된 일정 확인
+    const updatedEvent = editingResult.current.events.find((event) => event.id === targetEvent.id);
+    expect(updatedEvent).toBeTruthy();
+    expect(updatedEvent?.repeat.type).toBe('none'); // 반복 유형이 none으로 변경되었는지 확인
+    expect(updatedEvent).toMatchObject({
+      title: '수정된 회의',
+      description: '수정된 설명',
+      date: targetEvent.date,
+      startTime: targetEvent.startTime,
+      endTime: targetEvent.endTime,
+      location: targetEvent.location,
+      category: targetEvent.category,
+      notificationTime: targetEvent.notificationTime,
+    });
+  });
+});
