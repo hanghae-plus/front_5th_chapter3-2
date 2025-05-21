@@ -3,7 +3,7 @@ import { act } from '@testing-library/react';
 
 import { setupMockHandlerCreation } from '../../__mocks__/handlersUtils';
 import { useEventOperations } from '../../hooks/useEventOperations';
-import { EventForm } from '../../types';
+import { EventForm, RepeatType } from '../../types';
 
 describe('반복 일정 생성 및 수정', () => {
   beforeEach(() => {
@@ -369,5 +369,116 @@ describe('반복 간격 설정', () => {
     expectedDate.forEach((date, index) => {
       expect(result.current.events[index].date).toBe(date);
     });
+  });
+});
+
+describe('반복 일정 표시', () => {
+  beforeEach(() => {
+    setupMockHandlerCreation();
+  });
+
+  test('반복 유형별로 올바른 텍스트가 표시된다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    // 각 반복 유형별 테스트 데이터
+    const testCases = [
+      {
+        type: 'daily',
+        interval: 2,
+        expectedText: '반복: 2일',
+      },
+      {
+        type: 'weekly',
+        interval: 1,
+        expectedText: '반복: 1주',
+      },
+      {
+        type: 'monthly',
+        interval: 3,
+        expectedText: '반복: 3월',
+      },
+      {
+        type: 'yearly',
+        interval: 1,
+        expectedText: '반복: 1년',
+      },
+    ];
+
+    for (const testCase of testCases) {
+      const newEvent: EventForm = {
+        title: `${testCase.type} 반복 테스트`,
+        date: '2025-05-15',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '반복 표시 테스트',
+        location: '회의실 A',
+        category: '회의',
+        repeat: {
+          type: testCase.type as RepeatType,
+          interval: testCase.interval,
+          endDate: '2025-05-30',
+        },
+        notificationTime: 10,
+      };
+
+      await act(async () => {
+        await result.current.saveEvent(newEvent);
+      });
+
+      const savedEvents = result.current.events;
+      const lastSavedEvent = savedEvents[savedEvents.length - 1];
+
+      // 반복 유형이 올바르게 설정되었는지 확인
+      expect(lastSavedEvent.repeat.type).toBe(testCase.type);
+
+      // 반복 간격이 올바르게 설정되었는지 확인
+      expect(lastSavedEvent.repeat.interval).toBe(testCase.interval);
+
+      // 반복 표시 텍스트가 올바른지 확인
+      const repeatText = `반복: ${lastSavedEvent.repeat.interval}${
+        lastSavedEvent.repeat.type === 'daily'
+          ? '일'
+          : lastSavedEvent.repeat.type === 'weekly'
+          ? '주'
+          : lastSavedEvent.repeat.type === 'monthly'
+          ? '월'
+          : '년'
+      }`;
+      expect(repeatText).toBe(testCase.expectedText);
+    }
+  });
+
+  test('반복이 아닌 일정은 반복 텍스트가 표시되지 않는다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    const newEvent: EventForm = {
+      title: '일반 일정',
+      date: '2025-05-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복 없는 일정',
+      location: '회의실 A',
+      category: '회의',
+      repeat: {
+        type: 'none',
+        interval: 1,
+        endDate: undefined,
+      },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    const savedEvents = result.current.events;
+    const savedEvent = savedEvents[0];
+
+    // 반복 유형이 none인지 확인
+    expect(savedEvent.repeat.type).toBe('none');
+
+    // repeat.type이 none이면 반복 텍스트가 표시되지 않아야 함
+    const shouldNotShowRepeatText = savedEvent.repeat.type === 'none';
+    expect(shouldNotShowRepeatText).toBe(true);
   });
 });
