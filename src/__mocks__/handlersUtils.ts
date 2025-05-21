@@ -7,6 +7,7 @@ import { Event } from '../types';
 export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
   const mockEvents: Event[] = [...initEvents];
 
+  //TODO - 반복 일정 로직 추가
   server.use(
     http.get('/api/events', () => {
       return HttpResponse.json({ events: mockEvents });

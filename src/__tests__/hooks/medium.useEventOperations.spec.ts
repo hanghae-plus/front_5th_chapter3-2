@@ -188,19 +188,207 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 });
 
 describe('반복 일정', () => {
-  it('일정 생성에서 반복 일정을 선택하면 일정에 반영된다.', () => {});
-  it('일정 수정에서 반복 일정을 선택하면 일정에 반영된다.', () => {});
+  it('일정 생성에서 반복 일정을 선택하면 일정에 반영된다.', async () => {
+    setupMockHandlerCreation();
 
-  it('윤년 29일에 반복 일정을 "매월"로 선택한다면 29일이 존재하는 경우에만 표시한다.', () => {});
-  it('윤년 29일에 반복 일정을 "매년"로 선택한다면 29일이 존재하는 경우에만 표시한다.', () => {});
+    const { result } = renderHook(() => useEventOperations(false));
 
-  it('매일 반복되는 일정에 대해 간격을 2일로 설정할 수 있다.', () => {});
-  it('매주 반복되는 일정에 대해 간격을 3주로 설정할 수 있다.', () => {});
-  it('매월 반복되는 일정에 대해 간격을 3개월로 설정할 수 있다.', () => {});
+    await act(() => Promise.resolve(null));
 
-  //TODO - 일정 표시는 통합 테스트에서 확인
+    const newEvent: Event = {
+      id: '1',
+      title: '새 반복 일정',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 반복 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-18' },
+      notificationTime: 5,
+    };
 
-  it('반복 종료 조건을 "2025-09-22"로 지정할 수 있다.', () => {});
-  it('반복 종료 조건을 3번으로 지정할 수 있다.', () => {});
-  it('반복 종료 조건을 "종료 없음"으로 지정할 수 있다.', () => {});
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(3);
+    expect(result.current.events[0].date).toBe('2025-10-16');
+    expect(result.current.events[-1].date).toBe('2025-10-18');
+  });
+
+  it('일정 수정에서 반복 일정을 선택하면 일정에 반영된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(true));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 반복 일정',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 반복 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-18' },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(3);
+    expect(result.current.events[0].date).toBe('2025-10-16');
+    expect(result.current.events[-1].date).toBe('2025-10-18');
+  });
+
+  it('윤년 29일에 반복 일정 설정하면 윤년 29일에만 표시를 한다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 반복 일정',
+      date: '2024-02-29',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 반복 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1, endDate: '2025-10-18' },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    expect(result.current.events[0].date).toBe('2024-02-29');
+    expect(result.current.events[1].date).toBe('2028-02-29');
+  });
+
+  it('매월 반복 일정을 31일로 설정한다면, 31일이 없는 달은 마지막 날에 일정을 표시를 한다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 반복 일정',
+      date: '2024-05-31',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 반복 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-7-31' },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(3);
+    expect(result.current.events[0].date).toBe('2025-05-31');
+    expect(result.current.events[1].date).toBe('2025-06-30');
+    expect(result.current.events[2].date).toBe('2025-07-31');
+  });
+
+  it('매일 반복되는 일정에 대해 간격을 2일로 설정할 수 있다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 반복 일정',
+      date: '2025-10-14',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 반복 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 2, endDate: '2025-10-18' },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    expect(result.current.events[0].date).toBe('2025-10-14');
+    expect(result.current.events[1].date).toBe('2025-10-16');
+  });
+
+  it('매주 반복되는 일정에 대해 간격을 3주로 설정할 수 있다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 반복 일정',
+      date: '2025-10-14',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 반복 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 2, endDate: '2025-10-18' },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    expect(result.current.events[0].date).toBe('2025-10-14');
+    expect(result.current.events[1].date).toBe('2025-10-16');
+  });
+
+  it('매월 반복되는 일정에 대해 간격을 3개월로 설정할 수 있다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 반복 일정',
+      date: '2025-05-01',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 반복 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 3, endDate: '2025-10-18' },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    expect(result.current.events[0].date).toBe('2025-05-01');
+    expect(result.current.events[1].date).toBe('2025-08-01');
+  });
+
+  it('반복 종료 조건을 "2025-09-22"로 지정할 수 있다.', async () => {});
+  it('반복 종료 조건을 3번으로 지정할 수 있다.', async () => {});
+  it('반복 종료 조건을 "종료 없음"으로 지정할 수 있다.', async () => {});
 });
