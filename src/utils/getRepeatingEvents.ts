@@ -77,6 +77,8 @@ function* yearEventGenerator(eventData: Event | EventForm) {
 export const getRepeatingEvents = (eventData: Event | EventForm) => {
   const eventList: Event[] = [];
 
+  if (eventData.repeat.type === 'none') return eventList;
+
   if (eventData.repeat.type === 'daily') {
     const event = dailyEventGenerator(eventData);
 
@@ -86,7 +88,8 @@ export const getRepeatingEvents = (eventData: Event | EventForm) => {
       if (done) break;
       eventList.push(value);
     }
-  } else if (eventData.repeat.type === 'weekly') {
+  }
+  if (eventData.repeat.type === 'weekly') {
     const event = weeklyEventGenerator(eventData);
 
     for (let i = 0; i <= 90; i++) {
@@ -94,7 +97,8 @@ export const getRepeatingEvents = (eventData: Event | EventForm) => {
       if (done) break;
       eventList.push(value);
     }
-  } else if (eventData.repeat.type === 'monthly') {
+  }
+  if (eventData.repeat.type === 'monthly') {
     const event = monthEventGenerator(eventData);
 
     // 일단 36개월
@@ -103,7 +107,8 @@ export const getRepeatingEvents = (eventData: Event | EventForm) => {
       if (done) break;
       eventList.push(value);
     }
-  } else if (eventData.repeat.type === 'yearly') {
+  }
+  if (eventData.repeat.type === 'yearly') {
     const event = yearEventGenerator(eventData);
 
     // 일단 10년
