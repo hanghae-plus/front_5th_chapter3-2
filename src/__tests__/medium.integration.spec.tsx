@@ -802,3 +802,94 @@ describe('반복 종료 조건 통합 테스트', () => {
     });
   });
 });
+
+describe('반복 일정 단일 수정', () => {
+  const initialRepeatingEventId = 'repeat-event-to-modify-id';
+  const initialRepeatGroupId = 'group-xyz';
+  const initialEvents: Event[] = [
+    {
+      id: initialRepeatingEventId,
+      title: '주간 정기 회의',
+      date: '2025-10-06', // 월요일
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '매주 월요일 진행되는 정기 회의',
+      location: '본사 회의실',
+      category: '업무',
+      repeat: {
+        type: 'weekly',
+        interval: 1,
+        id: initialRepeatGroupId, // 반복 그룹에 속함
+        endDate: '2025-10-27',
+      },
+      notificationTime: 10,
+    },
+    // 수정을 받지 않을 동일한 반복 일정의 다른 인스턴스
+    {
+      id: 'repeat-event-instance-2',
+      title: '주간 정기 회의',
+      date: '2025-10-13', // 다음 주 월요일
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '매주 월요일 진행되는 정기 회의',
+      location: '본사 회의실',
+      category: '업무',
+      repeat: {
+        type: 'weekly',
+        interval: 1,
+        id: initialRepeatGroupId,
+        endDate: '2025-10-27',
+      },
+      notificationTime: 10,
+    },
+    {
+      id: 'other-event-id',
+      title: '개인 약속',
+      date: '2025-10-06',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '친구와 점심',
+      location: '시내 레스토랑',
+      category: '개인',
+      repeat: { type: 'none', interval: 1 },
+      notificationTime: 5,
+    },
+  ];
+
+  let updatedEventPayload: Event | null = null;
+
+  beforeEach(() => {
+    updatedEventPayload = null;
+    server.use(
+      http.get('/api/events', () => {
+        return HttpResponse.json({ events: [...initialEvents] }); // 복사본 사용
+      }),
+      http.put('/api/events/:id', async ({ request, params }) => {
+        const eventId = params.id;
+        const newEventData = (await request.json()) as Event;
+        updatedEventPayload = { ...newEventData, id: eventId as string };
+
+        // 백엔드 업데이트 시뮬레이션: 찾아서 교체
+        const eventIndex = initialEvents.findIndex((e) => e.id === eventId);
+        let newLocalEvents = [...initialEvents]; // 테스트 격리를 위해 매번 초기 상태에서 시작하도록 수정 필요
+        // 또는 initialEvents를 beforeEach에서 리셋
+        if (eventIndex !== -1) {
+          newLocalEvents[eventIndex] = updatedEventPayload;
+        }
+        // 이 mock GET은 업데이트 후 재요청에 사용됩니다.
+        server.use(
+          http.get('/api/events', () => {
+            return HttpResponse.json({ events: newLocalEvents });
+          })
+        );
+        return HttpResponse.json(updatedEventPayload, { status: 200 });
+      })
+    );
+  });
+
+  afterEach(() => {
+    server.resetHandlers();
+  });
+
+  it('반복 일정의 특정 인스턴스를 수정하면 해당 일정만 단일 일정으로 변경되고 반복 아이콘이 사라져야 한다.', async () => {});
+});
