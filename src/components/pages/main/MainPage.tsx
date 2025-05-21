@@ -28,10 +28,8 @@ export function MainPage() {
     resetForm,
     editEvent,
   } = useEventForm();
-  const { events, saveEvent, deleteEvent, saveRepeatingEvents } = useEventOperations(
-    Boolean(editingEvent),
-    () => setEditingEvent(null)
-  );
+  const { events, saveEvent, deleteEvent, saveRepeatingEvents, updateEventToRepeatingEvent } =
+    useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
   const { notifications, notifiedEvents, removeNotification } = useNotifications(events);
   const { isOverlapModalOpen, overlappingEvents, openModal, closeModal, isOverlapping } =
     useOverlapModal();
@@ -66,9 +64,21 @@ export function MainPage() {
       return;
     }
 
-    // 먼저 isEditing으로 분기
+    if (editingEvent && isRepeating) {
+      if (isLeapDayYearlyRepeat(eventForm)) {
+        return setIsLeapMonthModalOpen(true);
+      }
+
+      if (isInvalidMonthlyRepeat(eventForm)) {
+        return setIsInvalidMonthlyRepeatModalOpen(true);
+      }
+
+      const eventData = convertFormToEventDataRepeating(eventForm, null);
+      await updateEventToRepeatingEvent(eventData);
+      resetForm();
+    }
+
     if (editingEvent) {
-      // 편집 중인 이벤트 처리
       const eventData = convertFormToEventData(eventForm, isRepeating, editingEvent);
 
       if (isOverlapping(eventData, events)) {

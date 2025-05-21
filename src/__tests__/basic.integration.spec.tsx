@@ -6,11 +6,13 @@ import { vi } from 'vitest';
 import {
   setupMockHandlerCreation,
   setupMockHandlerRepeatingEvents,
+  setupMockHandlerUpdateToRepeating,
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
 import { Event, EventForm } from '../types';
+
 // * 8주차 기본과제 - TDD
 describe('8th basic integration test - 반복 일정', () => {
   const renderComponent = () => {
@@ -438,8 +440,8 @@ describe('8th basic integration test - 반복 일정', () => {
       expect(repeatIcons.length).toBe(4);
     });
     it.only('일정 수정 시 반복 일정이 정확히 표시된다.', async () => {
-      const { handler, getHandler } = setupMockHandlerRepeatingEvents(mockEvents);
-      server.use(handler, getHandler);
+      const { handlers, getHandler } = setupMockHandlerUpdateToRepeating(mockEvents);
+      server.use(...handlers, getHandler);
       const user = userEvent.setup();
       renderComponent();
 
@@ -460,7 +462,7 @@ describe('8th basic integration test - 반복 일정', () => {
       // * 4. 반복 간격 선택
       const repeatIntervalSelector = screen.getByLabelText('반복 간격');
       await user.clear(repeatIntervalSelector);
-      await user.type(repeatIntervalSelector, '2');
+      await user.type(repeatIntervalSelector, '1');
 
       // * 5. 반복 종료일 선택
       const repeatEndDateSelector = screen.getByLabelText('반복 종료일');
@@ -472,11 +474,11 @@ describe('8th basic integration test - 반복 일정', () => {
 
       // * 7. 결과 확인
       const eventList = await screen.findByTestId('event-list');
-      expect(within(eventList).getAllByText(mockEvents[0].title).length).toBe(1);
+      expect(within(eventList).getAllByText(mockEvents[0].title).length).toBe(4);
 
       const allEventTags = await screen.findAllByTestId('schedule-tag');
       console.log(allEventTags.length);
-      expect(allEventTags.length).toBe(6);
+      expect(allEventTags.length).toBe(5);
 
       const repeatIcons = await screen.findAllByTestId('repeat-icon');
       console.log(repeatIcons.length);

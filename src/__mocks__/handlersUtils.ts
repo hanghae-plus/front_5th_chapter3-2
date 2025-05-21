@@ -118,3 +118,76 @@ export const setupMockHandlerDeletion = (initEvents: Event[] = []) => {
     getHandler: store.getHandler,
   };
 };
+
+export const setupMockHandlerUpdateToRepeating = (initEvents: Event[] = []) => {
+  const store = createEventStore(initEvents);
+
+  // * 이벤트 업데이트 핸들러 (원본 이벤트 업데이트용)
+  const updateHandler = http.put('/api/events/:id', async ({ params, request }) => {
+    const { id } = params;
+    if (!id) return new HttpResponse(null, { status: 404 });
+
+    const eventId = store.getEventId(id);
+    const updatedEvent = (await request.json()) as Partial<Event>;
+    const index = store.findEventIndex(eventId);
+
+    if (index === -1) return new HttpResponse(null, { status: 404 });
+
+    console.log('이벤트 업데이트:', updatedEvent);
+    console.log('업데이트 전 이벤트 목록:', store.getEvents());
+
+    //* 이벤트 업데이트
+    const events = store.getEvents();
+    events[index] = { ...events[index], ...updatedEvent, id: eventId };
+
+    console.log('업데이트 후 이벤트 목록:', store.getEvents());
+
+    return HttpResponse.json({ events: store.getEvents() });
+  });
+
+  // * 반복 이벤트 생성 핸들러 (추가 반복 이벤트 생성용)
+  const createRepeatEventsHandler = http.post('/api/events-list', async ({ request }) => {
+    const reqData = await request.json();
+    const { events } = Array.isArray(reqData)
+      ? { events: reqData }
+      : (reqData as { events: Omit<Event, 'id'>[] });
+
+    console.log('반복 이벤트 생성 요청 데이터:', events);
+    console.log('생성 전 이벤트 목록:', store.getEvents());
+
+    // * 모든 반복 이벤트에 동일한 repeatId 적용
+    const isRepeatEvent = events[0]?.repeat?.type !== 'none';
+    const repeatId = isRepeatEvent ? `repeat-${Date.now()}` : undefined;
+
+    // * 현재 가장 큰 ID 값 찾기
+    const maxId = store.getEvents().reduce((max, event) => {
+      const id = parseInt(event.id);
+      return isNaN(id) ? max : Math.max(max, id);
+    }, 0);
+
+    events.forEach((event: Omit<Event, 'id'>, index) => {
+      // * 이미 ID가 있는 경우 해당 ID 사용, 없으면 새 ID 생성
+      const eventId = (event as any).id || String(maxId + index + 1);
+
+      const newEvent = {
+        id: eventId,
+        ...event,
+        repeat: {
+          ...event.repeat,
+          id: isRepeatEvent ? repeatId : event.repeat?.id,
+        },
+      };
+
+      store.addEvent(newEvent);
+    });
+
+    console.log('생성 후 이벤트 목록:', store.getEvents());
+
+    return HttpResponse.json({ events: store.getEvents() });
+  });
+
+  return {
+    handlers: [updateHandler, createRepeatEventsHandler],
+    getHandler: store.getHandler,
+  };
+};
