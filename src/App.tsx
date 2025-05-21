@@ -106,6 +106,8 @@ function App() {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    repeatEndCount,
+    setRepeatEndCount,
   } = useEventForm();
 
   const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
@@ -401,12 +403,24 @@ function App() {
                   setRepeatEndType={setRepeatEndType}
                 />
                 <FormControl>
-                  <Input
-                    type="date"
-                    value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
-                    marginTop={8}
-                  />
+                  {repeatEndType === 'endDate' && (
+                    <Input
+                      type="date"
+                      value={repeatEndDate}
+                      onChange={(e) => setRepeatEndDate(e.target.value)}
+                      marginTop={8}
+                      data-testid="repeat-end-date"
+                    />
+                  )}
+                  {repeatEndType === 'endCount' && (
+                    <Input
+                      type="number"
+                      value={repeatEndCount}
+                      onChange={(e) => setRepeatEndCount(Number(e.target.value))}
+                      marginTop={8}
+                      data-testid="repeat-end-count"
+                    />
+                  )}
                 </FormControl>
               </HStack>
             </VStack>

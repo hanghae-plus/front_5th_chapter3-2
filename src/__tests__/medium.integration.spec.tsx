@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act, waitFor } from '@testing-library/react';
+import { render, screen, within, act, waitFor, fireEvent } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
@@ -541,5 +541,39 @@ describe('반복 일정 단일 수정', () => {
     expect(
       within(modifiedEventBox as HTMLElement).queryByTestId('repeat-icon')
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('반복 종료', () => {
+  it('종료일 선택하면 날짜 입력 필드가 표시된다', async () => {
+    const { user } = setup(<App />);
+
+    const select = screen.getByRole('combobox', { name: '반복 종료' });
+
+    await user.selectOptions(select, 'endDate');
+
+    const dateInput = screen.getByTestId('repeat-end-date');
+    const countInput = screen.queryByTestId('repeat-end-count');
+
+    expect(dateInput).toBeInTheDocument();
+    expect(dateInput).toHaveAttribute('type', 'date');
+
+    expect(countInput).not.toBeInTheDocument();
+  });
+
+  it('종료 횟수 선택하면 횟수 입력 필드가 표시된다', async () => {
+    const { user } = setup(<App />);
+
+    const select = screen.getByRole('combobox', { name: '반복 종료' });
+
+    await user.selectOptions(select, 'endCount');
+
+    const dateInput = screen.queryByTestId('repeat-end-date');
+    const countInput = screen.getByTestId('repeat-end-count');
+
+    expect(dateInput).not.toBeInTheDocument();
+
+    expect(countInput).toBeInTheDocument();
+    expect(countInput).toHaveAttribute('type', 'number');
   });
 });
