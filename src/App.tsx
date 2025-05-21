@@ -156,7 +156,6 @@ function App() {
       },
       notificationTime,
     };
-    console.log('🚀 ~ addOrUpdateEvent ~ eventData:', eventData);
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {

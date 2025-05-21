@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { ReactElement } from 'react';
 
@@ -28,16 +28,19 @@ const saveRepeatSchedule = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
-  await user.selectOptions(screen.getByLabelText('반복 종류'), repeat?.type);
+  await user.selectOptions(screen.getByLabelText('반복 유형'), repeat?.type);
+  await user.clear(screen.getByLabelText('반복 간격'));
   await user.type(screen.getByLabelText('반복 간격'), repeat?.interval.toString());
-  await user.type(screen.getByLabelText('반복 종료 날짜'), repeat?.endDate ?? '');
+  await user.type(screen.getByLabelText('반복 종료일'), repeat?.endDate!.toString());
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
 
-describe.only('반복 일정', () => {
-  it('2월 29일에 매년 반복일정을 설정하면, 윤년이 아닌 해에는 2월 28일에 생성되는지 확인한다.', async () => {
+describe('반복 일정', () => {
+  it.only('2월 29일에 매년 반복일정을 설정하면, 윤년이 아닌 해에는 2월 28일에 생성되는지 확인한다.', async () => {
     vi.setSystemTime(new Date('2025-02-28 08:49:59'));
+
+    setupMockHandlerCreation();
 
     const { user } = setup(<App />);
 
@@ -51,10 +54,11 @@ describe.only('반복 일정', () => {
       description: '매년 반복 일정',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'yearly', interval: 1 },
+      repeat: { type: 'yearly', interval: 1, endDate: '2025-09-30' },
     });
 
     const eventList = within(screen.getByTestId('event-list'));
+
     expect(eventList.getByText('2025-02-28')).toBeInTheDocument();
     expect(eventList.getByText('매년 반복 일정')).toBeInTheDocument();
   });
@@ -78,6 +82,8 @@ describe.only('반복 일정', () => {
       category: '업무',
       repeat: { type: 'monthly', interval: 1 },
     });
+
+    await waitFor(() => expect(screen.getByText('2025-02-28')).toBeInTheDocument());
 
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getByText('2025-04-30')).toBeInTheDocument();

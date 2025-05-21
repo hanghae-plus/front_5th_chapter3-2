@@ -7,37 +7,6 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
   const toast = useToast();
 
-  const saveRepeatEvent = async (eventData: Event | EventForm) => {
-    try {
-      const response = await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(eventData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save repeat event');
-      }
-
-      await fetchEvents();
-      onSave?.();
-      toast({
-        title: editing ? '반복 일정이 수정되었습니다.' : '반복 일정이 추가되었습니다.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error('Error saving event:', error);
-      toast({
-        title: '반복 일정 저장 실패',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
   const fetchEvents = async () => {
     try {
       const response = await fetch('/api/events');
@@ -46,6 +15,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       }
       const { events } = await response.json();
       setEvents(events);
+      console.log('🚀 ~ fetchEvents ~ events:', events);
     } catch (error) {
       console.error('Error fetching events:', error);
       toast({
@@ -62,7 +32,6 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       let response;
 
       const isRepeatEvent = (eventData as Event).repeat.type !== 'none';
-      console.log('🚀 ~ saveEvent ~ isRepeatEvent:', isRepeatEvent);
 
       if (isRepeatEvent) {
         response = await fetch('/api/events-list', {
@@ -77,12 +46,16 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           body: JSON.stringify(eventData),
         });
       } else {
+        console.log('🚀 ~ saveEvent ~ eventData:그냥 저장로직', eventData);
         response = await fetch('/api/events', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),
         });
       }
+
+      const newEvents = await response.json();
+      console.log('🌀 반복일정 응답 데이터:', newEvents);
 
       if (!response.ok) {
         throw new Error('Failed to save event');
