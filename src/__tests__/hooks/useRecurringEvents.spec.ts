@@ -51,16 +51,4 @@ describe('useRecurringEvents Hook', () => {
     const { result } = renderHook(() => useRecurringEvents([]));
     expect(result.current).toEqual([]);
   });
-
-  it.skip('반복 이벤트는 generateRecurringEvents로 확장된 일정 데이터를 가진다', () => {
-    const { result } = renderHook(() => useRecurringEvents(events));
-    expect(result.current[0].instances).toBeDefined();
-    expect(result.current[1].instances).toBeUndefined();
-  });
-
-  it.skip('반복 이벤트가 아닌 경우 instances는 undefined', () => {
-    const { result } = renderHook(() => useRecurringEvents(events));
-    expect(result.current[0].instances).toBeDefined();
-    expect(result.current[1].instances).toBeUndefined();
-  });
 });

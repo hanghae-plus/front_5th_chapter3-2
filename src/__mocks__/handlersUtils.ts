@@ -20,7 +20,7 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
   );
 };
 
-export const setupMockHandlerUpdating = () => {
+export const setupMockHandlerUpdating = (updatedEvents: { title: string; repeat: { type: string; interval: number; endDate: string; }; isRecurring: any; id: string; date: string; startTime: string; endTime: string; description: string; location: string; category: string; notificationTime: number; }[]) => {
   const mockEvents: Event[] = [
     {
       id: '1',
@@ -91,4 +91,26 @@ export const setupMockHandlerDeletion = () => {
       return new HttpResponse(null, { status: 204 });
     })
   );
+};
+
+export const setupMockHandlerListCreation = (initEvents = [] as Event[]) => {
+  const mockEvents: Event[] = [...initEvents];
+
+  const getEventsHandler = http.get('/api/events', () => {
+    return HttpResponse.json({ events: mockEvents });
+  });
+
+  const createEventListHandler = http.post('/api/events-list', async ({ request }) => {
+    const { events: newEvents } = (await request.json()) as { events: Event[] };
+    const repeatedEvents = newEvents.map((event, index) => ({
+      ...event,
+      id: `${mockEvents.length + index + 1}`,
+    }));
+    mockEvents.push(...repeatedEvents);
+    return HttpResponse.json(repeatedEvents, { status: 201 });
+  });
+
+  console.log(mockEvents);
+
+  server.use(getEventsHandler, createEventListHandler);
 };
