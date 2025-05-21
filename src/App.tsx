@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -204,6 +205,9 @@ function App() {
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
+                            {event.repeat.type !== 'none' && (
+                              <RepeatIcon data-testid="repeat-icon" />
+                            )}
                           </HStack>
                         </Box>
                       );
@@ -273,6 +277,9 @@ function App() {
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
+                                  {event.repeat.type !== 'none' && (
+                                    <RepeatIcon data-testid="repeat-icon" />
+                                  )}
                                 </HStack>
                               </Box>
                             );
