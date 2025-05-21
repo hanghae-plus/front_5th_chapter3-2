@@ -207,4 +207,76 @@ describe('getRepeatEvents', () => {
     expect(result).toHaveLength(7);
     expect(result[result.length - 1].date).toBe('2025-08-15');
   });
+
+  it('매월 반복 이벤트를 생성한다. (endDate 없음)', () => {
+    const event: EventForm = {
+      title: '이벤트 1',
+      date: '2025-05-23',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: { type: 'monthly', interval: 1 },
+      notificationTime: 0,
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(5);
+    expect(result[result.length - 1].date).toBe('2025-09-23');
+  });
+
+  it('매월 반복 이벤트를 생성한다. (endDate 있음. 간격 2개월)', () => {
+    const event: EventForm = {
+      title: '이벤트 1',
+      date: '2025-05-23',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: { type: 'monthly', interval: 2, endDate: '2025-12-23' },
+      notificationTime: 0,
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(4);
+    expect(result[result.length - 1].date).toBe('2025-11-23');
+  });
+
+  it('매년 반복 이벤트를 생성한다. (endDate 없음)', () => {
+    const event: EventForm = {
+      title: '이벤트 1',
+      date: '2025-05-23',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: { type: 'yearly', interval: 1 },
+      notificationTime: 0,
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(1);
+    expect(result[result.length - 1].date).toBe('2025-05-23');
+  });
+
+  it('매년 반복 이벤트를 생성한다. (endDate 있음. 간격 2년)', () => {
+    const event: EventForm = {
+      title: '이벤트 1',
+      date: '2025-05-23',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: { type: 'yearly', interval: 2, endDate: '2033-05-23' },
+      notificationTime: 0,
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(5);
+    expect(result[result.length - 1].date).toBe('2033-05-23');
+  });
 });
