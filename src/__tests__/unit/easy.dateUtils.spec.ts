@@ -142,25 +142,29 @@ describe('getEventsForDay', () => {
     },
   ];
 
-  it('특정 날짜(1일)에 해당하는 이벤트만 정확히 반환한다', () => {
-    const dayEvents = getEventsForDay(events, 1);
+  it('특정 날짜(2025-07-01)에 해당하는 이벤트만 정확히 반환한다', () => {
+    const date = new Date('2025-07-01');
+    const dayEvents = getEventsForDay(events, date);
     expect(dayEvents).toHaveLength(2);
     expect(dayEvents[0].title).toBe('이벤트 1');
     expect(dayEvents[1].title).toBe('이벤트 2');
   });
 
   it('해당 날짜에 이벤트가 없을 경우 빈 배열을 반환한다', () => {
-    const dayEvents = getEventsForDay(events, 3);
+    const date = new Date('2025-07-03');
+    const dayEvents = getEventsForDay(events, date);
     expect(dayEvents).toHaveLength(0);
   });
 
-  it('날짜가 0일 경우 빈 배열을 반환한다', () => {
-    const dayEvents = getEventsForDay(events, 0);
+  it('비정상적인 날짜 (예: 2025-07-32)는 처리되지 않으므로 빈 배열을 반환한다', () => {
+    const invalidDate = new Date('2025-07-32'); // 자동으로 8월 1일로 변환됨
+    const dayEvents = getEventsForDay(events, invalidDate);
     expect(dayEvents).toHaveLength(0);
   });
 
-  it('날짜가 32일 이상인 경우 빈 배열을 반환한다', () => {
-    const dayEvents = getEventsForDay(events, 32);
+  it('잘못된 날짜 객체 (예: new Date(""))는 빈 배열을 반환한다', () => {
+    const invalid = new Date('');
+    const dayEvents = getEventsForDay(events, invalid);
     expect(dayEvents).toHaveLength(0);
   });
 });

@@ -1,4 +1,3 @@
-import { ReactElement } from 'react';
 import { RepeatType, type Event } from '../../types';
 import {
   generateRepeatDates,
