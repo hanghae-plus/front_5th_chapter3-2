@@ -191,11 +191,6 @@ export function createRepeatingEvents(eventData: EventForm): EventForm[] {
   let currentDate = new Date(startDate);
   const seed = Date.now().toString(); // 고유 반복 그룹 식별용 시드
 
-  console.log('🟢 createRepeatingEvents 호출');
-  console.log('▶ startDate:', startDate.toDateString());
-  console.log('▶ finalEndDate:', finalEndDate.toDateString());
-  console.log('▶ maxCount:', maxCount);
-
   // 날짜 순회하면서 조건 만족하는 날짜를 count만큼 또는 endDate까지 수집
   while (
     (isCountBased ? dates.length < maxCount : currentDate <= finalEndDate) &&
@@ -209,8 +204,6 @@ export function createRepeatingEvents(eventData: EventForm): EventForm[] {
     }
     currentDate.setDate(currentDate.getDate() + 1);
   }
-
-  console.log('🟡 최종 생성 이벤트 수:', dates.length);
 
   // 각 날짜에 대해 복제된 이벤트 객체 생성
   return dates.map((date, index) => ({
