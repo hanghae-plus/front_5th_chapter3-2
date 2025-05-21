@@ -12,7 +12,7 @@ const __dirname = path.resolve();
 app.use(express.json());
 
 const getEvents = async () => {
-  const data = await readFile(`${__dirname}/src/__mocks__/response/realEvents.json`, 'utf8');
+  const data = await readFile(`${__dirname}/src/__mocks__/response/realEvents.short.json`, 'utf8');
 
   return JSON.parse(data);
 };
@@ -27,7 +27,7 @@ app.post('/api/events', async (req, res) => {
   const newEvent = { id: randomUUID(), ...req.body };
 
   fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/realEvents.json`,
+    `${__dirname}/src/__mocks__/response/realEvents.short.json`,
     JSON.stringify({
       events: [...events.events, newEvent],
     })
@@ -45,7 +45,7 @@ app.put('/api/events/:id', async (req, res) => {
     newEvents[eventIndex] = { ...events.events[eventIndex], ...req.body };
 
     fs.writeFileSync(
-      `${__dirname}/src/__mocks__/response/realEvents.json`,
+      `${__dirname}/src/__mocks__/response/realEvents.short.json`,
       JSON.stringify({
         events: newEvents,
       })
@@ -62,7 +62,7 @@ app.delete('/api/events/:id', async (req, res) => {
   const id = req.params.id;
 
   fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/realEvents.json`,
+    `${__dirname}/src/__mocks__/response/realEvents.short.json`,
     JSON.stringify({
       events: events.events.filter((event) => event.id !== id),
     })
@@ -87,7 +87,7 @@ app.post('/api/events-list', async (req, res) => {
   });
 
   fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/realEvents.json`,
+    `${__dirname}/src/__mocks__/response/realEvents.short.json`,
     JSON.stringify({
       events: [...events.events, ...newEvents],
     })
@@ -111,7 +111,7 @@ app.put('/api/events-list', async (req, res) => {
 
   if (isUpdated) {
     fs.writeFileSync(
-      `${__dirname}/src/__mocks__/response/realEvents.json`,
+      `${__dirname}/src/__mocks__/response/realEvents.short.json`,
       JSON.stringify({
         events: newEvents,
       })
@@ -128,7 +128,7 @@ app.delete('/api/events-list', async (req, res) => {
   const newEvents = events.events.filter((event) => !req.body.eventIds.includes(event.id)); // ? ids를 전달하면 해당 아이디를 기준으로 events에서 제거
 
   fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/realEvents.json`,
+    `${__dirname}/src/__mocks__/response/realEvents.short.json`,
     JSON.stringify({
       events: newEvents,
     })
