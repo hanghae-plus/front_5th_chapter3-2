@@ -168,10 +168,99 @@ describe('반복 유형 선택', () => {
 });
 
 describe('반복 간격 설정', () => {
-  it('매일 반복에서 간격을 설정하면 해당 간격에 맞게 일정이 생성되어야 한다');
-  it('매주 반복에서 간격을 설정하면 해당 간격에 맞게 일정이 생성되어야 한다');
-  it('매월 반복에서 간격을 설정하면 해당 간격에 맞게 일정이 생성되어야 한다');
-  it('매년 반복에서 간격을 설정하면 해당 간격에 맞게 일정이 생성되어야 한다');
+  describe('반복 간격 설정', () => {
+    it('매일 반복에서 간격을 설정하면 해당 간격에 맞게 일정이 생성되어야 한다', () => {
+      const baseEvent: EventForm = {
+        title: '체크인',
+        date: '2025-05-01',
+        startTime: '09:00',
+        endTime: '09:30',
+        description: '',
+        location: '',
+        category: '',
+        notificationTime: 5,
+        repeat: {
+          type: 'daily',
+          interval: 2,
+          endDate: '2025-05-07',
+        },
+      };
+
+      const result = generateRepeatEvents(baseEvent);
+      const dates = result.map((e) => e.date);
+
+      expect(dates).toEqual(['2025-05-01', '2025-05-03', '2025-05-05', '2025-05-07']);
+    });
+
+    it('매주 반복에서 간격을 설정하면 해당 간격에 맞게 일정이 생성되어야 한다', () => {
+      const baseEvent: EventForm = {
+        title: '팀 미팅',
+        date: '2025-05-06',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '',
+        location: '',
+        category: '',
+        notificationTime: 10,
+        repeat: {
+          type: 'weekly',
+          interval: 2,
+          endDate: '2025-06-17',
+        },
+      };
+
+      const result = generateRepeatEvents(baseEvent);
+      const dates = result.map((e) => e.date);
+
+      expect(dates).toEqual(['2025-05-06', '2025-05-20', '2025-06-03', '2025-06-17']);
+    });
+
+    it('매월 반복에서 간격을 설정하면 해당 간격에 맞게 일정이 생성되어야 한다', () => {
+      const baseEvent: EventForm = {
+        title: '월간 리뷰',
+        date: '2025-01-15',
+        startTime: '15:00',
+        endTime: '16:00',
+        description: '',
+        location: '',
+        category: '',
+        notificationTime: 15,
+        repeat: {
+          type: 'monthly',
+          interval: 2,
+          endDate: '2025-07-15',
+        },
+      };
+
+      const result = generateRepeatEvents(baseEvent);
+      const dates = result.map((e) => e.date);
+
+      expect(dates).toEqual(['2025-01-15', '2025-03-15', '2025-05-15', '2025-07-15']);
+    });
+
+    it('매년 반복에서 간격을 설정하면 해당 간격에 맞게 일정이 생성되어야 한다', () => {
+      const baseEvent: EventForm = {
+        title: '격년 컨퍼런스',
+        date: '2025-06-01',
+        startTime: '10:00',
+        endTime: '18:00',
+        description: '',
+        location: '',
+        category: '',
+        notificationTime: 30,
+        repeat: {
+          type: 'yearly',
+          interval: 2,
+          endDate: '2031-06-01',
+        },
+      };
+
+      const result = generateRepeatEvents(baseEvent);
+      const dates = result.map((e) => e.date);
+
+      expect(dates).toEqual(['2025-06-01', '2027-06-01', '2029-06-01', '2031-06-01']);
+    });
+  });
 });
 
 describe('반복 종료 조건', () => {
