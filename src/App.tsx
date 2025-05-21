@@ -104,10 +104,8 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, saveRepeatedEvents, deleteEvent } = useEventOperations(
-    Boolean(editingEvent),
-    () => setEditingEvent(null)
-  );
+  const { events, saveEvent, saveRepeatedEvents, deleteEvent, deleteRepeatedEvents } =
+    useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
@@ -168,6 +166,14 @@ function App() {
         await saveEvent(eventData);
       }
       resetForm();
+    }
+  };
+
+  const handleClickDeleteButton = (event: Event) => {
+    if (event.repeat.type === 'none') {
+      deleteEvent(event.id);
+    } else {
+      deleteRepeatedEvents([event.id]);
     }
   };
 
@@ -520,7 +526,9 @@ function App() {
                     <IconButton
                       aria-label="Delete event"
                       icon={<DeleteIcon />}
-                      onClick={() => deleteEvent(event.id)}
+                      onClick={() => {
+                        handleClickDeleteButton(event);
+                      }}
                     />
                   </HStack>
                 </HStack>
