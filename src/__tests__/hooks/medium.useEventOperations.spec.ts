@@ -321,7 +321,7 @@ describe('반복 일정 테스트', () => {
     const { result } = renderHook(() => useEventOperations(false));
     const event = createEvent({
       date: '2024-02-29',
-      repeat: { type: 'yearly', interval: 1, endType: 'count', count: 10 },
+      repeat: { type: 'yearly', interval: 4, endType: 'count', count: 3 },
     });
     await act(async () => await result.current.saveEvent(event));
 

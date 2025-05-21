@@ -161,7 +161,7 @@ function getFinalEndDate(eventData: EventForm): Date {
  * 이벤트 id를 생성.
  * @param event: 이벤트 정보
  * @param index: 이벤트 인덱스
- * @param seed: 씨앗
+ * @param seed: 고유 반복 그룹 식별용 시드
  * @return: 이벤트 id
  */
 function generateEventId(event: EventForm, index: number, seed: string) {
@@ -181,32 +181,41 @@ export function createRepeatingEvents(eventData: EventForm): EventForm[] {
   }
 
   const startDate = new Date(eventData.date);
-  const finalEndDate = getFinalEndDate(eventData);
+  const isCountBased = eventData.repeat.endType === 'count';
+  const maxCount = isCountBased ? eventData.repeat.count ?? 0 : Infinity;
+  const finalEndDate = isCountBased
+    ? new Date('2050-12-31') // 충분히 반복할 수 있도록 넉넉한 상한선 설정
+    : getFinalEndDate(eventData);
 
   const dates: Date[] = [];
   let currentDate = new Date(startDate);
   const seed = Date.now().toString(); // 고유 반복 그룹 식별용 시드
 
-  // 반복 종료 방식이 count인 경우: count만큼 생성되면 종료
-  const maxCount = eventData.repeat.endType === 'count' ? eventData.repeat.count ?? 0 : Infinity;
+  console.log('🟢 createRepeatingEvents 호출');
+  console.log('▶ startDate:', startDate.toDateString());
+  console.log('▶ finalEndDate:', finalEndDate.toDateString());
+  console.log('▶ maxCount:', maxCount);
 
-  // 시작일부터 종료일까지 하루씩 증가하며 체크
-  while (currentDate <= finalEndDate && dates.length < maxCount) {
+  // 날짜 순회하면서 조건 만족하는 날짜를 count만큼 또는 endDate까지 수집
+  while (
+    (isCountBased ? dates.length < maxCount : currentDate <= finalEndDate) &&
+    currentDate <= new Date('2050-12-31') // 무한루프 방지
+  ) {
     if (shouldCreateEventForDate(eventData, currentDate)) {
-      // 중복된 날짜를 추가하지 않도록 체크
-      if (
-        !dates.some((existingDate) => existingDate.toDateString() === currentDate.toDateString())
-      ) {
+      const exists = dates.some((d) => d.toDateString() === currentDate.toDateString());
+      if (!exists) {
         dates.push(new Date(currentDate));
       }
     }
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
+  console.log('🟡 최종 생성 이벤트 수:', dates.length);
+
   // 각 날짜에 대해 복제된 이벤트 객체 생성
   return dates.map((date, index) => ({
     ...eventData,
-    id: generateEventId({ ...eventData, date: formatDate(date) }, index, seed), // ← 고유 id 생성
+    id: generateEventId({ ...eventData, date: formatDate(date) }, index, seed),
     date: formatDate(date),
   }));
 }
