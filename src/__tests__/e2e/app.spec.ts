@@ -19,9 +19,9 @@ test.describe('일정 관리 App CRUD 테스트', () => {
     const eventList = getFilteredEvents(events, '', new Date(), 'month');
     const eventListView = page.getByTestId('event-list');
 
-    eventList.forEach(async (event: Event) => {
+    for (const event of eventList) {
       await expect(eventListView.getByText(event.title).first()).toBeVisible();
-    });
+    }
   });
 
   test('2. POST API를 통해 저장된 새로운 Event를 렌더하고 저장한 이벤트를 DELETE API를 통해 삭제 한다.', async ({

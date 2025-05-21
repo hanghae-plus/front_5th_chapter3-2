@@ -288,7 +288,7 @@ describe('반복 이벤트 저장', () => {
     expect(result.current.events).toEqual(expectedEvents);
   });
 
-  it('종료 시점이 없는 경우 2025-09-30까지 반복 일정이 저장된다', async () => {
+  it('반복 일정이지만 종료 시점이 없는 경우 까지 endDate이 2025-09-30로 지정된다.', async () => {
     setupMockHandlerEventsListCreation();
 
     const newRepeatEvent: Event = {
