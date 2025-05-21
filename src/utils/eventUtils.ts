@@ -58,18 +58,14 @@ export const createRepeatEvents = (event: Event | EventForm): EventForm[] => {
   const st = new Date(event.date);
   const ed = endDate ? new Date(endDate) : new Date('2026-06-30'); // test
 
-  if (type === 'daily') {
-    for (let cur = new Date(st); cur <= ed; cur.setDate(cur.getDate() + interval * 1)) {
-      events.push({ ...event, date: formatDate(new Date(cur)) });
-    }
-  } else if (type === 'weekly') {
-    for (let cur = new Date(st); cur <= ed; cur.setDate(cur.getDate() + interval * 7)) {
-      events.push({ ...event, date: formatDate(new Date(cur)) });
-    }
-  } else if (type === 'monthly') {
-    for (let cur = new Date(st); cur <= ed; ) {
-      events.push({ ...event, date: formatDate(new Date(cur)) });
-
+  let cur = new Date(st);
+  while (cur <= ed) {
+    events.push({ ...event, date: formatDate(new Date(cur)) });
+    if (type === 'daily') {
+      cur.setDate(cur.getDate() + interval * 1);
+    } else if (type === 'weekly') {
+      cur.setDate(cur.getDate() + interval * 7);
+    } else if (type === 'monthly') {
       const next = new Date(cur);
       next.setMonth(next.getMonth() + interval);
       next.setDate(st.getDate());
@@ -80,11 +76,7 @@ export const createRepeatEvents = (event: Event | EventForm): EventForm[] => {
       }
 
       cur = next;
-    }
-  } else if (type === 'yearly') {
-    for (let cur = new Date(st); cur <= ed; ) {
-      events.push({ ...event, date: formatDate(new Date(cur)) });
-
+    } else if (type === 'yearly') {
       const next = new Date(cur);
       next.setFullYear(next.getFullYear() + interval);
       next.setMonth(st.getMonth());
