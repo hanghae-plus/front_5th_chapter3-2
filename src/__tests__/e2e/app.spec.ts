@@ -23,9 +23,14 @@ test.describe('일정 관리 App CRUD 테스트', () => {
     });
   });
 
-  test('2. POST API를 통해 저장된 새로운 Event를 렌더 한다.', async ({ page }) => {
+  test('2. POST API를 통해 저장된 새로운 Event를 렌더하고 저장한 이벤트를 DELETE API를 통해 삭제 한다.', async ({
+    page,
+  }) => {
+    const date = new Date();
+    const formattedDate = date.toISOString().split('T')[0];
+
     await page.getByLabel('제목').fill('test event');
-    await page.getByLabel('날짜').fill('2025-05-21');
+    await page.getByLabel('날짜').fill(formattedDate);
     await page.getByLabel('시작 시간').fill('14:00');
     await page.getByLabel('종료 시간').fill('15:00');
     await page.getByLabel('설명').fill('test description');
@@ -41,5 +46,15 @@ test.describe('일정 관리 App CRUD 테스트', () => {
     await expect(eventListView.getByText('2025-05-21').first()).toBeVisible();
     await expect(eventListView.getByText('14:00 - 15:00').first()).toBeVisible();
     await expect(eventListView.getByText('test description').first()).toBeVisible();
+
+    const eventCard = eventListView.locator('div').filter({ hasText: 'test event' }).first();
+    // 2) 그 카드 안의 [Delete event] 버튼 클릭
+    const deleteBtn = eventCard.getByRole('button', { name: 'Delete event' });
+    await deleteBtn.click();
+
+    const toast2 = page.getByText('일정이 삭제되었습니다.').first();
+    await expect(toast2).toBeVisible();
+
+    await expect(eventListView.locator('div', { hasText: 'test event' })).toHaveCount(0);
   });
 });
