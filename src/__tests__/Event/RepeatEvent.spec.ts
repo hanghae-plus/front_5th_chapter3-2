@@ -249,3 +249,125 @@ describe('반복 일정 생성 및 수정', () => {
     expect(result.current.events[2].date).toBe('2025-02-28');
   });
 });
+
+describe('반복 간격 설정', () => {
+  beforeEach(() => {
+    setupMockHandlerCreation();
+  });
+  it('일정 반복을 daily로 설정시 interval 간격만큼 반복 일간 정보가 반영된다.', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: EventForm = {
+      title: '새 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-20' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(5);
+  });
+
+  it('일정 반복을 weekly로 설정시 interval 간격만큼 반복 주간 정보가 반영된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: EventForm = {
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    const expectedDate = ['2025-10-01', '2025-10-08', '2025-10-15', '2025-10-22', '2025-10-29'];
+
+    expect(result.current.events).toHaveLength(5);
+    expectedDate.forEach((date, index) => {
+      expect(result.current.events[index].date).toBe(date);
+    });
+  });
+
+  it('일정 반복을 monthly로 설정시 interval 간격만큼 반복 월간 정보가 반영된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: EventForm = {
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-12-30' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    const expectedDate = ['2025-10-01', '2025-11-01', '2025-12-01'];
+
+    expect(result.current.events).toHaveLength(3);
+    expectedDate.forEach((date, index) => {
+      expect(result.current.events[index].date).toBe(date);
+    });
+  });
+
+  it('일정 반복을 yearly로 설정시 interval 간격만큼 반복 년간 정보가 반영된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: EventForm = {
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1, endDate: '2026-10-30' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    const expectedDate = ['2025-10-01', '2026-10-01'];
+
+    expect(result.current.events).toHaveLength(2);
+    expectedDate.forEach((date, index) => {
+      expect(result.current.events[index].date).toBe(date);
+    });
+  });
+});
