@@ -9,6 +9,7 @@ import {
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
   setupMockHandlerRecurringCreation,
+  setupMockHandlerRecurringDeletion,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
@@ -548,6 +549,19 @@ describe('반복 일정 설정', () => {
     const calendarAfter1Year = within(screen.getByTestId('month-view'));
     expect(calendarAfter1Year.getAllByTestId('repeat-icon')).toHaveLength(1);
     expect(calendarAfter1Year.getAllByText('새로 반복되는 회의')).toHaveLength(1);
+  });
+  it('반복 일정을 삭제하고 해당 일정이 더 이상 화면에 조회되지 않는지 확인한다.', async () => {
+    setupMockHandlerRecurringDeletion();
+
+    const { user } = setup(<App />);
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(await eventList.findAllByText('삭제할 반복 이벤트')).toHaveLength(7);
+
+    const allDeleteButton = await screen.findAllByLabelText('Delete event');
+    await user.click(allDeleteButton[0]);
+
+    expect(eventList.getAllByText('삭제할 반복 이벤트')).toHaveLength(6);
   });
   //TODO: 일정 수정 케이스 추가
 });
