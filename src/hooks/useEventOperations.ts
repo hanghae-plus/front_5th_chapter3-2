@@ -41,7 +41,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         response = await fetch('/api/events-list', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ event: [...repeatEvents, eventData] }),
+          body: JSON.stringify({ events: repeatEvents }),
         });
       } else {
         response = await fetch('/api/events', {
