@@ -7,6 +7,7 @@ import { ReactElement } from 'react';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
+  setupMockHandlerEventsListCreation,
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
@@ -328,7 +329,7 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 
 describe('반복 유형 선택', () => {
   it('일정 생성 또는 수정 시 반복 유형을 선택할 수 있다.', async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerEventsListCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
 
@@ -349,21 +350,21 @@ describe('반복 유형 선택', () => {
     };
 
     await act(async () => {
-      await result.current.saveEvent(newEvent as Event);
+      await result.current.saveRepeatEvent(newEvent as Event);
     });
 
     const expectedEvents = [
-      { ...newEvent, date: '2025-05-21' },
-      { ...newEvent, date: '2025-05-28' },
-      { ...newEvent, date: '2025-06-04' },
-      { ...newEvent, date: '2025-06-11' },
+      { ...newEvent, id: '1', date: '2025-05-21' },
+      { ...newEvent, id: '2', date: '2025-05-28' },
+      { ...newEvent, id: '3', date: '2025-06-04' },
+      { ...newEvent, id: '4', date: '2025-06-11' },
     ];
 
     expect(result.current.events).toEqual(expectedEvents);
   });
 
   it('윤년 29일에 매년 반복일정을 설정한 경우 월의 마지막 날짜에 일정이 생성된다.', async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerEventsListCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
 
@@ -383,12 +384,12 @@ describe('반복 유형 선택', () => {
     };
 
     await act(async () => {
-      await result.current.saveEvent(newEvent as Event);
+      await result.current.saveRepeatEvent(newEvent as Event);
     });
 
     const expectedEvents = [
-      { ...newEvent, date: '2024-02-29' },
-      { ...newEvent, date: '2025-02-28' },
+      { ...newEvent, id: '1', date: '2024-02-29' },
+      { ...newEvent, id: '2', date: '2025-02-28' },
     ];
 
     expect(result.current.events).toEqual(expectedEvents);
@@ -403,8 +404,8 @@ describe('반복 간격 선택', () => {
     expect(repeatInterval).toHaveValue(1);
   });
 
-  it('반복 유형이 매월인데 반복 간격이 12 보다 큰 경우 경고 메시지가 노출된다.', async () => {
-    setupMockHandlerCreation();
+  it('종료 날짜를 지정하지 않으면 2025-12-31로 설정된다.', async () => {
+    setupMockHandlerEventsListCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
 
@@ -412,21 +413,32 @@ describe('반복 간격 선택', () => {
 
     const newEvent = {
       id: '1',
-      title: '복싱',
+      title: '등산',
       date: '2025-05-21',
-      startTime: '21:00',
-      endTime: '22:00',
-      description: '복싱 훈련',
-      location: '복싱장',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '등산 훈련',
+      location: '산책로',
       category: '운동',
-      repeat: { type: 'monthly', interval: 13, endDate: '2026-05-21' },
+      repeat: { type: 'monthly', interval: 1 },
       notificationTime: 10,
     };
 
     await act(async () => {
-      await result.current.saveEvent(newEvent as Event);
+      await result.current.saveRepeatEvent(newEvent as Event);
     });
 
-    expect(screen.getByText('반복 간격은 12 이하여야 합니다.')).toBeInTheDocument();
+    const expectedEvents = [
+      { ...newEvent, id: '1', date: '2025-05-21' },
+      { ...newEvent, id: '2', date: '2025-06-21' },
+      { ...newEvent, id: '3', date: '2025-07-21' },
+      { ...newEvent, id: '4', date: '2025-08-21' },
+      { ...newEvent, id: '5', date: '2025-09-21' },
+      { ...newEvent, id: '6', date: '2025-10-21' },
+      { ...newEvent, id: '7', date: '2025-11-21' },
+      { ...newEvent, id: '8', date: '2025-12-21' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
   });
 });
