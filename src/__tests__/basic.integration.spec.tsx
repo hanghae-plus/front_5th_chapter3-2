@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 
 import {
   setupMockHandlerCreation,
+  setupMockHandlerDeletion,
   setupMockHandlerRepeatingEvents,
   setupMockHandlerUpdateToRepeating,
   setupMockHandlerUpdating,
@@ -97,7 +98,7 @@ describe('8th basic integration test - 반복 일정', () => {
     vi.useRealTimers();
   });
 
-  describe.skip('반복 일정 기본 테스트', () => {
+  describe('반복 일정 기본 테스트', () => {
     it('일정 생성 시 반복 일정들이 캘린더에 정확히 표시된다.', async () => {
       const { handler, getHandler } = setupMockHandlerRepeatingEvents(mockEvents);
       server.use(handler, getHandler);
@@ -224,7 +225,7 @@ describe('8th basic integration test - 반복 일정', () => {
     });
   });
 
-  describe.skip('1. (필수) 반복 유형 선택', () => {
+  describe('1. (필수) 반복 유형 선택', () => {
     it('일정 생성 시 반복 유형을 선택할 수 있다.', async () => {
       const { handler, getHandler } = setupMockHandlerRepeatingEvents(mockEvents);
       server.use(handler, getHandler);
@@ -297,7 +298,7 @@ describe('8th basic integration test - 반복 일정', () => {
     });
   });
 
-  describe.skip('2. (필수) 반복 간격 설정', () => {
+  describe('2. (필수) 반복 간격 설정', () => {
     it('일정 생성 시 반복 간격을 선택할 수 있다.', async () => {
       const { handler, getHandler } = setupMockHandlerRepeatingEvents(mockEvents);
       server.use(handler, getHandler);
@@ -375,7 +376,7 @@ describe('8th basic integration test - 반복 일정', () => {
     });
   });
 
-  describe.skip('3. (필수) 반복 일정 표시', () => {
+  describe('3. (필수) 반복 일정 표시', () => {
     it('캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표시한다', async () => {
       const totalEvents = [...mockEvents, ...repeatEvents];
       const { handler, getHandler } = setupMockHandlerRepeatingEvents(totalEvents);
@@ -655,7 +656,33 @@ describe('8th basic integration test - 반복 일정', () => {
     });
   });
 
-  describe.skip('6. (필수) 반복 일정 삭제', () => {
-    it('반복일정을 삭제하면 해당 일정만 삭제됩니다.', async () => {});
+  describe('6. (필수) 반복 일정 삭제', () => {
+    it('반복일정을 삭제하면 해당 일정만 삭제됩니다.', async () => {
+      const { handler, getHandler } = setupMockHandlerDeletion([...mockEvents, ...repeatEvents]);
+      server.use(handler, getHandler);
+      const user = userEvent.setup();
+      renderComponent();
+
+      const beforeAllEventTags = await screen.findAllByTestId('schedule-tag');
+      console.log(beforeAllEventTags.length);
+      expect(beforeAllEventTags.length).toBe(4);
+
+      const beforeRepeatIcons = await screen.findAllByTestId('repeat-icon');
+      console.log(beforeRepeatIcons.length);
+      expect(beforeRepeatIcons.length).toBe(2);
+
+      // * 1. 삭제 버튼 클릭
+      const eventItem = await screen.findByTestId(`event-item-${repeatEvents[0].id}`);
+      const deleteButton = within(eventItem).getByLabelText('Delete event');
+      expect(deleteButton).toBeInTheDocument();
+      await user.click(deleteButton);
+
+      // * 2. 결과 확인
+      const allEventTags = await screen.findAllByTestId('schedule-tag');
+      expect(allEventTags.length).toBe(3);
+
+      const repeatIcons = await screen.findAllByTestId('repeat-icon');
+      expect(repeatIcons.length).toBe(1);
+    });
   });
 });
