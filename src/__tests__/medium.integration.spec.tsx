@@ -11,7 +11,8 @@ import {
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
-import { Event } from '../types';
+import { Event, RepeatType } from '../types';
+import { generateRepeatEvents, saveRepeatingSchedule } from '../utils/eventUtils';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
@@ -28,6 +29,12 @@ const saveSchedule = async (
   const { title, date, startTime, endTime, location, description, category } = form;
 
   await user.click(screen.getAllByText('일정 추가')[0]);
+
+  const repeatCheckbox = screen.getByLabelText('반복 일정') as HTMLInputElement;
+
+  if (repeatCheckbox.checked) {
+    await user.click(repeatCheckbox);
+  }
 
   await user.type(screen.getByLabelText('제목'), title);
   await user.type(screen.getByLabelText('날짜'), date);
@@ -323,4 +330,73 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('반복 일정 생성 비즈니스 로직', () => {
+  it('매일 반복 설정 시, 지정된 간격과 종료일에 맞게 이벤트 목록을 생성한다', async () => {
+    const baseEvent = {
+      title: '반복 테스트',
+      date: '2025-10-01',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '테스트 설명',
+      location: '회의실 A',
+      category: '업무',
+      notificationTime: 10,
+    };
+
+    const repeatInfo = {
+      type: 'daily' as RepeatType,
+      interval: 2,
+      endDate: '2025-10-07',
+    };
+
+    const events = generateRepeatEvents(baseEvent, repeatInfo);
+
+    expect(events).toHaveLength(4);
+    expect(events[0].date).toBe('2025-10-01');
+    expect(events[1].date).toBe('2025-10-03');
+    expect(events[2].date).toBe('2025-10-05');
+    expect(events[3].date).toBe('2025-10-07');
+    expect(events.every((e) => e.repeat.type === 'daily')).toBe(true);
+  });
+
+  it('생성된 반복 이벤트들이 /api/events-list 로 전송된다', async () => {
+    const spy = vi.fn();
+
+    server.use(
+      http.post('/api/events-list', async ({ request }) => {
+        const body = (await request.json()) as { events: Event[] };
+
+        spy(body.events);
+
+        return HttpResponse.json(body.events);
+      })
+    );
+
+    const baseEvent = {
+      title: '반복 테스트',
+      date: '2025-10-01',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '테스트 설명',
+      location: '회의실 A',
+      category: '업무',
+      notificationTime: 10,
+    };
+
+    const repeatInfo = {
+      type: 'weekly' as RepeatType,
+      interval: 1,
+      endDate: '2025-10-29',
+    };
+
+    await saveRepeatingSchedule(baseEvent, repeatInfo);
+
+    expect(spy).toHaveBeenCalled();
+
+    const sent = spy.mock.calls[0][0];
+
+    expect(sent).toHaveLength(5);
+  });
 });
