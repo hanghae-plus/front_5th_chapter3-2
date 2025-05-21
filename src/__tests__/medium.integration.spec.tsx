@@ -15,7 +15,6 @@ import {
 import App from '../App';
 import { server } from '../setupTests';
 import { Event } from '../types';
-import { getDaysInMonth, getWeekDates } from '../utils/dateUtils';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
