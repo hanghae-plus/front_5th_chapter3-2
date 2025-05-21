@@ -47,7 +47,7 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
         mockEvents[index] = { ...mockEvents[index], ...event };
       });
       return HttpResponse.json(events, { status: 200 });
-    }),
+    })
   );
 };
 
