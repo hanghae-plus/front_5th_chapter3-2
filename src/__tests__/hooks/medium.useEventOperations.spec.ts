@@ -420,14 +420,14 @@ describe('반복 일정 생성', () => {
 
     const newEvent: Event = {
       id: '1',
-      title: '31일은 베라데이',
-      date: '2025-05-31',
+      title: '윤년',
+      date: '2024-02-29',
       startTime: '13:00',
       endTime: '18:00',
-      description: '베라데이',
+      description: '윤년',
       location: '우리집',
       category: '개인',
-      repeat: { type: 'monthly', interval: 1, endDate: '2025-10-01' },
+      repeat: { type: 'yearly', interval: 1, endDate: '2032-03-01' },
       notificationTime: 10,
     };
 
@@ -444,12 +444,12 @@ describe('반복 일정 생성', () => {
       {
         ...newEvent,
         id: '2',
-        date: '2025-07-31',
+        date: '2028-02-29',
       },
       {
         ...newEvent,
         id: '3',
-        date: '2025-08-31',
+        date: '2032-02-29',
       },
     ]);
   });
