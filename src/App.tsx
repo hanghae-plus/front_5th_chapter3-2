@@ -44,6 +44,7 @@ import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
+import { useRecurringEvents } from './hooks/useRecurringEvents.ts';
 import { useSearch } from './hooks/useSearch.ts';
 import { Event, EventForm, RepeatType } from './types';
 import {
@@ -110,6 +111,7 @@ function App() {
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
   const { searchTerm, filteredEvents, setSearchTerm } = useSearch(events, currentDate, view);
+  const recurringEvents = useRecurringEvents(filteredEvents);
 
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
@@ -185,13 +187,13 @@ function App() {
               {weekDates.map((date) => (
                 <Td key={date.toISOString()} height="100px" verticalAlign="top" width="14.28%">
                   <Text fontWeight="bold">{date.getDate()}</Text>
-                  {filteredEvents
+                  {recurringEvents
                     .filter((event) => new Date(event.date).toDateString() === date.toDateString())
-                    .map((event) => {
+                    .map((event, index) => {
                       const isNotified = notifiedEvents.includes(event.id);
                       return (
                         <Box
-                          key={event.id}
+                          key={`${event.id}_${index}`}
                           p={1}
                           my={1}
                           bg={isNotified ? 'red.100' : 'gray.100'}
@@ -201,6 +203,7 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {event.repeat.type !== 'none' && <Text color="blue.500">🔁</Text>}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -256,11 +259,11 @@ function App() {
                               {holiday}
                             </Text>
                           )}
-                          {getEventsForDay(filteredEvents, day).map((event) => {
+                          {getEventsForDay(events, day).map((event, index) => {
                             const isNotified = notifiedEvents.includes(event.id);
                             return (
                               <Box
-                                key={event.id}
+                                key={`${event.id}_${index}`}
                                 p={1}
                                 my={1}
                                 bg={isNotified ? 'red.100' : 'gray.100'}
@@ -270,6 +273,7 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && <Text color="blue.500">🔁</Text>}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -381,6 +385,7 @@ function App() {
               <FormControl>
                 <FormLabel>반복 유형</FormLabel>
                 <Select
+                  data-testid="repeat-type-select"
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
@@ -455,15 +460,22 @@ function App() {
             />
           </FormControl>
 
-          {filteredEvents.length === 0 ? (
+          {recurringEvents.length === 0 ? (
             <Text>검색 결과가 없습니다.</Text>
           ) : (
-            filteredEvents.map((event) => (
-              <Box key={event.id} borderWidth={1} borderRadius="lg" p={3} width="100%">
+            recurringEvents.map((event, index) => (
+              <Box
+                key={`${event.id}_${index}`}
+                borderWidth={1}
+                borderRadius="lg"
+                p={3}
+                width="100%"
+              >
                 <HStack justifyContent="space-between">
                   <VStack align="start">
                     <HStack>
                       {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
+                      {event.repeat.type !== 'none' && <Text color="blue.500">🔁</Text>}
                       <Text
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                         color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
