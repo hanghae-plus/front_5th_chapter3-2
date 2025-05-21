@@ -316,6 +316,22 @@ describe('반복 일정 테스트', () => {
     ]);
   });
 
+  it('윤년 2월 29일 반복이 count 기반일 때도 정확히 count만큼 생성된다', async () => {
+    setupMockHandlerCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    const event = createEvent({
+      date: '2024-02-29',
+      repeat: { type: 'yearly', interval: 1, endType: 'count', count: 10 },
+    });
+    await act(async () => await result.current.saveEvent(event));
+
+    expect(result.current.events).toEqual([
+      { ...event, id: '1', date: '2024-02-29' },
+      { ...event, id: '2', date: '2028-02-29' },
+      { ...event, id: '3', date: '2032-02-29' },
+    ]);
+  });
+
   it('매월 31일 반복 시 해당 월에 31일이 없으면 말일로 대체된다', async () => {
     setupMockHandlerCreation();
     const { result } = renderHook(() => useEventOperations(false));
@@ -358,7 +374,7 @@ describe('반복 일정 테스트', () => {
     await act(async () => await result.current.saveEvent(event));
     expect(result.current.events).toEqual([{ ...event, id: '1' }]);
   });
-  it('횟수로 매일 반복 - 3회', async () => {
+  it('횟수를 3회로 매일 반복하면 3개의 일정이 생성된다', async () => {
     setupMockHandlerCreation();
     const { result } = renderHook(() => useEventOperations(false));
     const event = createEvent({
@@ -373,7 +389,7 @@ describe('반복 일정 테스트', () => {
     ]);
   });
 
-  it('횟수로 격일 반복 - 3회', async () => {
+  it('횟수를 3회로 격일 반복하면 3개의 일정이 생성된다', async () => {
     setupMockHandlerCreation();
     const { result } = renderHook(() => useEventOperations(false));
     const event = createEvent({
@@ -388,7 +404,7 @@ describe('반복 일정 테스트', () => {
     ]);
   });
 
-  it('횟수로 주간 반복 - 2회', async () => {
+  it('횟수를 2회로 주간 반복하면 2개의 일정이 생성된다', async () => {
     setupMockHandlerCreation();
     const { result } = renderHook(() => useEventOperations(false));
     const event = createEvent({

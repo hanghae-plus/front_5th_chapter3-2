@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { EventForm } from '../types';
 import { formatDate } from './dateUtils';
 
@@ -182,19 +183,15 @@ export function createRepeatingEvents(eventData: EventForm): EventForm[] {
   const startDate = new Date(eventData.date);
   const finalEndDate = getFinalEndDate(eventData);
 
-  // 종료일이 설정되지 않았다면 MAX_REPEAT_END_DATE로 설정
-  // const userEndDate = eventData.repeat.endDate ? new Date(eventData.repeat.endDate) : null;
-  // const maxEndDate = new Date(MAX_REPEAT_END_DATE);
-
-  // 종료일은 최대 MAX_REPEAT_END_DATE로 설정
-  // const finalEndDate = userEndDate && userEndDate < maxEndDate ? userEndDate : maxEndDate;
-
   const dates: Date[] = [];
   let currentDate = new Date(startDate);
   const seed = Date.now().toString(); // 고유 반복 그룹 식별용 시드
 
+  // 반복 종료 방식이 count인 경우: count만큼 생성되면 종료
+  const maxCount = eventData.repeat.endType === 'count' ? eventData.repeat.count ?? 0 : Infinity;
+
   // 시작일부터 종료일까지 하루씩 증가하며 체크
-  while (currentDate <= finalEndDate) {
+  while (currentDate <= finalEndDate && dates.length < maxCount) {
     if (shouldCreateEventForDate(eventData, currentDate)) {
       // 중복된 날짜를 추가하지 않도록 체크
       if (
@@ -203,7 +200,6 @@ export function createRepeatingEvents(eventData: EventForm): EventForm[] {
         dates.push(new Date(currentDate));
       }
     }
-    // 다음 날로 이동
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
