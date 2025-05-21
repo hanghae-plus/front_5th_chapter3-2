@@ -1,5 +1,7 @@
+import { ReactElement } from 'react';
 import { Event, RepeatType } from '../types';
 import { formatDate } from './dateUtils';
+import { RepeatClockIcon, RepeatIcon, CalendarIcon, SunIcon } from '@chakra-ui/icons';
 
 // 1. 반복 유형에 따른 라벨 반환
 export function getRepeatTypeLabel(type: RepeatType): string {
@@ -70,9 +72,19 @@ export function generateRepeatDates(
 }
 
 // 3. 반복 일정인지 여부에 따라 태그 반환
-export function getRecurringTag(event: Event): string | null {
-  if (event.repeat.type === 'none') return null;
-  return `${getRepeatTypeLabel(event.repeat.type)} 반복`;
+export function getRecurringIcon(type: RepeatType): ReactElement | null {
+  switch (type) {
+    case 'daily':
+      return <RepeatClockIcon data-testid="icon-daily" color="gray.400" boxSize={3} />;
+    case 'weekly':
+      return <RepeatIcon data-testid="icon-weekly" color="blue.400" boxSize={3} />;
+    case 'monthly':
+      return <CalendarIcon data-testid="icon-monthly" color="purple.400" boxSize={3} />;
+    case 'yearly':
+      return <SunIcon data-testid="icon-yearly" color="orange.300" boxSize={3} />;
+    default:
+      return null;
+  }
 }
 
 // 4. 종료일을 기준으로 반복 종료 여부 판단

@@ -1,12 +1,21 @@
+import { ReactElement } from 'react';
 import { RepeatType, type Event } from '../../types';
 import {
   generateRepeatDates,
   getRepeatTypeLabel,
-  getRecurringTag,
+  getRecurringIcon,
   isRepeatEnded,
   convertRecurringToSingleEvent,
   deleteSingleOccurrence,
 } from '../../utils/repeatUtils';
+import { render, screen } from '@testing-library/react';
+
+vi.mock('@chakra-ui/icons', () => ({
+  RepeatClockIcon: () => <svg data-testid="daily-icon" />,
+  RepeatIcon: () => <svg data-testid="weekly-icon" />,
+  CalendarIcon: () => <svg data-testid="monthly-icon" />,
+  SunIcon: () => <svg data-testid="yearly-icon" />,
+}));
 
 describe('getRepeatTypeLabel', () => {
   it('daily 타입에 대해 "매일"을 반환한다', () => {
@@ -68,39 +77,34 @@ describe('generateRepeatDates', () => {
   });
 });
 
-describe('getRecurringTag', () => {
-  it('반복 일정일 경우 반복 태그 문자열을 반환한다', () => {
-    const event: Event = {
-      id: '1',
-      title: '반복 회의',
-      date: '2025-07-01',
-      startTime: '10:00',
-      endTime: '11:00',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'weekly', interval: 1 },
-      notificationTime: 10,
-    };
-
-    expect(getRecurringTag(event)).toBe('매주 반복');
+describe('getRecurringIcon', () => {
+  it('"daily" 타입은 올바른 아이콘을 렌더링한다', () => {
+    const Icon = getRecurringIcon('daily');
+    render(<>{Icon}</>);
+    expect(screen.getByTestId('daily-icon')).toBeInTheDocument();
   });
 
-  it('반복이 아닌 일정일 경우 null을 반환한다', () => {
-    const event: Event = {
-      id: '2',
-      title: '단일 회의',
-      date: '2025-07-01',
-      startTime: '10:00',
-      endTime: '11:00',
-      description: '',
-      location: '',
-      category: '',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 10,
-    };
+  it('"weekly" 타입은 올바른 아이콘을 렌더링한다', () => {
+    const Icon = getRecurringIcon('weekly');
+    render(<>{Icon}</>);
+    expect(screen.getByTestId('weekly-icon')).toBeInTheDocument();
+  });
 
-    expect(getRecurringTag(event)).toBeNull();
+  it('"monthly" 타입은 올바른 아이콘을 렌더링한다', () => {
+    const Icon = getRecurringIcon('monthly');
+    render(<>{Icon}</>);
+    expect(screen.getByTestId('monthly-icon')).toBeInTheDocument();
+  });
+
+  it('"yearly" 타입은 올바른 아이콘을 렌더링한다', () => {
+    const Icon = getRecurringIcon('yearly');
+    render(<>{Icon}</>);
+    expect(screen.getByTestId('yearly-icon')).toBeInTheDocument();
+  });
+
+  it('"none" 타입은 null을 반환한다', () => {
+    const Icon = getRecurringIcon('none');
+    expect(Icon).toBeNull();
   });
 });
 
