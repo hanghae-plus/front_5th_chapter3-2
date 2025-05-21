@@ -221,4 +221,31 @@ describe('반복 일정 생성 및 수정', () => {
       '2027-05-15',
     ]);
   });
+
+  test('매월 윤년일때 2024년 2월 29일에 반복 일정을 선택했을 때, 2025년 2월 28일에 반복 일정이 생성된다.', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: EventForm = {
+      title: '새 회의',
+      date: '2024-02-29',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 6, endDate: '2025-03-01' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(3);
+    expect(result.current.events[0].date).toBe('2024-02-29');
+    expect(result.current.events[1].date).toBe('2024-08-29');
+    expect(result.current.events[2].date).toBe('2025-02-28');
+  });
 });

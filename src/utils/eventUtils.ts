@@ -87,6 +87,11 @@ export function getRepeatEvents(event: Event): Event[] {
       eventDay = Math.min(day, lastDayOfMonth);
       nextDate = new Date(year, month, eventDay);
     }
+  } else if (type === 'yearly') {
+    while (currentDate <= endDateObj) {
+      events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
+      currentDate.setFullYear(currentDate.getFullYear() + interval);
+    }
   }
 
   return events;
