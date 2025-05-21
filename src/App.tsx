@@ -149,11 +149,9 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: repeatType,
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat: editingEvent
+        ? { type: 'none', interval: 0 }
+        : { type: repeatType, interval: repeatInterval, endDate: repeatEndDate || undefined },
       notificationTime,
     };
 
