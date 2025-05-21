@@ -80,8 +80,13 @@ function expandRecurringEvents(events, startDate, endDate) {
     const repeatEnd = event.repeat.endDate ? new Date(event.repeat.endDate) : endDate;
     let current = new Date(event.date);
     while (current <= endDate && current <= repeatEnd) {
-      if (current >= startDate) {
-        expanded.push({ ...event, date: current.toISOString().slice(0, 10) });
+      const dateStr = current.toISOString().slice(0, 10);
+      // 예외 날짜에 포함되어 있으면 skip
+      if (
+        current >= startDate &&
+        !(event.exceptions && event.exceptions.includes(dateStr))
+      ) {
+        expanded.push({ ...event, date: dateStr });
       }
       switch (event.repeat.type) {
         case 'daily':
@@ -205,7 +210,6 @@ function App() {
     const weekEnd = weekDates[weekDates.length - 1];
     // 반복일정까지 포함해서 전개
     const expandedEvents = expandRecurringEvents(filteredEvents, weekStart, weekEnd);
-
     return (
       <VStack data-testid="week-view" align="stretch" w="full" spacing={4}>
         <Heading size="md">{formatWeek(currentDate)}</Heading>
