@@ -441,3 +441,54 @@ describe('반복 종료 설정', () => {
     expect(result.current.events).toEqual(expectedEvents);
   });
 });
+
+describe('반복 일정 단일 수정', () => {
+  it('반복 일정을 수정하면 단일 일정으로 변경되고 반복 일정 아이콘도 사라진다.', async () => {
+    const { user } = setup(<App />);
+
+    setupMockHandlerUpdating([
+      {
+        id: '1',
+        title: '새 회의',
+        date: '2025-05-21',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+      {
+        id: '2',
+        title: '새 회의',
+        date: '2025-07-21',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+    ]);
+
+    await user.click(await screen.findByLabelText('Edit event'));
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 회의');
+    await user.clear(screen.getByLabelText('설명'));
+    await user.type(screen.getByLabelText('설명'), '회의 내용 변경');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const eventList = within(screen.getByTestId('event-list'));
+
+    expect(eventList.queryByText('반복')).not.toBeInTheDocument();
+
+    const monthView = within(screen.getByTestId('month-view'));
+    const repeatIcon = monthView.queryByLabelText('repeat-icon');
+
+    expect(repeatIcon).not.toBeInTheDocument();
+  });
+});
