@@ -128,6 +128,23 @@ describe('일정 CRUD 및 기본 기능', () => {
 
     expect(eventList.queryByText('삭제할 이벤트')).not.toBeInTheDocument();
   });
+
+  it('반복 일정을 삭제하면 해당 반복 일정만 삭제되어야 한다.', async () => {
+    setupMockHandlerDeletion();
+
+    const { user } = setup(<App />);
+    await act(async () => null);
+
+    const eventList = within(screen.getByTestId('event-list'));
+    const repeatEvents = eventList.getAllByText(/반복:\s*/);
+    expect(repeatEvents.length).toBe(2);
+
+    // 삭제 버튼 클릭
+    const allDeleteButton = await screen.findAllByLabelText('Delete event');
+    await user.click(allDeleteButton[1]);
+
+    expect(eventList.getAllByText(/반복:\s*/)).toHaveLength(1);
+  });
 });
 
 describe('일정 뷰', () => {
