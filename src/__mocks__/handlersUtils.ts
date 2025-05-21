@@ -100,18 +100,19 @@ export const setupMockHandlerDeletion = (
 export const setupMockHandlerEventsListCreation = (initEvents: Event[] = []) => {
   const mockEvents: Event[] = [...initEvents];
 
-  server.use(
-    http.get('/api/events', () => {
-      return HttpResponse.json({ events: mockEvents });
-    }),
-    http.post('/api/events-list', async ({ request }) => {
-      const { events: newEvents } = (await request.json()) as { events: Event[] };
-      const createdEvents = newEvents.map((event, index) => ({
-        ...event,
-        id: String(mockEvents.length + index + 1),
-      }));
-      mockEvents.push(...createdEvents);
-      return HttpResponse.json(createdEvents, { status: 201 });
-    })
-  );
+  const getEventsHandler = http.get('/api/events', () => {
+    return HttpResponse.json({ events: mockEvents });
+  });
+
+  const postEventsListHandler = http.post('/api/events-list', async ({ request }) => {
+    const { events: newEvents } = (await request.json()) as { events: Event[] };
+    const createdEvents = newEvents.map((event, index) => ({
+      ...event,
+      id: String(mockEvents.length + index + 1),
+    }));
+    mockEvents.push(...createdEvents);
+    return HttpResponse.json(createdEvents, { status: 201 });
+  });
+
+  server.use(getEventsHandler, postEventsListHandler);
 };
