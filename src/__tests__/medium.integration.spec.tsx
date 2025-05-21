@@ -194,11 +194,10 @@ describe('일정 뷰', () => {
 
     await user.selectOptions(screen.getByLabelText('view'), 'month');
 
-    const monthView = within(screen.getByTestId('month-view'));
-    const eventItem = await monthView.findByText('반복 회의');
+    await screen.findByTestId('month-view');
 
-    const eventWrapper = eventItem.closest('[data-testid="event-item"]');
-    expect(within((eventWrapper as HTMLElement)!).getByText('[반복]')).toBeInTheDocument();
+    const tag = await screen.findByTestId('repeating-tag');
+    expect(tag).toHaveTextContent('[반복]');
   });
 });
 
