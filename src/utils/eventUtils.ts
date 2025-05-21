@@ -49,67 +49,94 @@ export function getFilteredEvents(
   return searchedEvents;
 }
 
-export function getRepeatedEvents(event: EventForm) {
+export function generateDailyEvents(repeatEndDate: Date, event: EventForm) {
   const { date, repeat } = event;
-  const { type, interval, endDate } = repeat;
-  const finalEndDate = endDate ? new Date(endDate) : new Date('2025-09-30');
   const repeatedEvents: EventForm[] = [];
-  const startDate = new Date(date);
-  const originMonth = new Date(date).getMonth(),
-    originDate = new Date(date).getDate();
+  const currentDate = new Date(date);
 
-  let currentDate = new Date(startDate);
-
-  const pushEvent = () => {
+  while (currentDate <= repeatEndDate) {
     repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
-  };
 
-  if (type === 'daily') {
-    while (currentDate <= finalEndDate) {
-      pushEvent();
-
-      currentDate.setDate(currentDate.getDate() + interval);
-    }
-  }
-
-  if (type === 'weekly') {
-    while (currentDate <= finalEndDate) {
-      pushEvent();
-
-      currentDate.setDate(currentDate.getDate() + 7 * interval);
-    }
-  }
-
-  if (type === 'monthly') {
-    while (currentDate <= finalEndDate) {
-      pushEvent();
-
-      const nextDate = new Date(currentDate);
-      nextDate.setMonth(nextDate.getMonth() + interval);
-
-      if (nextDate.getDate() !== originDate) {
-        nextDate.setDate(originDate);
-      }
-      currentDate = nextDate;
-    }
-  }
-
-  if (type === 'yearly') {
-    while (currentDate <= finalEndDate) {
-      if (currentDate.getDate() === originDate) {
-        pushEvent();
-      }
-
-      const nextDate = new Date(currentDate);
-      nextDate.setFullYear(nextDate.getFullYear() + interval);
-
-      if (originMonth !== currentDate.getMonth()) {
-        nextDate.setMonth(originMonth);
-        nextDate.setDate(originDate);
-      }
-      currentDate = nextDate;
-    }
+    currentDate.setDate(currentDate.getDate() + repeat.interval);
   }
 
   return repeatedEvents;
+}
+
+export function generateWeeklyEvents(repeatEndDate: Date, event: EventForm) {
+  const { date, repeat } = event;
+  const repeatedEvents: EventForm[] = [];
+  const currentDate = new Date(date);
+
+  while (currentDate <= repeatEndDate) {
+    repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+
+    currentDate.setDate(currentDate.getDate() + 7 * repeat.interval);
+  }
+
+  return repeatedEvents;
+}
+
+export function generateMonthlyEvents(repeatEndDate: Date, event: EventForm) {
+  const { date, repeat } = event;
+  const repeatedEvents: EventForm[] = [];
+  const originDate = new Date(date).getDate();
+  let currentDate = new Date(date);
+
+  while (currentDate <= repeatEndDate) {
+    repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+
+    const nextDate = new Date(currentDate);
+    nextDate.setMonth(nextDate.getMonth() + repeat.interval);
+
+    if (nextDate.getDate() !== originDate) {
+      nextDate.setDate(originDate);
+    }
+    currentDate = nextDate;
+  }
+
+  return repeatedEvents;
+}
+
+export function generateYearlyEvents(repeatEndDate: Date, event: EventForm) {
+  const { date, repeat } = event;
+  const repeatedEvents: EventForm[] = [];
+  const originMonth = new Date(date).getMonth();
+  const originDate = new Date(date).getDate();
+  let currentDate = new Date(date);
+
+  while (currentDate <= repeatEndDate) {
+    if (currentDate.getDate() === originDate) {
+      repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+    }
+
+    const nextDate = new Date(currentDate);
+    nextDate.setFullYear(nextDate.getFullYear() + repeat.interval);
+
+    if (originMonth !== currentDate.getMonth()) {
+      nextDate.setMonth(originMonth);
+      nextDate.setDate(originDate);
+    }
+    currentDate = nextDate;
+  }
+  return repeatedEvents;
+}
+
+export function getRepeatedEvents(event: EventForm) {
+  const { repeat } = event;
+  const { type, endDate } = repeat;
+  const finalEndDate = endDate ? new Date(endDate) : new Date('2025-09-30');
+
+  switch (type) {
+    case 'daily':
+      return generateDailyEvents(finalEndDate, event);
+    case 'weekly':
+      return generateWeeklyEvents(finalEndDate, event);
+    case 'monthly':
+      return generateMonthlyEvents(finalEndDate, event);
+    case 'yearly':
+      return generateYearlyEvents(finalEndDate, event);
+    default:
+      return [];
+  }
 }
