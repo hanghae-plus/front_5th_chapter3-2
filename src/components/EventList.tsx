@@ -21,7 +21,9 @@ type EventListProps = {
   setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
   editEvent: (event: Event) => void;
   deleteEvent: (id: string) => void;
+  deleteRepeatEvents: (eventIds: string[]) => void;
   notifiedEvents: string[];
+  isRepeating: boolean;
 };
 
 const EventList: FC<EventListProps> = ({
@@ -30,8 +32,18 @@ const EventList: FC<EventListProps> = ({
   setSearchTerm,
   editEvent,
   deleteEvent,
+  deleteRepeatEvents,
   notifiedEvents,
+  isRepeating,
 }) => {
+  const handleDeleteClick = (id: string) => {
+    if (isRepeating) {
+      deleteRepeatEvents([id]);
+    } else {
+      deleteEvent(id);
+    }
+  };
+
   return (
     <VStack data-testid="event-list" w="500px" h="full" overflowY="auto">
       <FormControl>
@@ -60,7 +72,7 @@ const EventList: FC<EventListProps> = ({
                 <IconButton
                   aria-label="Delete event"
                   icon={<DeleteIcon />}
-                  onClick={() => deleteEvent(event.id)}
+                  onClick={() => handleDeleteClick(event.id)}
                 />
               </HStack>
             </HStack>
@@ -71,4 +83,4 @@ const EventList: FC<EventListProps> = ({
   );
 };
 
-export default EventList;
+export default React.memo(EventList);

@@ -36,7 +36,7 @@ function App() {
     ...formMethods
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(
+  const { events, saveEvent, deleteEvent, deleteRepeatEvents } = useEventOperations(
     Boolean(editingEvent),
     isRepeating,
     () => setEditingEvent(null)
@@ -145,7 +145,9 @@ function App() {
           setSearchTerm={setSearchTerm}
           editEvent={formMethods.editEvent}
           deleteEvent={deleteEvent}
+          deleteRepeatEvents={deleteRepeatEvents}
           notifiedEvents={notifiedEvents}
+          isRepeating={isRepeating}
         />
       </Flex>
 

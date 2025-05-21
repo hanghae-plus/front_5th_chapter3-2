@@ -1,4 +1,4 @@
-import { RepeatInfo } from '../types';
+import { Event, RepeatInfo } from '../types';
 import { isDateInRange } from './dateUtils';
 
 /** 매년 반복되는 일정 */
@@ -178,3 +178,49 @@ export function generateRepeats(
     }
   }
 }
+
+/** 반복 설정에 따라 반복 일정들을 생성해주는 함수 */
+
+export const generateRepeatedEvents = (baseEvent: Event): Event[] => {
+  const events: Event[] = [];
+
+  const { repeat, ...rest } = baseEvent;
+  const { type, interval, endDate } = repeat;
+
+  let current = new Date(baseEvent.date);
+  const end = new Date(endDate!);
+
+  while (current <= end) {
+    const dateString = current.toISOString().split('T')[0];
+
+    events.push({
+      ...rest,
+      date: dateString,
+      repeat,
+    });
+
+    switch (type) {
+      case 'daily': {
+        current.setDate(current.getDate() + interval);
+        break;
+      }
+      case 'weekly': {
+        current.setDate(current.getDate() + interval + 7);
+        break;
+      }
+      case 'monthly': {
+        const day = current.getDate();
+        current.setMonth(current.getMonth() + interval);
+
+        if (current.getDate() < day) {
+          const adjusted = new Date(current.getFullYear(), current.getMonth() + 1, 0); // 0일은 전 달의 말일을 의미
+          current.setDate(adjusted.getDate());
+        }
+        break;
+      }
+      default:
+        throw new Error('unsupported repeat type');
+    }
+  }
+  return events;
+};

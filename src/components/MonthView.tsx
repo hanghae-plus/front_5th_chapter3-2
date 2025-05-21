@@ -1,5 +1,5 @@
 import { Heading, Table, Tbody, Td, Text, Th, Thead, Tr, VStack } from '@chakra-ui/react';
-import { FC } from 'react';
+import React, { FC } from 'react';
 
 import { Event } from '../types';
 import { formatDate, formatMonth, getEventsForDay, getWeeksAtMonth } from '../utils/dateUtils';
@@ -24,8 +24,8 @@ const MonthView: FC<MonthViewProps> = ({ currentDate, events, holidays, notified
       <Table variant="simple" w="full">
         <Thead>
           <Tr>
-            {weekDays.map((day) => (
-              <Th key={day} width="14.28%">
+            {weekDays.map((day, weekIdx) => (
+              <Th key={`${day}-${weekIdx}`} width="14.28%">
                 {day}
               </Th>
             ))}
@@ -41,7 +41,7 @@ const MonthView: FC<MonthViewProps> = ({ currentDate, events, holidays, notified
 
                 return (
                   <Td
-                    key={dayIndex}
+                    key={`${day}-${dayIndex}`}
                     height="100px"
                     verticalAlign="top"
                     width="14.28%"
@@ -55,13 +55,15 @@ const MonthView: FC<MonthViewProps> = ({ currentDate, events, holidays, notified
                             {holiday}
                           </Text>
                         )}
-                        {dayEvents.map((event) => (
-                          <EventItem
-                            key={event.id}
-                            event={event}
-                            isNotified={notifiedEvents.includes(event.id)}
-                          />
-                        ))}
+                        {dayEvents.map((event) => {
+                          return (
+                            <EventItem
+                              key={event.id}
+                              event={event}
+                              isNotified={notifiedEvents.includes(event.id)}
+                            />
+                          );
+                        })}
                       </>
                     )}
                   </Td>
@@ -75,4 +77,4 @@ const MonthView: FC<MonthViewProps> = ({ currentDate, events, holidays, notified
   );
 };
 
-export default MonthView;
+export default React.memo(MonthView);

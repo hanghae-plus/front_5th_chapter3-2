@@ -471,8 +471,6 @@ describe('반복 일정 단일 삭제', () => {
 
     await act(() => Promise.resolve(null));
 
-    console.log('RRR', result.current.events[0].id);
-
     await act(async () => {
       await result.current.deleteRepeatEvents([String(result.current.events[0].id)]);
     });

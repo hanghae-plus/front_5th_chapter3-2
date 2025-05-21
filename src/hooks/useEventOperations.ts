@@ -2,6 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import { generateRepeatedEvents } from '../utils/repeatUtils';
 
 export const useEventOperations = (
   editing: boolean,
@@ -40,10 +41,12 @@ export const useEventOperations = (
           body: JSON.stringify(eventData),
         });
       } else if (isRepeating) {
+        const repeatedEvents = generateRepeatedEvents(eventData as Event);
+
         response = await fetch(`/api/events-list`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ events: [eventData] }),
+          body: JSON.stringify({ events: repeatedEvents }),
         });
       } else {
         response = await fetch('/api/events', {
