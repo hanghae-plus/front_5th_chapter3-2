@@ -76,10 +76,11 @@ export const MonthView = () => {
                               borderRadius="md"
                               fontWeight={isNotified ? 'bold' : 'normal'}
                               color={isNotified ? 'red.500' : 'inherit'}
+                              data-testid={`event-id-${event.id}`}
                             >
                               <HStack spacing={1}>
-                                {isNotified && <BellIcon data-testid="bell-icon" />}
-                                {isRepeating && <RepeatIcon data-testid="repeat-icon" />}
+                                {isNotified && <BellIcon data-testid={'bell-icon'} />}
+                                {isRepeating && <RepeatIcon data-testid={'repeat-icon'} />}
                                 <Text fontSize="sm" noOfLines={1}>
                                   {event.title}
                                 </Text>

@@ -1,5 +1,7 @@
+import { randomUUID } from 'crypto';
+
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { ReactElement } from 'react';
 
@@ -7,6 +9,7 @@ import { setupMockHandlerList } from '@/__mocks__/handlersUtils';
 import App from '@/App';
 import { Providers } from '@/components/providers';
 import { Event } from '@/types';
+import { createRepeatEvents } from '@/utils/eventUtils';
 
 const setup = (element: ReactElement) => {
   const user = userEvent.setup();
@@ -40,6 +43,11 @@ const saveSchedule = async (user: UserEvent, form: Omit<Event, 'id' | 'notificat
     if (!checkbox.checked) {
       await user.click(checkbox);
     }
+
+    // checkbox의 동작을 기다리는 용도
+    await waitFor(() => {
+      screen.getByLabelText('반복 설정');
+    });
 
     await user.selectOptions(screen.getByLabelText('반복 유형'), type);
     await user.clear(screen.getByLabelText('반복 간격'));
@@ -169,18 +177,111 @@ it('반복 일정은 캘린더에 아이콘과 함꼐 구분할 수 있다.', as
   const monthView = screen.getByTestId('month-view');
   const repeatIcons = within(monthView).getAllByTestId('repeat-icon');
 
-  // 구현중
-  expect(repeatIcons.length).toBe(4); // 잘못된 테스트
+  expect(repeatIcons.length > 0).toBe(true);
+
+  repeatIcons.forEach((icon) => {
+    const td = icon.closest('td');
+    expect(td).not.toBeNull();
+    expect(td?.textContent).toContain('반복 일정 1');
+  });
 });
 
 // 5. 반복 일정 단일 수정 - 반복 일정을 수정하면 단일 일정으로 변경된다.
-it('반복 일정을 수정 시 반복에서 제외되며, 아이콘도 사라진다.', () => {
-  expect(1).toBe(1);
-});
-
 // 6. 반복 일정 단일 삭제 - 반복 일정을 삭제하면 해당 일정만 삭제된다.
-it('반복 일정 중 하나를 목록에서 제거하면, 해당 일정만 제거된다.', () => {
-  expect(1).toBe(1);
+describe('일정 목록에서 반복 일정을 수정 또는 삭제하면 단일로 변경된다.', () => {
+  const setupRepeatEvent = async () => {
+    setupMockHandlerList([]);
+    const events = createRepeatEvents({
+      id: randomUUID(),
+      title: '새 회의',
+      date: '2025-05-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: randomUUID(), type: 'daily', interval: 3, endDate: '2025-05-31' },
+      notificationTime: 5,
+    }) as Event[];
+
+    events.forEach((_, index) => {
+      events[index].id = randomUUID();
+    });
+
+    setupMockHandlerList(events as Event[]);
+    const { user } = setup(<App />);
+
+    await waitFor(() => {
+      screen.getByTestId('month-view');
+    });
+
+    const monthView = screen.getByTestId('month-view');
+    const eventList = screen.getByTestId('event-list');
+    const repeatIcons = within(monthView).getAllByTestId('repeat-icon');
+
+    return { user, events, monthView, eventList, repeatIcons };
+  };
+
+  it('반복 일정을 수정 시 반복에서 제외되며, 아이콘도 사라진다.', async () => {
+    const { user, events, eventList, repeatIcons } = await setupRepeatEvent();
+
+    const beforeCount = repeatIcons.length; // 수정 전 아이콘 갯수
+    expect(beforeCount > 0).toBe(true);
+
+    const targetId = events[1].id; // 반복 일정 중 2번째 수정
+
+    const eventItem = within(eventList).getByTestId(`event-id-${targetId}`);
+
+    await user.click(await within(eventItem).findByLabelText('Edit event'));
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 회의');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      const updatedMonthView = screen.getByTestId('month-view');
+      const updatedRepeatIcons = within(updatedMonthView).getAllByTestId('repeat-icon');
+
+      const afterCount = updatedRepeatIcons.length; // 수정 후 아이콘 갯수
+
+      expect(afterCount).toBe(beforeCount - 1); // 반복 아이콘이 하나 줄어듬
+
+      const updatedViewItem = within(updatedMonthView).getByTestId(`event-id-${targetId}`);
+      expect(updatedViewItem).toBeInTheDocument();
+      expect(within(updatedViewItem).getByText('수정된 회의')).toBeInTheDocument();
+    });
+  });
+
+  it('반복 일정 중 하나를 목록에서 제거하면, 해당 일정만 제거된다.', async () => {
+    const { user, events, eventList, repeatIcons } = await setupRepeatEvent();
+
+    const beforeCount = repeatIcons.length; // 삭제 전 아이콘 갯수
+    expect(beforeCount > 0).toBe(true);
+
+    const targetId = events[3].id; // 반복 일정 중 3번째 삭제
+
+    const eventItem = within(eventList).getByTestId(`event-id-${targetId}`);
+
+    await user.click(await within(eventItem).findByLabelText('Delete event'));
+
+    await waitFor(() => {
+      const updatedMonthView = screen.getByTestId('month-view');
+      const updatedRepeatIcons = within(updatedMonthView).getAllByTestId('repeat-icon');
+
+      const afterCount = updatedRepeatIcons.length; // 삭제 후 아이콘 갯수
+
+      expect(afterCount).toBe(beforeCount - 1); // 반복 아이콘이 하나 줄어듬
+
+      expect(
+        within(updatedMonthView).queryByTestId(`event-id-${targetId}`)
+      ).not.toBeInTheDocument(); // 캘린더에서 없어짐
+
+      const updatedList = screen.getByTestId('event-list');
+
+      expect(within(updatedList).queryByTestId(`event-id-${targetId}`)).not.toBeInTheDocument(); // 목록에서 없어짐
+    });
+  });
 });
 
 // (선택) 7. 예외 날짜 처리

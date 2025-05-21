@@ -96,7 +96,6 @@ export const EventManageForm = () => {
       setIsOverlapDialogOpen(true);
     } else {
       // 단일 생성으로 일단 구현
-      console.log(isRepeating, repeatType);
       if (isRepeating && repeatType !== 'none') {
         await saveRepeatEvent(eventData);
       } else {

@@ -104,7 +104,6 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         return;
       }
       const events = createRepeatEvents({ ...eventData });
-      // console.log(events);
       const response = await fetch('/api/events-list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
