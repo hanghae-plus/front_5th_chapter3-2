@@ -56,7 +56,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
           await fetchEvents();
         } else {
-          saveRepeatEvents(eventData);
+          response = await saveRepeatEvents(eventData);
         }
       }
 
@@ -71,8 +71,6 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         duration: 3000,
         isClosable: true,
       });
-
-      return await saveRepeatEvents(eventData);
     } catch (error) {
       console.error('Error saving event:', error);
       toast({
@@ -123,6 +121,8 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
 
     await fetchEvents();
+
+    return response;
   };
 
   async function init() {

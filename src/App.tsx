@@ -150,7 +150,7 @@ function App() {
       location,
       category,
       repeat: {
-        type: isRepeating ? repeatType : 'none',
+        type: isRepeating ? (repeatType === 'none' ? 'daily' : repeatType) : 'none',
         interval: repeatInterval,
         endDate: repeatEndDate || undefined,
       },
@@ -562,7 +562,7 @@ function App() {
                     location,
                     category,
                     repeat: {
-                      type: isRepeating ? repeatType : 'none',
+                      type: isRepeating ? (repeatType === 'none' ? 'daily' : repeatType) : 'none',
                       interval: repeatInterval,
                       endDate: repeatEndDate || undefined,
                     },

@@ -26,7 +26,8 @@ const saveSchedule = async (
   form: Omit<EventForm, 'repeat' | 'notificationTime'> &
     Partial<Pick<Event, 'repeat' | 'notificationTime'>>
 ) => {
-  const { title, date, startTime, endTime, location, description, category } = form;
+  const { title, date, startTime, endTime, location, description, category, repeat } = form;
+  const repeatCheckbox = screen.getByLabelText('반복 설정') as HTMLInputElement;
 
   await user.click(screen.getAllByText('일정 추가')[0]);
 
@@ -37,6 +38,11 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
+
+  // 반복일정이 체크되어있는데 repeatType이 none인 경우 반복 일정 체크 해제
+  if (repeatCheckbox.checked && repeat?.type === 'none') {
+    await user.click(repeatCheckbox);
+  }
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -55,6 +61,7 @@ describe('일정 CRUD 및 기본 기능', () => {
       description: '프로젝트 진행 상황 논의',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0 },
     });
 
     const eventList = within(screen.getByTestId('event-list'));
@@ -126,6 +133,7 @@ describe('일정 뷰', () => {
       description: '이번주 팀 회의입니다.',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0 },
     });
 
     await user.selectOptions(screen.getByLabelText('view'), 'week');
@@ -158,6 +166,7 @@ describe('일정 뷰', () => {
       description: '이번달 팀 회의입니다.',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0 },
     });
 
     const monthView = within(screen.getByTestId('month-view'));
@@ -412,7 +421,6 @@ describe('반복 일정 단일 삭제', () => {
 
     await screen.findByText('일정 로딩 완료!');
 
-    const eventList = await screen.findByTestId('event-list');
     const deleteButtons = await screen.findAllByLabelText('Delete event');
 
     await act(async () => {
