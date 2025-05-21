@@ -31,8 +31,9 @@ export const setupMockHandlerUpdating = (updatedEvents: { title: string; repeat:
       description: '기존 팀 미팅',
       location: '회의실 B',
       category: '업무',
-      repeat: { type: 'none', interval: 0 },
+      repeat: { type: 'none', interval: 0, endType: 'none' },
       notificationTime: 10,
+      isRecurring: undefined,
     },
     {
       id: '2',
@@ -43,8 +44,9 @@ export const setupMockHandlerUpdating = (updatedEvents: { title: string; repeat:
       description: '기존 팀 미팅 2',
       location: '회의실 C',
       category: '업무 회의',
-      repeat: { type: 'none', interval: 0 },
+      repeat: { type: 'none', interval: 0, endType: 'none' },
       notificationTime: 5,
+      isRecurring: undefined,
     },
   ];
 
@@ -74,8 +76,9 @@ export const setupMockHandlerDeletion = () => {
       description: '삭제할 이벤트입니다',
       location: '어딘가',
       category: '기타',
-      repeat: { type: 'none', interval: 0 },
+      repeat: { type: 'none', interval: 0, endType: 'none' },
       notificationTime: 10,
+      isRecurring: undefined,
     },
   ];
 
@@ -109,8 +112,6 @@ export const setupMockHandlerListCreation = (initEvents = [] as Event[]) => {
     mockEvents.push(...repeatedEvents);
     return HttpResponse.json(repeatedEvents, { status: 201 });
   });
-
-  console.log(mockEvents);
 
   server.use(getEventsHandler, createEventListHandler);
 };

@@ -11,7 +11,7 @@ export function useRecurringEvents(events: Event[]) {
         return recurringEvents.map((e) => ({
           ...e,
           isRecurring: true,
-          id: e.id.toString(),
+          id: e.id?.toString() ?? event.id.toString(),
         }));
       }
       return [

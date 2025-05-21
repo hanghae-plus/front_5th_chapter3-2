@@ -14,8 +14,9 @@ describe('useRecurringEvents Hook', () => {
       description: '기존 팀 미팅',
       location: '회의실 B',
       category: '업무',
-      repeat: { type: 'weekly', interval: 1, endDate: '2025-03-5' },
+      repeat: { type: 'weekly', interval: 1, endType: 'date', endDate: '2025-03-05' },
       notificationTime: 10,
+      isRecurring: true,
     },
     {
       id: '2',
@@ -26,8 +27,9 @@ describe('useRecurringEvents Hook', () => {
       description: '기존 팀 미팅',
       location: '회의실 B',
       category: '업무',
-      repeat: { type: 'none', interval: 0 },
+      repeat: { type: 'none', interval: 0, endType: 'none' },
       notificationTime: 10,
+      isRecurring: false,
     },
   ];
 

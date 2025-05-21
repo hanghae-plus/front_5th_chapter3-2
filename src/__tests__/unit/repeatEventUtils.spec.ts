@@ -11,6 +11,7 @@ describe('repeatEventUtils', () => {
     repeat: {
       type: 'daily',
       interval: 1,
+      endType: 'date',
       endDate: '2025-05-27',
     },
     description: '',
@@ -32,6 +33,7 @@ describe('repeatEventUtils', () => {
           type: 'daily',
           interval: 1,
           endDate: '2025-05-23',
+          endType: 'date',
         },
         description: '',
         location: '',
@@ -74,6 +76,7 @@ describe('repeatEventUtils', () => {
           type: 'weekly',
           interval: 1,
           endDate: '2025-05-27',
+          endType: 'date',
         },
         description: '',
         location: '',
@@ -108,6 +111,7 @@ describe('repeatEventUtils', () => {
           type: 'monthly',
           interval: 1,
           endDate: '2025-06-20',
+          endType: 'date',
         },
         description: '',
         location: '',
@@ -142,6 +146,7 @@ describe('repeatEventUtils', () => {
           type: 'yearly',
           interval: 1,
           endDate: '2026-05-20',
+          endType: 'date',
         },
         description: '',
         location: '',
@@ -174,7 +179,9 @@ describe('repeatEventUtils', () => {
           type: 'daily',
           interval: 0,
           endDate: '2025-05-20',
+          endType: 'date',
         },
+        isRecurring: true,
       };
       const result = generateRecurringEvents(invalidEvent);
       expect(result).toEqual([]);
@@ -188,7 +195,9 @@ describe('repeatEventUtils', () => {
           type: 'daily',
           interval: 1,
           endDate: '2025-05-19',
+          endType: 'date',
         },
+        isRecurring: true,
       };
       const result = generateRecurringEvents(invalidEvent);
       expect(result).toEqual([]);
@@ -198,17 +207,15 @@ describe('repeatEventUtils', () => {
       const invalidEvent: Event = {
         ...event,
         repeat: {
-          type: 'none',
+          type: 'none' as const,
           interval: 0,
           endDate: '2025-05-20',
+          endType: 'date',
         },
-        description: '',
-        location: '',
-        category: '',
-        notificationTime: 0,
+        isRecurring: false,
       };
 
-      const expected = [event];
+      const expected = [{ ...invalidEvent }];
       const result = generateRecurringEvents(invalidEvent);
       expect(result).toEqual(expected);
     });
@@ -222,7 +229,9 @@ describe('repeatEventUtils', () => {
         type: 'daily',
         interval: 1,
         endDate: '2025-05-20',
+        endType: 'date',
       },
+      isRecurring: true,
     };
 
     const expected = [
@@ -243,7 +252,9 @@ describe('repeatEventUtils', () => {
         type: 'yearly',
         interval: 1,
         endDate: '2025-09-30',
+        endType: 'date',
       },
+      isRecurring: true,
     };
 
     const expected = [
@@ -260,11 +271,103 @@ describe('repeatEventUtils', () => {
     const repeatEvent: Event = {
       ...event,
       date: '2024-02-29',
-      repeat: { type: 'yearly', interval: 1, endDate: '2028-02-29' },
+      repeat: {
+        type: 'yearly',
+        interval: 1,
+        endDate: '2027-02-28',
+        endType: 'date',
+      },
+      isRecurring: true,
     };
 
+    const expected = [
+      {
+        ...repeatEvent,
+        date: '2024-02-29', // 2024년 윤년
+      },
+      {
+        ...repeatEvent,
+        date: '2025-02-28', // 2025년 평년
+      },
+      {
+        ...repeatEvent,
+        date: '2026-02-28', // 2026년 평년
+      },
+      {
+        ...repeatEvent,
+        date: '2027-02-28', // 2027년 평년
+      },
+    ];
+
     const result = generateRecurringEvents(repeatEvent);
-    expect(result[1].date).toBe('2025-02-28'); // 2025년은 비윤년이므로 2월 28일
-    expect(result[4].date).toBe('2028-02-29'); // 2028년은 윤년이므로 2월 29일 유지
+    expect(result).toEqual(expected);
+  });
+
+  describe('종료 조건별 테스트', () => {
+    it('종료 횟수(count)로 반복일정을 생성한다', () => {
+      const countEvent: Event = {
+        ...event,
+        repeat: {
+          type: 'daily',
+          interval: 1,
+          endType: 'count',
+          endCount: 3,
+        },
+        isRecurring: true,
+      };
+
+      const expected = [
+        {
+          ...countEvent,
+          date: '2025-05-20',
+        },
+        {
+          ...countEvent,
+          date: '2025-05-21',
+        },
+        {
+          ...countEvent,
+          date: '2025-05-22',
+        },
+      ];
+
+      const result = generateRecurringEvents(countEvent);
+      expect(result).toEqual(expected);
+    });
+
+    it('종료일이 없고 종료 횟수도 없는 경우 2025년 9월 30일까지 일정만 생성한다', () => {
+      const infiniteEvent: Event = {
+        ...event,
+        date: '2025-05-20',
+        repeat: {
+          type: 'daily',
+          interval: 1,
+          endType: 'none',
+        },
+        isRecurring: true,
+      };
+
+      const result = generateRecurringEvents(infiniteEvent);
+      const lastDate = result[result.length - 1].date;
+
+      expect(result.length).toBeGreaterThan(0);
+      expect(lastDate).toBe('2025-09-30');
+    });
+
+    it('종료 횟수가 0 이하인 경우 빈 배열을 반환한다', () => {
+      const invalidCountEvent: Event = {
+        ...event,
+        repeat: {
+          type: 'daily',
+          interval: 1,
+          endType: 'count',
+          endCount: 0,
+        },
+        isRecurring: true,
+      };
+
+      const result = generateRecurringEvents(invalidCountEvent);
+      expect(result).toEqual([]);
+    });
   });
 });
