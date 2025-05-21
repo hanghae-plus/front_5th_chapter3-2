@@ -3,6 +3,8 @@ import '@testing-library/jest-dom';
 
 import { handlers } from './__mocks__/handlers';
 
+// React 개발 모드 강제 설정
+process.env.NODE_ENV = 'development';
 // ! Hard 여기 제공 안함
 /* msw */
 export const server = setupServer(...handlers);
