@@ -4,6 +4,9 @@ import { Event } from '../types.ts';
  * 주어진 년도와 월의 일수를 반환합니다.
  */
 export function getDaysInMonth(year: number, month: number): number {
+  if (month < 1 || month > 12) {
+    throw new Error('Month must be between 1 and 12');
+  }
   return new Date(year, month, 0).getDate();
 }
 
@@ -84,17 +87,11 @@ export function formatMonth(date: Date): string {
   return `${year}년 ${month}월`;
 }
 
-const stripTime = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
 /**
  * 주어진 날짜가 특정 범위 내에 있는지 확인합니다.
  */
 export function isDateInRange(date: Date, rangeStart: Date, rangeEnd: Date): boolean {
-  const normalizedDate = stripTime(date);
-  const normalizedStart = stripTime(rangeStart);
-  const normalizedEnd = stripTime(rangeEnd);
-
-  return normalizedDate >= normalizedStart && normalizedDate <= normalizedEnd;
+  return date >= rangeStart && date <= rangeEnd;
 }
 
 export function fillZero(value: number, size = 2) {
@@ -108,3 +105,45 @@ export function formatDate(currentDate: Date, day?: number) {
     fillZero(day ?? currentDate.getDate()),
   ].join('-');
 }
+
+export const formatDateToYYYYMMDD = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export const calculateRepeatNextDate = (
+  currentDate: Date,
+  iteration: number,
+  repeatType: string,
+  interval: number,
+  dayOfMonth: number
+): Date => {
+  const nextDate = new Date(currentDate);
+
+  switch (repeatType) {
+    case 'daily':
+      nextDate.setDate(nextDate.getDate() + (iteration + 1) * interval);
+      break;
+    case 'weekly': {
+      nextDate.setDate(nextDate.getDate() + (iteration + 1) * interval * 7);
+      break;
+    }
+    case 'monthly': {
+      nextDate.setMonth(nextDate.getMonth() + (iteration + 1) * interval);
+      const lastDayOfMonth = new Date(nextDate.getFullYear(), nextDate.getMonth() + 1, 0).getDate();
+      if (dayOfMonth > lastDayOfMonth) {
+        nextDate.setDate(lastDayOfMonth);
+      } else {
+        nextDate.setDate(dayOfMonth);
+      }
+      break;
+    }
+    case 'yearly':
+      nextDate.setFullYear(nextDate.getFullYear() + (iteration + 1) * interval);
+      break;
+  }
+
+  return nextDate;
+};

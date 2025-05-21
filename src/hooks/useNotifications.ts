@@ -4,8 +4,13 @@ import { useState } from 'react';
 import { Event } from '../types';
 import { createNotificationMessage, getUpcomingEvents } from '../utils/notificationUtils';
 
+export interface NotificationProps {
+  id: string;
+  message: string;
+}
+
 export const useNotifications = (events: Event[]) => {
-  const [notifications, setNotifications] = useState<{ id: string; message: string }[]>([]);
+  const [notifications, setNotifications] = useState<NotificationProps[]>([]);
   const [notifiedEvents, setNotifiedEvents] = useState<string[]>([]);
 
   const checkUpcomingEvents = () => {
@@ -27,7 +32,7 @@ export const useNotifications = (events: Event[]) => {
     setNotifications((prev) => prev.filter((_, i) => i !== index));
   };
 
-  useInterval(checkUpcomingEvents, 1000); // 1초마다 체크
+  useInterval(checkUpcomingEvents, 1000);
 
   return { notifications, notifiedEvents, setNotifications, removeNotification };
 };

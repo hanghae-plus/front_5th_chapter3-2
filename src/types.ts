@@ -4,6 +4,7 @@ export interface RepeatInfo {
   type: RepeatType;
   interval: number;
   endDate?: string;
+  id?: string;
 }
 
 export interface EventForm {
@@ -15,9 +16,11 @@ export interface EventForm {
   location: string;
   category: string;
   repeat: RepeatInfo;
-  notificationTime: number; // 분 단위로 저장
+  notificationTime: number;
 }
 
 export interface Event extends EventForm {
   id: string;
 }
+
+export type ScheduleField = keyof EventForm | keyof RepeatInfo;
