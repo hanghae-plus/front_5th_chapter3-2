@@ -578,8 +578,8 @@ describe('반복 일정 설정', () => {
 
     await user.click(screen.getByTestId('event-submit-button'));
 
-    const eventList = within(screen.getByTestId('event-list'));
-    expect(eventList.getByText('수정된 반복 일정')).toBeInTheDocument();
-    expect(eventList.getAllByTestId('repeat-icon')).toHaveLength(3);
+    const calendar = within(screen.getByTestId('month-view'));
+    expect(calendar.getByText('수정된 반복 일정')).toBeInTheDocument();
+    expect(calendar.getAllByTestId('repeat-icon')).toHaveLength(3);
   });
 });
