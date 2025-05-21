@@ -173,6 +173,33 @@ describe('일정 뷰', () => {
     const januaryFirstCell = within(monthView).getByText('1').closest('td')!;
     expect(within(januaryFirstCell).getByText('신정')).toBeInTheDocument();
   });
+
+  it('반복 일정은 [반복] span 태그가 생기는지 확인한다.', async () => {
+    setupMockHandlerCreation([
+      {
+        id: 'test1',
+        title: '반복 회의',
+        date: '2025-10-15',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '반복 팀 미팅',
+        location: '회의실 D',
+        category: '업무',
+        repeat: { type: 'daily', interval: 1 },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+
+    await user.selectOptions(screen.getByLabelText('view'), 'month');
+
+    const monthView = within(screen.getByTestId('month-view'));
+    const eventItem = await monthView.findByText('반복 회의');
+
+    const eventWrapper = eventItem.closest('[data-testid="event-item"]');
+    expect(within((eventWrapper as HTMLElement)!).getByText('[반복]')).toBeInTheDocument();
+  });
 });
 
 describe('검색 기능', () => {
