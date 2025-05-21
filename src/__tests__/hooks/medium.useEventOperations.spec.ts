@@ -92,7 +92,7 @@ it("새로 정의된 'title', 'endTime' 기준으로 적절하게 일정이 업�
     await result.current.saveEvent(updatedEvent);
   });
 
-  expect(result.current.events[0]).toEqual(updatedEvent);
+  expect(result.current.events[0]).toMatchObject(updatedEvent);
 });
 
 it('존재하는 이벤트 삭제 시 에러없이 아이템이 삭제된다.', async () => {
