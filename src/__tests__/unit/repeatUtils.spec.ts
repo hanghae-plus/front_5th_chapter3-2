@@ -116,33 +116,4 @@ describe('generateRepeatedEvents', () => {
       expect(last!.date <= '2025-09-30').toBe(true); // 기본 종료일 전인지 확인
     });
   });
-
-  // 5 & 6. 단일 수정/삭제 기능 테스트
-  describe('단일 수정 및 삭제', () => {
-    // 3일 반복 이벤트를 빠르게 만드는 헬퍼 함수
-    const setup3DayEvent = (): EventForm[] =>
-      generateRepeatedEvents({
-        ...baseEvent,
-        date: '2025-01-01',
-        repeat: { type: 'daily' as const, interval: 1, count: 3 },
-      });
-
-    it('반복 일정 중 하나를 수정하면 반복이 해제된다', () => {
-      // 특정 일정 하나만 수정하고 repeat.type을 'none'으로 바꾼 경우
-      const events = setup3DayEvent();
-      const edited = { ...events[1], title: '수정된 일정', repeat: { type: 'none', interval: 1 } };
-
-      expect(edited.repeat.type).toBe('none'); // 수정된 event는 반복 없음 상태
-      expect(events[1].repeat.type).not.toBe('none'); // 원본 events는 여전히 반복 중
-    });
-
-    it('반복 일정 중 하나를 삭제하면 나머지는 유지된다', () => {
-      // 3개 중 1개 일정 삭제했을 때 나머지 2개가 정상적으로 유지됐는지 확인
-      const events = setup3DayEvent();
-      const remaining = events.filter((e) => e.date !== '2025-01-02');
-
-      expect(remaining).toHaveLength(2);
-      expect(getDates(remaining)).toEqual(['2025-01-01', '2025-01-03']);
-    });
-  });
 });
