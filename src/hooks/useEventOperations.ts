@@ -19,6 +19,7 @@ export const useEventOperations = (
         throw new Error('Failed to fetch events');
       }
       const { events } = await response.json();
+
       setEvents(events);
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -42,6 +43,8 @@ export const useEventOperations = (
         });
       } else if (isRepeating) {
         const repeatedEvents = generateRepeatedEvents(eventData as Event);
+        console.log('eventData', eventData);
+        console.log('repeatedEvents', repeatedEvents);
 
         response = await fetch(`/api/events-list`, {
           method: 'POST',

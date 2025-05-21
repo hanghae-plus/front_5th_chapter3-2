@@ -2,7 +2,7 @@ import { Event, RepeatInfo } from '../types';
 import { isDateInRange } from './dateUtils';
 
 /** 매년 반복되는 일정 */
-export function generateYearlyRepeats(startDate: Date, endDate: Date): Date[] {
+export function generateYearlyRepeats(startDate: Date, endDate: Date, interval: number): Date[] {
   const result: Date[] = [];
 
   const startYear = startDate.getFullYear();
@@ -10,10 +10,10 @@ export function generateYearlyRepeats(startDate: Date, endDate: Date): Date[] {
   const month = startDate.getMonth();
   const day = startDate.getDate();
 
-  for (let year = startYear; year <= endYear; year++) {
+  for (let year = startYear; year <= endYear; year += interval) {
     const date = new Date(year, month, day); // 날짜가 존재하지않으면 js는 알아서 그 다음일자로 바뀐다.
 
-    if (date.getDate() !== day) continue;
+    if (date.getMonth() !== month || date.getDate() !== day) continue;
 
     if (isDateInRange(date, startDate, endDate)) {
       result.push(date);
@@ -48,6 +48,36 @@ export function generateMonthlyRepeats(startDate: Date, endDate: Date, interval:
     // interval(월 단위)만큼 증가
     currentStartDate.setMonth(month + interval);
   }
+  return result;
+}
+
+export function generateYearlyRepeatsByCount(
+  startDate: Date,
+  interval: number,
+  count: number
+): Date[] {
+  const result: Date[] = [];
+  let current = new Date(startDate);
+
+  for (let i = 0; i < count; i++) {
+    const year = current.getFullYear();
+    const month = current.getMonth();
+    const day = current.getDate();
+
+    const nextDate = new Date(year, month, day);
+
+    // 윤년 보정: 2월 29일이 아닌 경우는 스킵
+    if (month === 1 && day === 29 && (nextDate.getMonth() !== 1 || nextDate.getDate() !== 29)) {
+      // 윤년이 아닌 경우 → 스킵하고 다음 연도로 건너뜀
+      current.setFullYear(year + interval);
+      i--; // 이 반복은 유효하지 않으므로 카운트 무효 처리
+      continue;
+    }
+
+    result.push(nextDate);
+    current.setFullYear(current.getFullYear() + interval);
+  }
+
   return result;
 }
 
@@ -149,6 +179,8 @@ export function generateRepeats(
         return generateWeeklyRepeats(startDate, end, interval);
       case 'monthly':
         return generateMonthlyRepeats(startDate, end, interval);
+      case 'yearly':
+        return generateYearlyRepeats(startDate, end, interval);
       default:
         throw new Error(`Unsupported repeat type: ${type}`);
     }
@@ -161,6 +193,8 @@ export function generateRepeats(
         return generateWeeklyRepeatsByCount(startDate, interval, count);
       case 'monthly':
         return generateMonthlyRepeatsByCount(startDate, interval, count);
+      case 'yearly':
+        return generateYearlyRepeatsByCount(startDate, interval, count);
       default:
         throw new Error(`Unsupported repeat type: ${type}`);
     }
@@ -173,6 +207,8 @@ export function generateRepeats(
         return generateWeeklyRepeatsByCount(startDate, interval, maxCount);
       case 'monthly':
         return generateMonthlyRepeatsByCount(startDate, interval, maxCount);
+      case 'yearly':
+        return generateYearlyRepeatsByCount(startDate, interval, maxCount);
       default:
         throw new Error(`Unsupported repeat type: ${type}`);
     }
@@ -182,45 +218,16 @@ export function generateRepeats(
 /** 반복 설정에 따라 반복 일정들을 생성해주는 함수 */
 
 export const generateRepeatedEvents = (baseEvent: Event): Event[] => {
-  const events: Event[] = [];
-
   const { repeat, ...rest } = baseEvent;
-  const { type, interval, endDate } = repeat;
 
-  let current = new Date(baseEvent.date);
-  const end = new Date(endDate!);
+  if (repeat.type === 'none') return [];
 
-  while (current <= end) {
-    const dateString = current.toISOString().split('T')[0];
+  const startDate = new Date(baseEvent.date);
+  const repeatDates = generateRepeats(startDate, repeat);
 
-    events.push({
-      ...rest,
-      date: dateString,
-      repeat,
-    });
-
-    switch (type) {
-      case 'daily': {
-        current.setDate(current.getDate() + interval);
-        break;
-      }
-      case 'weekly': {
-        current.setDate(current.getDate() + interval + 7);
-        break;
-      }
-      case 'monthly': {
-        const day = current.getDate();
-        current.setMonth(current.getMonth() + interval);
-
-        if (current.getDate() < day) {
-          const adjusted = new Date(current.getFullYear(), current.getMonth() + 1, 0); // 0일은 전 달의 말일을 의미
-          current.setDate(adjusted.getDate());
-        }
-        break;
-      }
-      default:
-        throw new Error('unsupported repeat type');
-    }
-  }
-  return events;
+  return repeatDates.map((date) => ({
+    ...rest,
+    date: date.toISOString().split('T')[0],
+    repeat,
+  }));
 };
