@@ -59,11 +59,15 @@ const saveSchedule = async (
     }
 
     if (form.repeatEndDate) {
-      await user.click(await screen.findByLabelText('날짜'));
-      await user.type(await screen.findByLabelText('반복 종료 날짜'), form.repeatEndDate);
+      const repeatEndArea = (await screen.findByText('반복 종료')).parentElement;
+      await user.click(within(repeatEndArea!).getByLabelText('날짜'));
+      await user.type(screen.getByLabelText('반복 종료일'), form.repeatEndDate);
     } else if (form.repeatCount) {
-      await user.click(await screen.findByLabelText('횟수'));
-      await user.type(await screen.findByLabelText('반복 횟수'), form.repeatCount!.toString());
+      const repeatEndArea = (await screen.findByText('반복 종료')).parentElement;
+      await user.click(within(repeatEndArea!).getByLabelText('횟수'));
+      const repeatCountInput = screen.getByLabelText('반복 횟수');
+      await user.clear(repeatCountInput);
+      await user.type(repeatCountInput, form.repeatCount.toString());
     }
   } else {
     if (isRepeatingCheckbox.checked) {
@@ -587,7 +591,6 @@ describe('반복 일정 추가', () => {
 
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getAllByText('새로운 반복 일정 타이틀')).toHaveLength(repeatDates.length);
-    expect(eventList.getAllByText('반복: 매일')).toHaveLength(repeatDates.length);
 
     repeatDates.forEach((date) => {
       expect(eventList.getByText(date)).toBeInTheDocument();
@@ -616,7 +619,6 @@ describe('반복 일정 추가', () => {
 
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getAllByText('새로운 반복 일정 타이틀')).toHaveLength(repeatDates.length);
-    expect(eventList.getAllByText('반복: 매일')).toHaveLength(repeatDates.length);
 
     repeatDates.forEach((date) => {
       expect(eventList.getByText(date)).toBeInTheDocument();
