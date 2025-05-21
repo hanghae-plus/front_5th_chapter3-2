@@ -1,1 +1,64 @@
-{"events":[{"id":"2b7545a6-ebee-426c-b906-2329bc8d62bd","title":"팀 회의","date":"2025-05-20","startTime":"10:00","endTime":"11:00","description":"주간 팀 미팅","location":"회의실 A","category":"업무","repeat":{"type":"none","interval":0},"notificationTime":1},{"id":"09702fb3-a478-40b3-905e-9ab3c8849dcd","title":"점심 약속","date":"2025-05-21","startTime":"12:30","endTime":"13:30","description":"동료와 점심 식사","location":"회사 근처 식당","category":"개인","repeat":{"type":"none","interval":0},"notificationTime":1},{"id":"da3ca408-836a-4d98-b67a-ca389d07552b","title":"프로젝트 마감","date":"2025-05-25","startTime":"09:00","endTime":"18:00","description":"분기별 프로젝트 마감","location":"사무실","category":"업무","repeat":{"type":"none","interval":0},"notificationTime":1},{"id":"dac62941-69e5-4ec0-98cc-24c2a79a7f81","title":"생일 파티","date":"2025-05-28","startTime":"19:00","endTime":"22:00","description":"친구 생일 축하","location":"친구 집","category":"개인","repeat":{"type":"none","interval":0},"notificationTime":1},{"id":"80d85368-b4a4-47b3-b959-25171d49371f","title":"운동","date":"2025-05-22","startTime":"18:00","endTime":"19:00","description":"주간 운동","location":"헬스장","category":"개인","repeat":{"type":"none","interval":0},"notificationTime":1},{"id":"390e7b0b-5a7a-4731-93b8-fbe2a13f3578","title":"ㅁㄴㅇ","date":"2025-05-02","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"33d41f9c-f2e8-4b6f-b141-b462592661b0","title":"ㅁㄴㅇ","date":"2025-05-09","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"a4bfdc2f-76e0-40da-aca9-fc37f8a05f7b","title":"ㅁㄴㅇ","date":"2025-05-16","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"7ada12d4-7438-46b2-b560-dd50c5cf32f4","title":"ㅁㄴㅇㄹ","date":"2025-05-23","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"none","interval":1},"notificationTime":10},{"id":"6bacf91a-0e4f-4a6f-a325-6c064a32ff92","title":"ㅁㄴㅇ","date":"2025-05-30","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"cf95d466-4b86-428c-b0fa-bed9ba7e5c16","title":"ㅁㄴㅇ","date":"2025-06-06","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"a7594af8-2706-482d-a198-49266c056272","title":"ㅁㄴㅇ","date":"2025-06-13","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"e1e8a1c9-085b-42c9-8f35-9c346fe4913d","title":"ㅁㄴㅇ","date":"2025-06-20","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"168e49e4-2fac-47c1-91c5-123a9ee1a605","title":"ㅁㄴㅇ","date":"2025-06-27","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"2fe65e42-b05e-4e19-9ced-f6f01dee7e77","title":"ㅁㄴㅇ","date":"2025-07-04","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"4340cee8-7fa6-416b-9764-9c06de6deba5","title":"ㅁㄴㅇ","date":"2025-07-11","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"f69c0a96-16c1-4732-9b5e-99182556177a","title":"ㅁㄴㅇ","date":"2025-07-18","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"6d1293b4-3e72-4f41-b09d-6046702eb64e","title":"ㅁㄴㅇ","date":"2025-07-25","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"405388e2-62ad-4ce6-a62b-5fa9b7b8eba1","title":"ㅁㄴㅇ","date":"2025-08-01","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"7656ae9f-2658-43af-bf7c-d7184a7cdf7e","title":"ㅁㄴㅇ","date":"2025-08-08","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"7d51044c-4147-4dad-964f-8dc524b9f9d8","title":"ㅁㄴㅇ","date":"2025-08-15","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"aa93b545-bb52-4541-889a-eaa2182ab37c","title":"ㅁㄴㅇ","date":"2025-08-22","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"c58e3c36-d734-41ac-9f4f-555d8803254c","title":"ㅁㄴㅇ","date":"2025-08-29","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"c8de8dc5-8d00-4982-9295-52af31c32756","title":"ㅁㄴㅇ","date":"2025-09-05","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"a5954c97-91be-4b6d-9a99-c0e01b3df2a9","title":"ㅁㄴㅇ","date":"2025-09-12","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"666eeb79-09d7-44b7-8c82-ad44ca7a5c15","title":"ㅁㄴㅇ","date":"2025-09-19","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10},{"id":"624411f5-f22f-4796-be21-e22859c187b6","title":"ㅁㄴㅇ","date":"2025-09-26","startTime":"13:00","endTime":"13:01","description":"ㄴㅁㅇㄹ","location":"ㅎ","category":"업무","repeat":{"type":"weekly","interval":1},"notificationTime":10}]}
+{
+  "events": [
+    {
+      "id": "2b7545a6-ebee-426c-b906-2329bc8d62bd",
+      "title": "팀 회의",
+      "date": "2025-05-20",
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "description": "주간 팀 미팅",
+      "location": "회의실 A",
+      "category": "업무",
+      "repeat": { "type": "none", "interval": 0 },
+      "notificationTime": 1
+    },
+    {
+      "id": "09702fb3-a478-40b3-905e-9ab3c8849dcd",
+      "title": "점심 약속",
+      "date": "2025-05-21",
+      "startTime": "12:30",
+      "endTime": "13:30",
+      "description": "동료와 점심 식사",
+      "location": "회사 근처 식당",
+      "category": "개인",
+      "repeat": { "type": "none", "interval": 0 },
+      "notificationTime": 1
+    },
+    {
+      "id": "da3ca408-836a-4d98-b67a-ca389d07552b",
+      "title": "프로젝트 마감",
+      "date": "2025-05-25",
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "description": "분기별 프로젝트 마감",
+      "location": "사무실",
+      "category": "업무",
+      "repeat": { "type": "none", "interval": 0 },
+      "notificationTime": 1
+    },
+    {
+      "id": "dac62941-69e5-4ec0-98cc-24c2a79a7f81",
+      "title": "생일 파티",
+      "date": "2025-05-28",
+      "startTime": "19:00",
+      "endTime": "22:00",
+      "description": "친구 생일 축하",
+      "location": "친구 집",
+      "category": "개인",
+      "repeat": { "type": "none", "interval": 0 },
+      "notificationTime": 1
+    },
+    {
+      "id": "80d85368-b4a4-47b3-b959-25171d49371f",
+      "title": "운동",
+      "date": "2025-05-22",
+      "startTime": "18:00",
+      "endTime": "19:00",
+      "description": "주간 운동",
+      "location": "헬스장",
+      "category": "개인",
+      "repeat": { "type": "none", "interval": 0 },
+      "notificationTime": 1
+    }
+  ]
+}
