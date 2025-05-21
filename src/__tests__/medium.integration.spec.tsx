@@ -48,7 +48,6 @@ const saveScheduleWithRepeat = async (
   const { title, date, startTime, endTime, location, description, category, repeat } = form;
 
   await user.click(screen.getAllByText('일정 추가')[0]);
-
   await user.type(screen.getByLabelText('제목'), title);
   await user.type(screen.getByLabelText('날짜'), date);
   await user.type(screen.getByLabelText('시작 시간'), startTime);
@@ -56,7 +55,9 @@ const saveScheduleWithRepeat = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
+  await user.click(screen.getByLabelText('반복 일정'));
   await user.selectOptions(screen.getByLabelText('반복 유형'), repeat.type);
+  await user.clear(screen.getByLabelText('반복 간격'));
   await user.type(screen.getByLabelText('반복 간격'), String(repeat.interval));
   if (repeat.endDate) {
     await user.type(screen.getByLabelText('반복 종료일'), repeat.endDate);
@@ -449,7 +450,37 @@ describe('반복 일정 설정', () => {
     expect(calendarAfter1Week.getAllByTestId('repeat-icon')).toHaveLength(3);
     expect(calendarAfter1Week.getAllByText('반복되는 회의')).toHaveLength(3);
   });
-  it(`매달 반복 설정된 일정을 저장하면 설정한 종료일까지 매달 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
+  it(`매주 반복 설정된 일정을 저장하면 9월 30일까지 매달 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
+    vi.setSystemTime(new Date('2025-08-01'));
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await saveScheduleWithRepeat(user, {
+      title: '새로 반복되는 회의',
+      date: '2025-08-13',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 C',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+      },
+    });
+
+    const calendar = within(screen.getByTestId('month-view'));
+    expect(calendar.getAllByTestId('repeat-icon')).toHaveLength(3);
+    expect(calendar.getAllByText('새로 반복되는 회의')).toHaveLength(3);
+
+    await user.click(screen.getByLabelText('Next'));
+
+    const calendarAfter1Month = within(screen.getByTestId('month-view'));
+    expect(calendarAfter1Month.getAllByTestId('repeat-icon')).toHaveLength(4);
+    expect(calendarAfter1Month.getAllByText('새로 반복되는 회의')).toHaveLength(4);
+  });
+  it(`매달 반복 설정된 일정을 저장하면 9월 30일까지 매달 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
