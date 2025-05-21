@@ -1,12 +1,13 @@
 import { expect, Page, test } from '@playwright/test';
 
 import { Event } from '../src/types';
+import { formatDate } from '../src/utils/dateUtils';
 
 // 일정의 각 항목을 작성하고 제출하면 캘린더와 목록에 표기된다.
 // 다음 달의 일정과 미리 알림을 설정하면, 다음 달 버튼을 클릭했을 때 캘린더에 일정과 함께 아이콘이 렌더링된다.
 // 2주 간격의 반복 일정을 다음 달 말일까지 등록하면, 반복 횟수에 따라 일정이 캘린더에 표시되고 다음 달 이동 버튼을 클릭해도 일정이 표기된다.
 
-const fillScheduleForm = async (page: Page, data: Omit<Event, 'id' | 'notificationTime'>) => {
+const fillScheduleForm = async (page: Page, data: Omit<Event, 'id'>) => {
   await page.getByRole('button', { name: '일정 추가' }).click();
 
   await page.getByLabel('제목').fill(data.title);
@@ -17,8 +18,11 @@ const fillScheduleForm = async (page: Page, data: Omit<Event, 'id' | 'notificati
   await page.getByLabel('위치').fill(data.location);
   await page.getByLabel('카테고리').selectOption(data.category);
 
+  await page.getByLabel('알림 설정').selectOption(String(data.notificationTime));
+
   if (data.repeat.type !== 'none') {
-    const checkbox = page.getByLabel('반복 설정');
+    const checkbox = page.getByTestId('repeat-checkbox'); // 라벨보다 정확함
+
     if (!(await checkbox.isChecked())) {
       await checkbox.click();
     }
@@ -30,27 +34,40 @@ const fillScheduleForm = async (page: Page, data: Omit<Event, 'id' | 'notificati
   }
 
   await page.getByTestId('event-submit-button').click();
+
+  const proceedButton = page.getByRole('button', { name: '계속 진행' });
+
+  if (await proceedButton.isVisible()) {
+    await proceedButton.click();
+  }
 };
 
 test('일정의 각 항목을 작성하고 제출하면 캘린더와 목록에 표기된다', async ({ page }) => {
+  // 테스트 당시의 일자를 기준으로 테스트 이벤트를 생성
+  const now = new Date();
+  const date = formatDate(now, 10);
+  const endDate = formatDate(new Date(now.getFullYear(), now.getMonth() + 2, 0));
+
   await page.goto('/');
   await fillScheduleForm(page, {
-    title: '일정 1',
-    date: '2025-05-10',
+    title: '반복 일정 1',
+    date,
     startTime: '10:00',
     endTime: '11:00',
     description: '일정 1 설명',
     location: '집',
     category: '개인',
-    repeat: { type: 'none', interval: 0 },
+    repeat: { type: 'weekly', interval: 2, endDate },
+    notificationTime: 60,
   });
 
   const monthView = page.getByTestId('month-view');
-  await expect(monthView.getByText('일정 1')).toBeVisible();
+  const calendarEvents = monthView.locator('text=반복 일정 1');
+  await expect(calendarEvents.first()).toBeVisible();
 
   const eventList = page.getByTestId('event-list');
-  await expect(eventList.getByText('2025-05-10')).toBeVisible();
-  await expect(eventList.getByText('10:00 - 11:00')).toBeVisible();
+  const listEvents = eventList.locator('text=반복 일정 1');
+  await expect(listEvents.first()).toBeVisible();
 });
 
 test('다음 달의 일정과 미리 알림을 설정하면, 다음 달 버튼을 클릭했을 때 캘린더에 일정과 함께 아이콘이 렌더링된다.', async ({

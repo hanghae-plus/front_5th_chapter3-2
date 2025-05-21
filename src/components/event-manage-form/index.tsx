@@ -134,14 +134,16 @@ export const EventManageForm = () => {
       <CategorySelect />
 
       <FormControl>
-        <FormLabel>반복 설정</FormLabel>
+        <FormLabel htmlFor={'repeat-checkbox'}>반복 설정</FormLabel>
         <Checkbox
+          id={'repeat-checkbox'}
           isChecked={isRepeating}
           onChange={(e) => {
             setIsRepeating(e.target.checked);
             setRepeatType(e.target.checked ? 'daily' : 'none');
             setRepeatInterval(e.target.checked ? 1 : 0);
           }}
+          data-testid={'repeat-checkbox'}
         >
           반복 일정
         </Checkbox>
