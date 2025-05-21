@@ -157,6 +157,19 @@ function getFinalEndDate(eventData: EventForm): Date {
 }
 
 /**
+ * 이벤트 id를 생성.
+ * @param event: 이벤트 정보
+ * @param index: 이벤트 인덱스
+ * @param seed: 씨앗
+ * @return: 이벤트 id
+ */
+function generateEventId(event: EventForm, index: number, seed: string) {
+  const safeTitle = event.title.replace(/\s/g, '');
+  const safeTime = `${event.date}-${event.startTime}`.replace(/:/g, '');
+  return `${safeTitle}-${safeTime}-${seed}-${index + 1}`;
+}
+
+/**
  * 반복 일정에 대한 모든 이벤트 객체를 생성.
  * @param eventData: 반복 일정 정보
  * @return: 반복 일정 정보 배열
@@ -178,6 +191,7 @@ export function createRepeatingEvents(eventData: EventForm): EventForm[] {
 
   const dates: Date[] = [];
   let currentDate = new Date(startDate);
+  const seed = Date.now().toString(); // 고유 반복 그룹 식별용 시드
 
   // 시작일부터 종료일까지 하루씩 증가하며 체크
   while (currentDate <= finalEndDate) {
@@ -194,10 +208,9 @@ export function createRepeatingEvents(eventData: EventForm): EventForm[] {
   }
 
   // 각 날짜에 대해 복제된 이벤트 객체 생성
-  const baseId = `${eventData.title}-${eventData.date}`.replace(/\s/g, ''); // id 충돌 최소화
   return dates.map((date, index) => ({
     ...eventData,
-    id: `${baseId}-${index + 1}`, // ← 고유 id 생성
+    id: generateEventId({ ...eventData, date: formatDate(date) }, index, seed), // ← 고유 id 생성
     date: formatDate(date),
   }));
 }

@@ -22,6 +22,7 @@ export const useEventForm = (initialEvent?: Event) => {
   );
   const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat.interval || 1);
   const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
+  const [repeatCount, setRepeatCount] = useState(initialEvent?.repeat.count || 1);
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -100,6 +101,8 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatCount,
+    setRepeatCount,
     notificationTime,
     setNotificationTime,
     startTimeError,
