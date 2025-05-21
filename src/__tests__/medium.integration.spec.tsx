@@ -362,7 +362,7 @@ describe('반복 유형 선택', () => {
     expect(result.current.events).toEqual(expectedEvents);
   });
 
-  it('윤년 29일에 매월 또는 매년 반복일정을 설정한 경우 월의 마지막 날짜에 일정이 생성된다.', async () => {
+  it('윤년 29일에 매년 반복일정을 설정한 경우 월의 마지막 날짜에 일정이 생성된다.', async () => {
     setupMockHandlerCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
