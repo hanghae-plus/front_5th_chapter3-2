@@ -61,6 +61,7 @@ export const WeeklyCalendar = ({
                         borderRadius="md"
                         fontWeight={isNotified ? 'bold' : 'normal'}
                         color={isNotified ? 'red.500' : isRepeat ? 'blue.500' : 'inherit'}
+                        data-testid="schedule-tag"
                       >
                         <HStack spacing={1}>
                           {isNotified ? (

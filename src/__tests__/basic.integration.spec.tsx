@@ -46,6 +46,9 @@ describe('8th basic integration test - 반복 일정', () => {
       repeat: { type: 'none', interval: 0 },
       notificationTime: 10,
     },
+  ];
+
+  const repeatEvents: Event[] = [
     {
       id: '3',
       title: '운동',
@@ -370,15 +373,114 @@ describe('8th basic integration test - 반복 일정', () => {
     });
   });
 
-  describe.skip('3. (필수) 반복 일정 표시', () => {
-    it('캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표시한다', async () => {
-      expect(true).toBe(true);
+  describe('3. (필수) 반복 일정 표시', () => {
+    it.skip('캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표시한다', async () => {
+      const totalEvents = [...mockEvents, ...repeatEvents];
+      const { handler, getHandler } = setupMockHandlerRepeatingEvents(totalEvents);
+      server.use(handler, getHandler);
+      renderComponent();
+
+      const allEventTags = await screen.findAllByTestId('schedule-tag');
+      expect(allEventTags.length).toBe(totalEvents.length);
+
+      const repeatIcons = await screen.findAllByTestId('repeat-icon');
+      expect(repeatIcons.length).toBe(repeatEvents.length);
     });
+
+    // * 이 이벤트는
+    // * 반복 일정 기본 테스트 - 일정 생성 시 반복 일정들이 캘린더에 정확히 표시된다.
+    // * 3. (필수) 반복 일정 표시 - 캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표시한다
+    // * 에서 각각 테스트하므로 중복적인 테스트 같음
     it('일정 생성 시 반복 일정이 정확히 표시된다.', async () => {
-      expect(true).toBe(true);
+      const { handler, getHandler } = setupMockHandlerRepeatingEvents(mockEvents);
+      server.use(handler, getHandler);
+      const user = userEvent.setup();
+      renderComponent();
+      // * 1. 기본 정보 입력
+      await user.type(screen.getByLabelText('제목'), formData.title);
+      await user.type(screen.getByLabelText('날짜'), formData.date);
+      await user.type(screen.getByLabelText('시작 시간'), formData.startTime);
+      await user.type(screen.getByLabelText('종료 시간'), formData.endTime);
+      await user.type(screen.getByLabelText('설명'), formData.description);
+      await user.type(screen.getByLabelText('위치'), formData.location);
+      await user.selectOptions(screen.getByLabelText('카테고리'), formData.category);
+
+      // * 2. 반복 설정
+      const isRepeatingCheckbox = screen.getByLabelText('반복 설정');
+      await user.click(isRepeatingCheckbox);
+
+      // * 3. 반복 유형 선택
+      const repeatTypeSelector = screen.getByLabelText('반복 유형');
+      await user.selectOptions(repeatTypeSelector, 'weekly');
+
+      // * 4. 반복 간격 선택
+      const repeatIntervalSelector = screen.getByLabelText('반복 간격');
+      await user.clear(repeatIntervalSelector);
+      await user.type(repeatIntervalSelector, '1');
+
+      // * 5. 종료 날짜 선택
+      const endDateSelector = screen.getByLabelText('반복 종료일');
+      await user.type(endDateSelector, '2024-02-28');
+
+      // * 6. 저장
+      const submitButton = screen.getByTestId('event-submit-button');
+      await user.click(submitButton);
+      // * 7. 결과 확인
+      const eventList = await screen.findByTestId('event-list');
+      expect(within(eventList).getAllByText(formData.title).length).toBe(4);
+
+      const allEventTags = await screen.findAllByTestId('schedule-tag');
+      console.log(allEventTags.length);
+      expect(allEventTags.length).toBe(6);
+
+      const repeatIcons = await screen.findAllByTestId('repeat-icon');
+      console.log(repeatIcons.length);
+      expect(repeatIcons.length).toBe(4);
     });
-    it('일정 수정 시 반복 일정이 정확히 표시된다.', async () => {
-      expect(true).toBe(true);
+    it.only('일정 수정 시 반복 일정이 정확히 표시된다.', async () => {
+      const { handler, getHandler } = setupMockHandlerRepeatingEvents(mockEvents);
+      server.use(handler, getHandler);
+      const user = userEvent.setup();
+      renderComponent();
+
+      // * 1. 수정 버튼 클릭
+      const eventItem = await screen.findByTestId(`event-item-${mockEvents[0].id}`);
+      const editButton = within(eventItem).getByLabelText('Edit event');
+      expect(editButton).toBeInTheDocument();
+      await user.click(editButton);
+
+      // * 2. 반복 설정
+      const isRepeatingCheckbox = screen.getByLabelText('반복 설정');
+      await user.click(isRepeatingCheckbox);
+
+      // * 3. 반복 유형 선택
+      const repeatTypeSelector = screen.getByLabelText('반복 유형');
+      await user.selectOptions(repeatTypeSelector, 'weekly');
+
+      // * 4. 반복 간격 선택
+      const repeatIntervalSelector = screen.getByLabelText('반복 간격');
+      await user.clear(repeatIntervalSelector);
+      await user.type(repeatIntervalSelector, '2');
+
+      // * 5. 반복 종료일 선택
+      const repeatEndDateSelector = screen.getByLabelText('반복 종료일');
+      await user.type(repeatEndDateSelector, '2024-02-28');
+
+      // * 6. 저장
+      const submitButton = screen.getByTestId('event-submit-button');
+      await user.click(submitButton);
+
+      // * 7. 결과 확인
+      const eventList = await screen.findByTestId('event-list');
+      expect(within(eventList).getAllByText(mockEvents[0].title).length).toBe(1);
+
+      const allEventTags = await screen.findAllByTestId('schedule-tag');
+      console.log(allEventTags.length);
+      expect(allEventTags.length).toBe(6);
+
+      const repeatIcons = await screen.findAllByTestId('repeat-icon');
+      console.log(repeatIcons.length);
+      expect(repeatIcons.length).toBe(4);
     });
   });
 
