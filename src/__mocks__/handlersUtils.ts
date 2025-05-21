@@ -138,7 +138,7 @@ export const setupMockHandlerRecurringUpdating = () => {
     {
       id: '2',
       title: '기존 회의',
-      date: '2025-10-15',
+      date: '2025-10-16',
       startTime: '09:00',
       endTime: '10:00',
       description: '기존 팀 미팅',
@@ -150,7 +150,7 @@ export const setupMockHandlerRecurringUpdating = () => {
     {
       id: '3',
       title: '기존 회의',
-      date: '2025-10-15',
+      date: '2025-10-17',
       startTime: '09:00',
       endTime: '10:00',
       description: '기존 팀 미팅',
@@ -162,7 +162,7 @@ export const setupMockHandlerRecurringUpdating = () => {
     {
       id: '4',
       title: '기존 회의',
-      date: '2025-10-15',
+      date: '2025-10-18',
       startTime: '09:00',
       endTime: '10:00',
       description: '기존 팀 미팅',
