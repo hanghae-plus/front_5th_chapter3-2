@@ -106,6 +106,21 @@ export const setupMockHandlerList = (initEvents = [] as Event[]) => {
       mockEvents.push(newEvent);
       return HttpResponse.json(newEvent, { status: 201 });
     }),
+    http.put('/api/events/:id', async ({ params, request }) => {
+      const { id } = params;
+      const updatedEvent = (await request.json()) as Event;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
+      return HttpResponse.json(mockEvents[index]);
+    }),
+    http.delete('/api/events/:id', ({ params }) => {
+      const { id } = params;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      mockEvents.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
+    }),
     // server.js에 추가된 API 목록
 
     // POST /api/events-list
@@ -117,7 +132,6 @@ export const setupMockHandlerList = (initEvents = [] as Event[]) => {
       newEvents.forEach((_, index) => {
         newEvents[index].id = randomUUID();
       });
-
       mockEvents.push(...newEvents);
       return HttpResponse.json(newEvents, { status: 201 });
     }),
