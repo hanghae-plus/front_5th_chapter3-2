@@ -82,6 +82,7 @@ export const useRepeatingEventOperations = (onSuccess?: () => void) => {
           type: event.repeat.type,
           interval: event.repeat.interval,
           endDate: event.repeat.endDate,
+          maxOccurrences: event.repeat.maxOccurrences,
           id: repeatGroupId,
         },
       };

@@ -5,18 +5,13 @@ import { getTimeErrorMessage } from '../utils/timeValidation';
 
 type TimeErrorRecord = Record<'startTimeError' | 'endTimeError', string | null>;
 
+// 상수 정의
+const DEFAULT_REPEAT_END_DATE_FOR_NO_END = '2025-09-30';
+const DEFAULT_MAX_OCCURRENCES = 10;
+
+export type RepeatEndType = 'date' | 'count' | 'never';
+
 export const useEventForm = (initialEvent?: Event) => {
-  const DEFAULT_MAX_OCCURRENCES = 10;
-  const DEFAULT_END_DATE = '2025-09-30';
-
-  const getInitialEndType = (event?: Event): 'date' | 'count' | 'never' => {
-    if (!event || !event.repeat) return 'date';
-
-    if (event.repeat.maxOccurrences) return 'count';
-    if (event.repeat.endDate && event.repeat.type !== 'none') return 'date';
-    return 'never';
-  };
-
   const [title, setTitle] = useState(initialEvent?.title || '');
   const [date, setDate] = useState(initialEvent?.date || '');
   const [startTime, setStartTime] = useState(initialEvent?.startTime || '');
@@ -29,128 +24,63 @@ export const useEventForm = (initialEvent?: Event) => {
   );
   const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat.type || 'none');
   const [repeatInterval, setRepeatIntervalState] = useState(initialEvent?.repeat.interval || 1);
-  // const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
+  const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
 
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  // 새로 추가된 상태
+  const [repeatEndType, setRepeatEndType] = useState<RepeatEndType>(() => {
+    if (initialEvent) {
+      if (initialEvent.repeat.maxOccurrences) return 'count';
+      if (!initialEvent.repeat.endDate && initialEvent.repeat.type !== 'none') return 'never';
+    }
+    return 'date';
+  });
 
-  const [repeatEndType, setRepeatEndTypeInternal] = useState<'date' | 'count' | 'never'>(
-    getInitialEndType(initialEvent)
-  );
+  const [repeatMaxOccurrences, setRepeatMaxOccurrencesState] = useState<number | undefined>(() => {
+    return initialEvent?.repeat.maxOccurrences;
+  });
+
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
   const [{ startTimeError, endTimeError }, setTimeError] = useState<TimeErrorRecord>({
     startTimeError: null,
     endTimeError: null,
   });
 
+  // 안전하게 repeatMaxOccurrences를 설정하는 함수
+  const setRepeatMaxOccurrences = (value: number | string | undefined) => {
+    if (value === undefined || value === '') {
+      setRepeatMaxOccurrencesState(undefined);
+      return;
+    }
+
+    const numValue = typeof value === 'string' ? Number(value) : value;
+
+    if (isNaN(numValue) || numValue <= 0) {
+      setRepeatMaxOccurrencesState(DEFAULT_MAX_OCCURRENCES);
+    } else {
+      setRepeatMaxOccurrencesState(Math.floor(numValue));
+    }
+  };
+
   const setRepeatInterval = (value: number) => {
     setRepeatIntervalState(value);
   };
 
-  // 초기 maxOccurrences 값 결정 - 'count' 타입일 때만 의미 있음
-  const initialMaxOccurrences =
-    getInitialEndType(initialEvent) === 'count'
-      ? initialEvent?.repeat.maxOccurrences || DEFAULT_MAX_OCCURRENCES
-      : undefined;
-
-  const [repeatMaxOccurrences, setRepeatMaxOccurrencesState] = useState<number | undefined>(
-    initialMaxOccurrences
-  );
-
-  // 초기 endDate 값 결정 - 'date' 타입일 때만 의미 있음
-  const initialEndDate =
-    getInitialEndType(initialEvent) === 'date' ? initialEvent?.repeat.endDate || '' : '';
-
-  const [repeatEndDate, setRepeatEndDateState] = useState(initialEndDate);
-
-  // 종료 유형 변경 시 다른 종료 조건 초기화 및 활성화
-  const setRepeatEndType = (type: 'date' | 'count' | 'never') => {
-    setRepeatEndTypeInternal(type);
-
-    if (type === 'date') {
-      // 횟수 종료 초기화
-      setRepeatMaxOccurrencesState(undefined);
-
-      // 날짜가 없으면 빈 문자열로 유지
-      if (!repeatEndDate) {
-        setRepeatEndDateState('');
+  // 종료 유형이 변경될 때 관련 상태 초기화
+  useEffect(() => {
+    if (repeatEndType === 'date') {
+      setRepeatMaxOccurrences(undefined);
+    } else if (repeatEndType === 'count') {
+      setRepeatEndDate('');
+      if (!repeatMaxOccurrences) {
+        setRepeatMaxOccurrences(DEFAULT_MAX_OCCURRENCES);
       }
-    } else if (type === 'count') {
-      // 날짜 종료 초기화
-      setRepeatEndDateState('');
-
-      // 횟수가 설정되지 않았으면 기본값 설정
-      if (repeatMaxOccurrences === undefined) {
-        setRepeatMaxOccurrencesState(DEFAULT_MAX_OCCURRENCES);
-      }
-    } else if (type === 'never') {
-      // 둘 다 초기화 - 내부적으로는 endDate만 사용됨
-      setRepeatEndDateState('');
-      setRepeatMaxOccurrencesState(undefined);
+    } else if (repeatEndType === 'never') {
+      setRepeatEndDate('');
+      setRepeatMaxOccurrences(undefined);
     }
-  };
-
-  // UI 편의를 위한 래퍼 함수들 - 개선된 타입 안전성
-  const setRepeatEndDate = (date: string) => {
-    setRepeatEndDateState(date);
-
-    // 만약 날짜를 입력했지만 date 타입이 아니라면 자동 변경
-    if (date && repeatEndType !== 'date') {
-      setRepeatEndType('date');
-    }
-  };
-
-  // 개선된 setRepeatMaxOccurrences - 값 유효성 검사를 함수 내부로 이동
-  const setRepeatMaxOccurrences = (value: number | string | undefined) => {
-    // 숫자로 변환 (빈 문자열이나 NaN 처리)
-    const numValue = value === undefined || value === '' ? undefined : Number(value);
-
-    // 유효한 값인 경우만 설정 (1 이상 또는 undefined)
-    if (numValue === undefined) {
-      setRepeatMaxOccurrencesState(undefined);
-    } else {
-      const validValue =
-        isNaN(numValue) || numValue < 1 ? DEFAULT_MAX_OCCURRENCES : Math.floor(numValue);
-      setRepeatMaxOccurrencesState(validValue);
-    }
-
-    // 횟수를 명시적으로 입력했고 count 타입이 아니라면 자동 변경
-    if (numValue && numValue >= 1 && repeatEndType !== 'count') {
-      setRepeatEndType('count');
-    }
-  };
-
-  // 반복 정보 생성 함수 - id는 제외
-  const createRepeatInfo = (): Omit<RepeatInfo, 'id'> => {
-    if (!isRepeating) {
-      return { type: 'none', interval: 0 };
-    }
-
-    const baseInfo = {
-      type: repeatType,
-      interval: Number(repeatInterval),
-    };
-
-    switch (repeatEndType) {
-      case 'date':
-        return {
-          ...baseInfo,
-          endDate: repeatEndDate || DEFAULT_END_DATE, // 날짜가 비어있으면 기본값 사용
-        };
-      case 'count':
-        return {
-          ...baseInfo,
-          maxOccurrences: repeatMaxOccurrences || DEFAULT_MAX_OCCURRENCES, // 횟수가 없으면 기본값 사용
-          endDate: DEFAULT_END_DATE, // 안전장치로 기본 종료일 항상 포함
-        };
-      case 'never':
-      default:
-        return {
-          ...baseInfo,
-          endDate: DEFAULT_END_DATE, // 종료 없음은 기본 종료일 사용
-        };
-    }
-  };
+  }, [repeatEndType]);
 
   useEffect(() => {
     if (isRepeating) {
@@ -165,6 +95,33 @@ export const useEventForm = (initialEvent?: Event) => {
       setIsRepeating(true);
     }
   }, [repeatType]);
+
+  // RepeatInfo 객체 생성 함수
+  const createRepeatInfo = (): RepeatInfo => {
+    const baseRepeatInfo: RepeatInfo = {
+      type: repeatType,
+      interval: repeatInterval,
+    };
+
+    if (repeatEndType === 'date') {
+      return {
+        ...baseRepeatInfo,
+        endDate: repeatEndDate || DEFAULT_REPEAT_END_DATE_FOR_NO_END,
+      };
+    } else if (repeatEndType === 'count') {
+      return {
+        ...baseRepeatInfo,
+        maxOccurrences: repeatMaxOccurrences ?? DEFAULT_MAX_OCCURRENCES,
+        endDate: DEFAULT_REPEAT_END_DATE_FOR_NO_END, // 안전장치로 기본 종료일도 함께 저장
+      };
+    } else {
+      // 'never'
+      return {
+        ...baseRepeatInfo,
+        endDate: DEFAULT_REPEAT_END_DATE_FOR_NO_END, // 종료없음이지만 안전장치로 기본 종료일 설정
+      };
+    }
+  };
 
   const handleStartTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newStartTime = e.target.value;
@@ -190,6 +147,8 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatType('none');
     setRepeatInterval(1);
     setRepeatEndDate('');
+    setRepeatEndType('date');
+    setRepeatMaxOccurrences(undefined);
     setNotificationTime(10);
   };
 
@@ -205,7 +164,24 @@ export const useEventForm = (initialEvent?: Event) => {
     setIsRepeating(event.repeat.type !== 'none');
     setRepeatType(event.repeat.type);
     setRepeatIntervalState(event.repeat?.interval !== undefined ? event.repeat.interval : 1);
-    setRepeatEndDate(event.repeat.endDate || '');
+
+    // 종료 조건 설정
+    if (event.repeat.maxOccurrences) {
+      setRepeatEndType('count');
+      setRepeatMaxOccurrences(event.repeat.maxOccurrences);
+      setRepeatEndDate('');
+    } else if (event.repeat.endDate && event.repeat.type !== 'none') {
+      setRepeatEndType('date');
+      setRepeatEndDate(event.repeat.endDate);
+      setRepeatMaxOccurrences(undefined);
+    } else if (event.repeat.type !== 'none') {
+      setRepeatEndType('never');
+      setRepeatEndDate('');
+      setRepeatMaxOccurrences(undefined);
+    } else {
+      setRepeatEndType('date');
+    }
+
     setNotificationTime(event.notificationTime);
   };
 
@@ -232,6 +208,10 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatEndType,
+    setRepeatEndType,
+    repeatMaxOccurrences,
+    setRepeatMaxOccurrences,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -242,5 +222,6 @@ export const useEventForm = (initialEvent?: Event) => {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    createRepeatInfo,
   };
 };
