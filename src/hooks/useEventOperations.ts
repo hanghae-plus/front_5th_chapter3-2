@@ -26,17 +26,35 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
+      const formData = { ...eventData } as EventForm;
+
       if (editing) {
-        const modified = { ...eventData, repeat: { ...eventData.repeat, type: 'none' } };
-        const response = await fetch(`/api/events/${(eventData as Event).id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(modified),
-        });
-        if (!response.ok) throw new Error('Failed to save event');
+        const existingEvent = eventData as Event;
+
+        if (isRepeatingEvent(formData)) {
+          // ✅ 반복 일정 → 새로운 반복 일정으로 저장 (기존 반복은 유지)
+          const newEvents = createRepeatingEvents(formData);
+          for (const evt of newEvents) {
+            const response = await fetch('/api/events', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(evt),
+            });
+            if (!response.ok) throw new Error('Failed to save event');
+          }
+        } else {
+          // ✅ 반복 해제 → 단일 일정으로 수정
+          const response = await fetch(`/api/events/${existingEvent.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+          });
+          if (!response.ok) throw new Error('Failed to save event');
+        }
       } else {
-        const formData = eventData as EventForm;
+        // 추가 모드
         const toSave = isRepeatingEvent(formData) ? createRepeatingEvents(formData) : [formData];
+
         for (const evt of toSave) {
           const response = await fetch('/api/events', {
             method: 'POST',
@@ -57,7 +75,12 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       });
     } catch (error) {
       console.error('Error saving event:', error);
-      toast({ title: '일정 저장 실패', status: 'error', duration: 3000, isClosable: true });
+      toast({
+        title: '일정 저장 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 

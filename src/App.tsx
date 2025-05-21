@@ -45,7 +45,7 @@ import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { Event, EventForm, RepeatType, RepeatEndType } from './types';
 import {
   formatDate,
   formatMonth,
@@ -91,6 +91,8 @@ function App() {
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatEndType,
+    setRepeatEndType,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -116,6 +118,14 @@ function App() {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const toast = useToast();
+
+  const repeatIcon = () => {
+    return (
+      <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>
+        cycle
+      </span>
+    );
+  };
 
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
@@ -150,6 +160,7 @@ function App() {
       repeat: {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
+        endType: repeatEndType,
         endDate: repeatEndDate || undefined,
       },
       notificationTime,
@@ -200,11 +211,10 @@ function App() {
                           color={isNotified ? 'red.500' : 'inherit'}
                         >
                           <HStack spacing={1}>
+                            {event.repeat.type !== 'none' && repeatIcon()}
                             {isNotified && <BellIcon />}
-
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
-                              {event.repeat.type !== 'none' && '반복'}
                             </Text>
                           </HStack>
                         </Box>
@@ -271,6 +281,7 @@ function App() {
                                 color={isNotified ? 'red.500' : 'inherit'}
                               >
                                 <HStack spacing={1}>
+                                  {event.repeat.type !== 'none' && repeatIcon()}
                                   {isNotified && <BellIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
@@ -569,6 +580,7 @@ function App() {
                     repeat: {
                       type: isRepeating ? repeatType : 'none',
                       interval: repeatInterval,
+                      endType: repeatEndType,
                       endDate: repeatEndDate || undefined,
                     },
                     notificationTime,

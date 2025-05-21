@@ -194,11 +194,10 @@ export function createRepeatingEvents(eventData: EventForm): EventForm[] {
   }
 
   // 각 날짜에 대해 복제된 이벤트 객체 생성
-  return dates.map((date) => {
-    const formattedDate = formatDate(date);
-    return {
-      ...eventData,
-      date: formattedDate,
-    };
-  });
+  const baseId = `${eventData.title}-${eventData.date}`.replace(/\s/g, ''); // id 충돌 최소화
+  return dates.map((date, index) => ({
+    ...eventData,
+    id: `${baseId}-${index + 1}`, // ← 고유 id 생성
+    date: formatDate(date),
+  }));
 }
