@@ -324,3 +324,70 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
+
+describe('반복 유형 선택', () => {
+  it('일정 생성 또는 수정 시 반복 유형을 선택할 수 있다.', async () => {
+    const { user } = setup(<App />);
+
+    const repeatType = screen.getByLabelText('repeat-type');
+    await user.selectOptions(repeatType, 'monthly');
+
+    expect(repeatType).toHaveValue('monthly');
+    expect(screen.getByText('매월')).toBeInTheDocument();
+  });
+
+  it('윤년 29일에 또는 31일에 매월 또는 매년 반복일정을 설정한 경우 월의 마지막 날짜에 일정이 생성된다.', async () => {
+    vi.setSystemTime(new Date('2025-05-01'));
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    const repeatType = screen.getByLabelText('repeat-type');
+    await user.selectOptions(repeatType, 'monthly');
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2024-02-29', // 윤년
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+    });
+
+    expect(screen.getByText('2025-05-31')).toBeInTheDocument();
+  });
+});
+
+describe('반복 간격 선택', () => {
+  it('반복 간격을 선택하지 않으면 default로 1로 설정된다.', async () => {
+    setup(<App />);
+
+    const repeatInterval = screen.getByLabelText('repeat-interval');
+    expect(repeatInterval).toHaveValue(1);
+  });
+
+  it('반복 유형이 매월인데 반복 간격이 12 보다 큰 경우 경고 메시지가 노출된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    const repeatType = screen.getByLabelText('repeat-type');
+    await user.selectOptions(repeatType, 'monthly');
+
+    const repeatInterval = screen.getByLabelText('repeat-interval');
+    await user.type(repeatInterval, '13');
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-15',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+    });
+
+    expect(screen.getByText('반복 간격은 12 이하여야 합니다.')).toBeInTheDocument();
+  });
+});
