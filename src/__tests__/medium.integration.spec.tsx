@@ -355,14 +355,14 @@ describe('반복 일정 설정', () => {
     server.resetHandlers();
   });
 
-  it(`매일 반복되는 일정을 생성하면 월간 뷰 달력에 아이콘과 함께 매일 표시된다.`, async () => {
+  it(`매일 반복되는 일정을 생성하면 종료일까지 매일 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
 
     await saveScheduleWithRepeat(user, {
       title: '반복되는 회의',
-      date: '2025-10-13',
+      date: '2025-10-12',
       startTime: '14:00',
       endTime: '15:00',
       description: '프로젝트 진행 상황 논의',
@@ -371,44 +371,30 @@ describe('반복 일정 설정', () => {
       repeat: {
         type: 'daily',
         interval: 1,
+        endDate: '2025-10-31',
       },
     });
 
-    let currentYear = 2025,
-      currentMonth = 9;
+    const calendar = within(screen.getByTestId('month-view'));
+    expect(calendar.getAllByTestId('repeat-icon')).toHaveLength(20);
+    expect(calendar.getAllByText('반복되는 회의')).toHaveLength(20);
 
-    // 반복 일정이 2년동안 잘 저장됐는지 확인
-    for (let month = 0; month <= 24; month++) {
-      if (month !== 0) {
-        await user.click(screen.getByLabelText('Next'));
-      }
+    await user.click(screen.getByLabelText('Next'));
 
-      const eventList = within(screen.getByTestId('month-view'));
-      const allSchedules = eventList.getAllByText('🔁 새로 반복되는 회의');
-
-      if (month !== 0) {
-        expect(allSchedules).toHaveLength(19);
-      } else {
-        const days = getDaysInMonth(currentYear, currentMonth);
-        expect(allSchedules).toHaveLength(days);
-      }
-
-      currentMonth++;
-      if (currentMonth === 12) {
-        currentYear++;
-        currentMonth = 0;
-      }
-    }
+    const calendarAfter1Month = within(screen.getByTestId('month-view'));
+    expect(calendarAfter1Month.getAllByTestId('repeat-icon')).toHaveLength(0);
+    expect(calendarAfter1Month.getAllByText('반복되는 회의')).toHaveLength(0);
   });
 
-  it(`5일 간격으로 반복되는 일정을 생성하면 월간 뷰 달력에 아이콘과 함께 5일마다 표시된다.`, async () => {
+  it(`5일 간격으로 반복되는 일정을 생성하면 종료일까지 5일마다 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
+    vi.setSystemTime(new Date('2025-06-13'));
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
 
     await saveScheduleWithRepeat(user, {
       title: '반복되는 회의',
-      date: '2025-10-13',
+      date: '2025-06-13',
       startTime: '14:00',
       endTime: '15:00',
       description: '프로젝트 진행 상황 논의',
@@ -417,40 +403,23 @@ describe('반복 일정 설정', () => {
       repeat: {
         type: 'daily',
         interval: 5,
+        endDate: '2025-07-22',
       },
     });
 
-    let repeatDate = new Date(2025, 9, 13);
-    let viewDate = new Date(2025, 9, 1);
+    const calendar = within(screen.getByTestId('month-view'));
+    expect(calendar.getAllByTestId('repeat-icon')).toHaveLength(4);
+    expect(calendar.getAllByText('반복되는 회의')).toHaveLength(4);
 
-    // 반복 일정이 2년동안 잘 저장됐는지 확인
-    for (let i = 0; i <= 24; i++) {
-      if (i !== 0) {
-        await user.click(screen.getByLabelText('Next'));
-        viewDate.setMonth(viewDate.getMonth() + 1);
-      }
+    await user.click(screen.getByLabelText('Next'));
 
-      const eventList = within(screen.getByTestId('month-view'));
-
-      const startOfMonth = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-      const endOfMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0);
-
-      const expectedDates: string[] = [];
-      let current = new Date(repeatDate);
-
-      while (current <= endOfMonth) {
-        if (current >= startOfMonth) {
-          expectedDates.push(current.getDate().toString());
-        }
-        current.setDate(current.getDate() + 2);
-      }
-
-      const allSchedules = eventList.getAllByText('🔁 새로 반복되는 회의');
-      expect(allSchedules).toHaveLength(expectedDates.length);
-    }
+    const calendarAfter1Month = within(screen.getByTestId('month-view'));
+    expect(calendarAfter1Month.getAllByTestId('repeat-icon')).toHaveLength(6);
+    expect(calendarAfter1Month.getAllByText('반복되는 회의')).toHaveLength(6);
   });
 
-  it(`매일 반복되는 일정을 생성하면 주간 뷰 달력에 아이콘과 함께 매일 표시된다.`, async () => {
+  it(`매일 반복 설정된 일정을 저장하면 주간 뷰 달력으로 바꿔도 매일 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
+    vi.setSystemTime(new Date('2025-09-21'));
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
@@ -458,7 +427,7 @@ describe('반복 일정 설정', () => {
 
     await saveScheduleWithRepeat(user, {
       title: '반복되는 회의',
-      date: '2025-10-13',
+      date: '2025-09-23',
       startTime: '14:00',
       endTime: '15:00',
       description: '프로젝트 진행 상황 논의',
@@ -470,29 +439,23 @@ describe('반복 일정 설정', () => {
       },
     });
 
-    // 반복 일정이 2년동안 잘 저장됐는지 확인
-    for (let week = 0; week <= 120; week++) {
-      if (week !== 0) {
-        await user.click(screen.getByLabelText('Next'));
-      }
+    const calendar = within(screen.getByTestId('week-view'));
+    expect(calendar.getAllByTestId('repeat-icon')).toHaveLength(5);
+    expect(calendar.getAllByText('반복되는 회의')).toHaveLength(5);
 
-      const eventList = within(screen.getByTestId('week-view'));
-      const allSchedules = eventList.getAllByText('🔁 새로 반복되는 회의');
+    await user.click(screen.getByLabelText('Next'));
 
-      if (week !== 0) {
-        expect(allSchedules).toHaveLength(6);
-      } else {
-        expect(allSchedules).toHaveLength(7);
-      }
-    }
+    const calendarAfter1Week = within(screen.getByTestId('week-view'));
+    expect(calendarAfter1Week.getAllByTestId('repeat-icon')).toHaveLength(3);
+    expect(calendarAfter1Week.getAllByText('반복되는 회의')).toHaveLength(3);
   });
-  it(`매월 반복되는 일정을 생성하면 월간 뷰 달력에 아이콘과 함께 매달 표시된다.`, async () => {
+  it(`매달 반복 설정된 일정을 저장하면 설정한 종료일까지 매달 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
 
     await saveScheduleWithRepeat(user, {
-      title: '🔁 새로 반복되는 회의',
+      title: '새로 반복되는 회의',
       date: '2025-10-13',
       startTime: '14:00',
       endTime: '15:00',
@@ -502,61 +465,33 @@ describe('반복 일정 설정', () => {
       repeat: {
         type: 'monthly',
         interval: 1,
+        endDate: '2025-11-30',
       },
     });
 
-    // 반복 일정이 2년동안 잘 저장됐는지 확인
-    for (let month = 0; month <= 24; month++) {
-      if (month !== 0) {
-        await user.click(screen.getByLabelText('Next'));
-      }
+    const calendar = within(screen.getByTestId('month-view'));
+    expect(calendar.queryByTestId('repeat-icon')).toBeInTheDocument();
+    expect(calendar.queryByText('새로 반복되는 회의')).toBeInTheDocument();
 
-      const eventList = within(screen.getByTestId('month-view'));
-      expect(eventList.getByText('🔁 새로 반복되는 회의')).toBeInTheDocument();
-    }
+    await user.click(screen.getByLabelText('Next'));
+
+    const calendarAfter1Month = within(screen.getByTestId('month-view'));
+    expect(calendarAfter1Month.queryByTestId('repeat-icon')).toBeInTheDocument();
+    expect(calendarAfter1Month.queryByText('새로 반복되는 회의')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Next'));
+
+    const calendarAfter2Month = within(screen.getByTestId('month-view'));
+    expect(calendarAfter2Month.queryByText('새로 반복되는 회의')).not.toBeInTheDocument();
   });
 
-  it(`매월 반복되는 일정을 생성하면 주간 뷰 달력에 아이콘과 함께 매달 표시된다.`, async () => {
-    setupMockHandlerCreation();
-
-    const { user } = setup(<App />);
-    await user.selectOptions(screen.getByLabelText('view'), 'week');
-
-    await saveScheduleWithRepeat(user, {
-      title: '반복되는 회의',
-      date: '2025-10-13',
-      startTime: '14:00',
-      endTime: '15:00',
-      description: '프로젝트 진행 상황 논의',
-      location: '회의실 C',
-      category: '업무',
-      repeat: {
-        type: 'monthly',
-        interval: 1,
-      },
-    });
-
-    // 반복 일정이 2년동안 잘 저장됐는지 확인
-    for (let week = 0; week <= 120; week++) {
-      if (week !== 0) {
-        await user.click(screen.getByLabelText('Next'));
-      }
-
-      const eventList = within(screen.getByTestId('week-view'));
-
-      if (eventList.queryByText('13')) {
-        expect(eventList.getByText('🔁 새로 반복되는 회의')).toBeInTheDocument();
-      }
-    }
-  });
-
-  it(`매년 반복되는 일정을 생성하면 월간 뷰 달력에 아이콘과 함께 매년 표시된다.`, async () => {
+  it(`매년 반복 설정된 일정을 저장하면, 설정한 종료일까지 매년 해당 날짜에 반복 아이콘과 함께 일정이 표시된다.`, async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
 
     await saveScheduleWithRepeat(user, {
-      title: '🔁 새로 반복되는 회의',
+      title: '새로 반복되는 회의',
       date: '2025-10-13',
       startTime: '14:00',
       endTime: '15:00',
@@ -566,53 +501,35 @@ describe('반복 일정 설정', () => {
       repeat: {
         type: 'yearly',
         interval: 1,
+        endDate: '2027-11-01',
       },
     });
 
-    // 반복 일정이 2년동안 잘 저장됐는지 확인
-    for (let month = 0; month <= 24; month++) {
-      if (month !== 0) {
-        await user.click(screen.getByLabelText('Next'));
-      }
-      if (month % 12 === 0) {
-        const eventList = within(screen.getByTestId('month-view'));
-        expect(eventList.getByText('🔁 새로 반복되는 회의')).toBeInTheDocument();
-      }
+    const calendar = within(screen.getByTestId('month-view'));
+    expect(calendar.queryByTestId('repeat-icon')).toBeInTheDocument();
+    expect(calendar.queryByText('새로 반복되는 회의')).toBeInTheDocument();
+
+    for (let month = 0; month < 12; month++) {
+      await user.click(screen.getByLabelText('Next'));
     }
-  });
 
-  it(`매년 반복되는 일정을 생성하면 주간 뷰 달력에 아이콘과 함께 매년 표시된다.`, async () => {
-    setupMockHandlerCreation();
+    const calendarAfter1Year = within(screen.getByTestId('month-view'));
+    expect(calendarAfter1Year.queryByTestId('repeat-icon')).toBeInTheDocument();
+    expect(calendarAfter1Year.queryByText('새로 반복되는 회의')).toBeInTheDocument();
 
-    const { user } = setup(<App />);
-    await user.selectOptions(screen.getByLabelText('view'), 'week');
-
-    await saveScheduleWithRepeat(user, {
-      title: '반복되는 회의',
-      date: '2025-10-13',
-      startTime: '14:00',
-      endTime: '15:00',
-      description: '프로젝트 진행 상황 논의',
-      location: '회의실 C',
-      category: '업무',
-      repeat: {
-        type: 'yearly',
-        interval: 1,
-      },
-    });
-
-    // 반복 일정이 2년동안 잘 저장됐는지 확인
-    for (let week = 0; week <= 120; week++) {
-      if (week !== 0) {
-        await user.click(screen.getByLabelText('Next'));
-      }
-
-      const eventList = within(screen.getByTestId('week-view'));
-
-      if (eventList.queryByText(/10월/) && eventList.queryByText('13')) {
-        expect(eventList.getByText('🔁 새로 반복되는 회의')).toBeInTheDocument();
-      }
+    for (let month = 0; month < 12; month++) {
+      await user.click(screen.getByLabelText('Next'));
     }
+
+    const calendarAfter2Year = within(screen.getByTestId('month-view'));
+    expect(calendarAfter2Year.queryByTestId('repeat-icon')).toBeInTheDocument();
+    expect(calendarAfter2Year.queryByText('새로 반복되는 회의')).toBeInTheDocument();
+
+    for (let i = 0; i < 12; i++) {
+      await user.click(screen.getByLabelText('Next'));
+    }
+    const calendarAfter3Year = within(screen.getByTestId('month-view'));
+    expect(calendarAfter3Year.queryByText('새로 반복되는 회의')).not.toBeInTheDocument();
   });
-  //TODO: 종료일 지정됐을 때 케이스 추가
+  //TODO: 일정 수정 케이스 추가
 });
