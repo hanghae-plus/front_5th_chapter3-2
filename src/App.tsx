@@ -204,6 +204,9 @@ function App() {
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
                             <Text fontSize="sm" noOfLines={1}>
+                              {event.repeat.type !== 'none' && (
+                                <span data-testid="repeating-tag">[반복]</span>
+                              )}
                               {event.title}
                             </Text>
                           </HStack>
@@ -273,6 +276,9 @@ function App() {
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
+                                    {event.repeat.type !== 'none' && (
+                                      <span data-testid="repeating-tag">[반복]</span>
+                                    )}
                                     {event.title}
                                   </Text>
                                 </HStack>
