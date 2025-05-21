@@ -396,6 +396,7 @@ function App() {
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
+                  <option value="">반복 유형 선택</option>
                   <option value="daily">매일</option>
                   <option value="weekly">매주</option>
                   <option value="monthly">매월</option>
