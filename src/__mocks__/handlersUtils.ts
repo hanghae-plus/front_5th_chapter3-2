@@ -58,7 +58,7 @@ export const setupMockHandlerCreation = (initEvents: Event[] = []) => {
 
     store.addEvent(newEvent);
 
-    return HttpResponse.json({ event: newEvent });
+    return HttpResponse.json({ events: store.getEvents() });
   });
 
   return {
@@ -85,7 +85,7 @@ export const setupMockHandlerUpdating = (initEvents: Event[] = []) => {
     const events = store.getEvents();
     events[index] = { ...events[index], ...updatedEvent, id: eventId };
 
-    return HttpResponse.json({ event: events[index] });
+    return HttpResponse.json({ events: store.getEvents() });
   });
 
   return {

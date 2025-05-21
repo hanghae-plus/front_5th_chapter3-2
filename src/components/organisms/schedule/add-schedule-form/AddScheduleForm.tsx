@@ -10,7 +10,7 @@ import { NOTIFICATION_OPTIONS } from '@/constants/notification';
 import { EventForm, RepeatInfo, RepeatType, ScheduleField } from '@/types';
 import { getTimeErrorMessage } from '@/utils/timeValidation';
 
-export interface AddScheduleFromProps {
+export interface AddScheduleFormProps {
   addOrUpdateEvent: () => void;
   eventForm: EventForm;
   handleOnChangeEvent: (key: ScheduleField, value: string | number | RepeatInfo) => void;
@@ -21,7 +21,7 @@ export interface AddScheduleFromProps {
   isEditEvent: boolean;
 }
 
-export const AddScheduleFrom: React.FC<AddScheduleFromProps> = ({
+export const AddScheduleForm: React.FC<AddScheduleFormProps> = ({
   addOrUpdateEvent,
   eventForm,
   handleOnChangeEvent,

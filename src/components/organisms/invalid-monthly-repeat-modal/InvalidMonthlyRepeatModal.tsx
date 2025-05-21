@@ -6,23 +6,18 @@ import {
   AlertDialogHeader,
   AlertDialogOverlay,
   Button,
-  Text,
 } from '@chakra-ui/react';
 import React, { useRef } from 'react';
 
-import { EventForm } from '@/types';
-
-interface LeapDayUnsupportedModalProps {
+interface InvalidMonthlyRepeatModalProps {
   isOpen: boolean;
   onCloseModal: React.Dispatch<React.SetStateAction<boolean>>;
-  formData: EventForm;
 }
 
-export const LeapDayUnsupportedModal = ({
+export const InvalidMonthlyRepeatModal = ({
   isOpen,
   onCloseModal,
-  formData,
-}: LeapDayUnsupportedModalProps) => {
+}: InvalidMonthlyRepeatModalProps) => {
   const cancelRef = useRef<HTMLButtonElement>(null);
   return (
     <AlertDialog
@@ -33,14 +28,11 @@ export const LeapDayUnsupportedModal = ({
       <AlertDialogOverlay>
         <AlertDialogContent>
           <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            윤달 반복 경고
+            31일 반복 일정 경고
           </AlertDialogHeader>
 
           <AlertDialogBody>
-            다음 일정은 윤달이기 때문에 반복이 불가능합니다.
-            <Text>
-              {formData.title} ({formData.date} {formData.startTime}-{formData.endTime})
-            </Text>
+            매달 31일은 모든 달에 존재하지 않아 반복 등록이 불가능합니다.
           </AlertDialogBody>
 
           <AlertDialogFooter>

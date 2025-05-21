@@ -1,7 +1,7 @@
 import { ChakraProvider } from '@chakra-ui/react';
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import { AddScheduleFrom } from '@/components/organisms/schedule/add-schedule-from/AddScheduleFrom';
+import { AddScheduleForm } from '@/components/organisms/schedule/add-schedule-form/AddScheduleForm';
 import { DEFAULT_EVENT_FORM } from '@/constants/form';
 import { RepeatInfo, ScheduleField } from '@/types';
 
@@ -27,7 +27,7 @@ describe('AddScheduleForm', () => {
   const renderComponent = (props = {}) => {
     return render(
       <ChakraProvider>
-        <AddScheduleFrom {...defaultProps} {...props} />
+        <AddScheduleForm {...defaultProps} {...props} />
       </ChakraProvider>
     );
   };

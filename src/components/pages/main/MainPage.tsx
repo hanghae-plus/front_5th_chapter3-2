@@ -1,12 +1,14 @@
 import { Box, Flex, useToast } from '@chakra-ui/react';
 
 import { AlertContainer } from '@/components/organisms/alert-container';
+import { InvalidMonthlyRepeatModal } from '@/components/organisms/invalid-monthly-repeat-modal';
 import { LeapDayUnsupportedModal } from '@/components/organisms/leap-day-unsurpported-modal';
 import { OverlappingModal } from '@/components/organisms/overlapping-modal';
 import { AddScheduleTemplate } from '@/components/templates/add-schedule/AddScheduleTemplate.tsx';
 import { ViewScheduleTemplate } from '@/components/templates/view-schedule';
 import { useEventForm } from '@/hooks/useEventForm.ts';
 import { useEventOperations } from '@/hooks/useEventOperations.ts';
+import { useInvalidMonthlyRepeatModal } from '@/hooks/useInvalidMonthlyRepeatModal';
 import { useLeapMonthModal } from '@/hooks/useLeapMonthModal';
 import { useNotifications } from '@/hooks/useNotifications.ts';
 import { useOverlapModal } from '@/hooks/useOverlapModal';
@@ -35,6 +37,11 @@ export function MainPage() {
     useOverlapModal();
   const { isLeapMonthModalOpen, isLeapDayYearlyRepeat, setIsLeapMonthModalOpen } =
     useLeapMonthModal();
+  const {
+    isInvalidMonthlyRepeatModalOpen,
+    isInvalidMonthlyRepeat,
+    setIsInvalidMonthlyRepeatModalOpen,
+  } = useInvalidMonthlyRepeatModal();
 
   const toast = useToast();
 
@@ -59,21 +66,39 @@ export function MainPage() {
       return;
     }
 
+    // 먼저 isEditing으로 분기
+    if (editingEvent) {
+      // 편집 중인 이벤트 처리
+      const eventData = convertFormToEventData(eventForm, isRepeating, editingEvent);
+
+      if (isOverlapping(eventData, events)) {
+        openModal(findOverlappingEvents(eventData, events));
+      } else {
+        await saveEvent(eventData);
+        resetForm();
+      }
+      return;
+    }
+
+    // 새 이벤트 생성 처리
     if (isRepeating) {
       if (isLeapDayYearlyRepeat(eventForm)) {
         return setIsLeapMonthModalOpen(true);
       }
 
-      const eventData = convertFormToEventDataRepeating(eventForm, editingEvent);
+      if (isInvalidMonthlyRepeat(eventForm)) {
+        return setIsInvalidMonthlyRepeatModalOpen(true);
+      }
+
+      const eventData = convertFormToEventDataRepeating(eventForm, null);
       if (isOverlapping(eventData[0], events)) {
         openModal(findOverlappingEvents(eventData[0], events));
       } else {
         await saveRepeatingEvents(eventData);
         resetForm();
       }
-      return;
     } else {
-      const eventData = convertFormToEventData(eventForm, isRepeating, editingEvent);
+      const eventData = convertFormToEventData(eventForm, isRepeating, null);
 
       if (isOverlapping(eventData, events)) {
         openModal(findOverlappingEvents(eventData, events));
@@ -121,6 +146,10 @@ export function MainPage() {
         isOpen={isLeapMonthModalOpen}
         onCloseModal={setIsLeapMonthModalOpen}
         formData={eventForm}
+      />
+      <InvalidMonthlyRepeatModal
+        isOpen={isInvalidMonthlyRepeatModalOpen}
+        onCloseModal={setIsInvalidMonthlyRepeatModalOpen}
       />
 
       {notifications.length > 0 && (

@@ -1,9 +1,9 @@
 import { Heading, VStack } from '@chakra-ui/react';
 
 import {
-  AddScheduleFrom,
-  AddScheduleFromProps,
-} from '@/components/organisms/schedule/add-schedule-from';
+  AddScheduleForm,
+  AddScheduleFormProps,
+} from '@/components/organisms/schedule/add-schedule-form';
 
 export const AddScheduleTemplate = ({
   addOrUpdateEvent,
@@ -14,12 +14,12 @@ export const AddScheduleTemplate = ({
   endTimeError,
   isRepeating,
   setIsRepeating,
-}: AddScheduleFromProps) => {
+}: AddScheduleFormProps) => {
   return (
     <VStack w="400px" spacing={5} align="stretch">
       <Heading>{isEditEvent ? '일정 수정' : '일정 추가'}</Heading>
 
-      <AddScheduleFrom
+      <AddScheduleForm
         addOrUpdateEvent={addOrUpdateEvent}
         eventForm={eventForm}
         handleOnChangeEvent={handleOnChangeEvent}
