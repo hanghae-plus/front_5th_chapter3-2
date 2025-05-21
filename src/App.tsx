@@ -138,6 +138,17 @@ function App() {
       return;
     }
 
+    const repeat = editingEvent
+      ? {
+          type: 'none' as RepeatType,
+          interval: 0,
+        }
+      : {
+          type: isRepeating ? repeatType : 'none',
+          interval: repeatInterval,
+          endDate: repeatEndDate || undefined,
+        };
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -147,11 +158,7 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat,
       notificationTime,
     };
 
