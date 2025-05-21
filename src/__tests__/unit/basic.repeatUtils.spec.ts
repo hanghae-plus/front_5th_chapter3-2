@@ -264,8 +264,50 @@ describe('반복 간격 설정', () => {
 });
 
 describe('반복 종료 조건', () => {
-  it('untilDate가 지정된 경우, 해당 날짜까지만 일정이 생성되어야 한다');
-  it('maxCount가 지정된 경우, 지정된 횟수만큼만 일정이 생성되어야 한다');
-  it('untilDate와 maxCount가 동시에 지정되면, 더 빠른 조건을 기준으로 종료되어야 한다');
-  it('종료 조건이 없는 경우, 기본적으로 2025-09-30까지만 생성되어야 한다');
+  describe('반복 종료 조건', () => {
+    it('untilDate가 지정된 경우, 해당 날짜까지만 일정이 생성되어야 한다', () => {
+      const baseEvent: EventForm = {
+        title: '출근 체크',
+        date: '2025-05-01',
+        startTime: '09:00',
+        endTime: '09:30',
+        description: '',
+        location: '',
+        category: '',
+        notificationTime: 0,
+        repeat: {
+          type: 'daily',
+          interval: 1,
+          endDate: '2025-05-04',
+        },
+      };
+
+      const result = generateRepeatEvents(baseEvent);
+      const dates = result.map((e) => e.date);
+
+      expect(dates).toEqual(['2025-05-01', '2025-05-02', '2025-05-03', '2025-05-04']);
+    });
+
+    it('종료 조건이 없는 경우, 기본적으로 2025-09-30까지만 일정이 생성되어야 한다', () => {
+      const baseEvent: EventForm = {
+        title: '오픈 채팅 공지',
+        date: '2025-09-27',
+        startTime: '20:00',
+        endTime: '20:10',
+        description: '',
+        location: '',
+        category: '',
+        notificationTime: 1,
+        repeat: {
+          type: 'daily',
+          interval: 1,
+        },
+      };
+
+      const result = generateRepeatEvents(baseEvent);
+      const dates = result.map((e) => e.date);
+
+      expect(dates).toEqual(['2025-09-27', '2025-09-28', '2025-09-29', '2025-09-30']);
+    });
+  });
 });
