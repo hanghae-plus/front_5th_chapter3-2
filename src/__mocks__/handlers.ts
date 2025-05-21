@@ -12,6 +12,23 @@ export const handlers = [
     return HttpResponse.json(newEvent, { status: 201 });
   }),
 
+  http.post('/api/events-list', async ({ request }) => {
+    const repeatId = `repeat-${events.length + 1}`;
+    const { events: eventsToAdd } = (await request.json()) as { events: Event[] };
+    const newEvents = eventsToAdd.map((event) => {
+      const isRepeatEvent = event.repeat.type !== 'none';
+      return {
+        ...event,
+        repeat: {
+          ...event.repeat,
+          id: isRepeatEvent ? repeatId : undefined,
+        },
+      };
+    });
+
+    return HttpResponse.json(newEvents, { status: 201 });
+  }),
+
   http.put('/api/events/:id', async ({ params, request }) => {
     const { id } = params;
     const updatedEvent = (await request.json()) as Event;

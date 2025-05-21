@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatClockIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -201,6 +202,7 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {event.repeat.type !== 'none' && <RepeatClockIcon fontSize="xs" />}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -270,6 +272,9 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && (
+                                    <RepeatClockIcon fontSize="xs" />
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
