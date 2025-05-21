@@ -40,7 +40,14 @@ export const WeeklyCalendar = ({
                   .map((event) => {
                     const isNotified = notifiedEvents.includes(event.id);
                     const isRepeat = event.repeat.type !== 'none';
-                    return <EventTag event={event} isNotified={isNotified} isRepeat={isRepeat} />;
+                    return (
+                      <EventTag
+                        key={event.id}
+                        event={event}
+                        isNotified={isNotified}
+                        isRepeat={isRepeat}
+                      />
+                    );
                   })}
               </Td>
             ))}

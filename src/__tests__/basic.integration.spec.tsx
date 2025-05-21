@@ -486,7 +486,7 @@ describe('8th basic integration test - 반복 일정', () => {
     });
   });
 
-  describe.only('4. (필수) 반복 종료', () => {
+  describe('4. (필수) 반복 종료', () => {
     it('일정 생성 시 반복 종료일을 선택할 수 있다.', async () => {
       const { handler, getHandler } = setupMockHandlerRepeatingEvents(mockEvents);
       server.use(handler, getHandler);
@@ -582,9 +582,77 @@ describe('8th basic integration test - 반복 일정', () => {
     });
   });
 
-  describe.skip('5. (필수) 반복 일정 단일 수정', () => {
-    it('반복일정을 수정하면 단일 일정으로 변경됩니다.', async () => {});
-    it('반복일정을 수정하면 반복일정 아이콘도 사라집니다.', async () => {});
+  describe('5. (필수) 반복 일정 단일 수정', () => {
+    it('반복일정을 수정하면 단일 일정으로 변경됩니다.', async () => {
+      const { handler, getHandler } = setupMockHandlerUpdating([...mockEvents, ...repeatEvents]);
+      server.use(handler, getHandler);
+      const user = userEvent.setup();
+      renderComponent();
+
+      const beforeEventList = await screen.findByTestId('event-list');
+      const beforeRepeatEventTitles = within(beforeEventList).getAllByText(repeatEvents[0].title);
+
+      expect(beforeRepeatEventTitles[0].title).toBe(beforeRepeatEventTitles[1].title);
+      expect(beforeRepeatEventTitles.length).toBe(2);
+      expect(within(beforeEventList).getAllByText(/1.*주.*마다/)).toHaveLength(2);
+
+      // * 1. 수정 버튼 클릭
+      const eventItem = await screen.findByTestId(`event-item-${repeatEvents[0].id}`);
+      const editButton = within(eventItem).getByLabelText('Edit event');
+      expect(editButton).toBeInTheDocument();
+      await user.click(editButton);
+
+      // * 2. 반복 설정 비활성화
+      const isRepeatingCheckbox = screen.getByLabelText('반복 설정');
+      await user.click(isRepeatingCheckbox);
+
+      // * 3. 저장
+      const submitButton = screen.getByTestId('event-submit-button');
+      await user.click(submitButton);
+
+      // * 4. 결과 확인
+      const afterEventList = await screen.findByTestId('event-list');
+      const afterRepeatEventTitles = within(afterEventList).getAllByText(repeatEvents[0].title);
+      expect(afterRepeatEventTitles.length).toBe(2);
+      expect(afterRepeatEventTitles[0].title).toBe(afterRepeatEventTitles[1].title);
+      expect(within(afterEventList).getAllByText(/1.*주.*마다/)).toHaveLength(1);
+    });
+    it('반복일정을 수정하면 반복일정 아이콘도 사라집니다.', async () => {
+      const { handler, getHandler } = setupMockHandlerUpdating([...mockEvents, ...repeatEvents]);
+      server.use(handler, getHandler);
+      const user = userEvent.setup();
+      renderComponent();
+
+      const beforeAllEventTags = await screen.findAllByTestId('schedule-tag');
+      console.log(beforeAllEventTags.length);
+      expect(beforeAllEventTags.length).toBe(4);
+
+      const beforeRepeatIcons = await screen.findAllByTestId('repeat-icon');
+      console.log(beforeRepeatIcons.length);
+      expect(beforeRepeatIcons.length).toBe(2);
+
+      // * 1. 수정 버튼 클릭
+      const eventItem = await screen.findByTestId(`event-item-${repeatEvents[0].id}`);
+      const editButton = within(eventItem).getByLabelText('Edit event');
+      expect(editButton).toBeInTheDocument();
+      await user.click(editButton);
+
+      // * 2. 반복 설정 비활성화
+      const isRepeatingCheckbox = screen.getByLabelText('반복 설정');
+      await user.click(isRepeatingCheckbox);
+
+      // * 6. 저장
+      const submitButton = screen.getByTestId('event-submit-button');
+      await user.click(submitButton);
+
+      // * 7. 결과 확인
+
+      const allEventTags = await screen.findAllByTestId('schedule-tag');
+      expect(allEventTags.length).toBe(4);
+
+      const repeatIcons = await screen.findAllByTestId('repeat-icon');
+      expect(repeatIcons.length).toBe(1);
+    });
   });
 
   describe.skip('6. (필수) 반복 일정 삭제', () => {
