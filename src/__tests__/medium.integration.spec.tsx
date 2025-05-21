@@ -20,6 +20,18 @@ const setup = (element: ReactElement) => {
   return { ...render(<ChakraProvider>{element}</ChakraProvider>), user }; // ? Med: 왜 ChakraProvider로 감싸는지 물어보자
 };
 
+// 필수 필드 입력을 위한 헬퍼 함수 추가
+async function fillBasicEventForm(user: UserEvent, details: Partial<EventForm> = {}) {
+  await user.type(screen.getByLabelText('제목'), details.title || '기본 제목');
+  await user.type(screen.getByLabelText('날짜'), details.date || '2025-07-01');
+  await user.type(screen.getByLabelText('시작 시간'), details.startTime || '10:00');
+  await user.type(screen.getByLabelText('종료 시간'), details.endTime || '11:00');
+  if (details.description) await user.type(screen.getByLabelText('설명'), details.description);
+  if (details.location) await user.type(screen.getByLabelText('위치'), details.location);
+  if (details.category)
+    await user.selectOptions(screen.getByLabelText('카테고리'), details.category);
+}
+
 // ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
@@ -325,41 +337,30 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
 
-// --- 새로운 반복 일정 테스트 스위트 ---
 describe('반복 일정 기능 통합 테스트', () => {
-  // 각 테스트 후 MSW 핸들러 리셋
+  // 매 테스트 후에 MSW 핸들러 초기화
   afterEach(() => {
     server.resetHandlers();
   });
 
-  // --- 필수 필드 입력을 위한 헬퍼 함수 ---
-  async function fillBasicEventForm(user: UserEvent, details: Partial<EventForm> = {}) {
-    await user.type(screen.getByLabelText('제목'), details.title || '기본 제목');
-    await user.type(screen.getByLabelText('날짜'), details.date || '2025-07-01'); // `setupTests.ts`의 vi.setSystemTime('2025-10-01') 보다 이전이거나 이후 날짜 사용
-    await user.type(screen.getByLabelText('시작 시간'), details.startTime || '10:00');
-    await user.type(screen.getByLabelText('종료 시간'), details.endTime || '11:00');
-    if (details.description) await user.type(screen.getByLabelText('설명'), details.description);
-    if (details.location) await user.type(screen.getByLabelText('위치'), details.location);
-    if (details.category)
-      await user.selectOptions(screen.getByLabelText('카테고리'), details.category);
-  }
-
-  it('매일 반복 설정을 하고 저장하면, 여러 이벤트가 /api/events-list로 전송되어야 한다 (Red)', async () => {
-    let capturedRequestData: { events: EventForm[] } | null = null;
+  it('매일 반복 설정을 하고 저장하면, 여러 이벤트가 /api/events-list로 전송되어야 한다.', async () => {
+    type RepeatingEventsRequest = {
+      events: EventForm[];
+    };
+    let capturedRequestData: RepeatingEventsRequest | null = null;
     let apiCalled = false;
-
     server.use(
       // `/api/events-list` POST 요청을 모킹합니다.
       http.post('/api/events-list', async ({ request }) => {
         apiCalled = true;
-        capturedRequestData = (await request.json()) as { events: EventForm[] };
-        // 서버의 응답 모방: 요청받은 이벤트들에 서버에서 생성된 id와 repeat.id를 추가하여 반환
+        const jsonData = await request.json();
+        capturedRequestData = jsonData as RepeatingEventsRequest;
         const responseEvents = capturedRequestData.events.map((event, index) => ({
           ...event,
-          id: `mock-event-${index}-${Date.now()}`,
+          id: `mock-event-${index}-${Date.now()}`, // 실제 ID는 서버에서 생성됨
           repeat: {
             ...event.repeat,
-            id: event.repeat.id || `mock-repeat-group-${Date.now()}`,
+            id: event.repeat.id || `mock-repeat-group-${Date.now()}`, // 실제 repeat.id는 서버 또는 생성 로직에서 관리
           },
         }));
         return HttpResponse.json(responseEvents, { status: 201 });
@@ -394,36 +395,41 @@ describe('반복 일정 기능 통합 테스트', () => {
       await user.click(screen.getByTestId('event-submit-button'));
     });
 
-    // API가 호출되었는지, 그리고 전송된 데이터가 올바른지 검증 (실패 예상)
+    // API가 호출되었는지, 그리고 전송된 데이터가 올바른지 검증
     await waitFor(() => {
-      expect(apiCalled).toBe(true); // App.tsx가 아직 /api/events-list로 보내지 않을 것이므로 실패
+      expect(apiCalled).toBe(true); // App.tsx가 /api/events-list로 보내도록 수정 필요
     });
 
-    // 아래 expect 구문들은 apiCalled가 true가 된 후에야 의미가 있습니다.
-    // 현재는 App.tsx의 addOrUpdateEvent가 단일 이벤트만 /api/events로 보내므로,
-    // 이 테스트는 apiCalled 부터 실패할 것입니다.
     expect(capturedRequestData).not.toBeNull();
-    expect(capturedRequestData?.events).toHaveLength(3); // 7/1, 7/2, 7/3
 
-    if (capturedRequestData?.events) {
-      expect(capturedRequestData.events[0].date).toBe('2025-07-01');
-      expect(capturedRequestData.events[0].repeat.type).toBe('daily');
-      expect(capturedRequestData.events[0].repeat.interval).toBe(1); // 기본값 또는 입력값
-      expect(capturedRequestData.events[0].repeat.endDate).toBe('2025-07-03');
+    const events = capturedRequestData!.events;
 
-      expect(capturedRequestData.events[1].date).toBe('2025-07-02');
-      expect(capturedRequestData.events[2].date).toBe('2025-07-03');
+    if (events) {
+      expect(events).toHaveLength(3);
 
-      const repeatGroupId = capturedRequestData.events[0].repeat.id;
-      expect(repeatGroupId).toBeDefined();
-      expect(capturedRequestData.events[1].repeat.id).toBe(repeatGroupId);
-      expect(capturedRequestData.events[2].repeat.id).toBe(repeatGroupId);
+      expect(events[0].date).toBe('2025-07-01');
+      expect(events[0].repeat.type).toBe('daily');
+      expect(events[0].repeat.interval).toBe(1);
+      expect(events[0].repeat.endDate).toBe('2025-07-03');
+
+      expect(events[1].date).toBe('2025-07-02');
+      expect(events[2].date).toBe('2025-07-03');
+
+      // 모든 생성된 이벤트가 동일한 repeat.id를 공유하는지 확인 (새로운 훅 또는 App.tsx에서 할당 필요)
+      // 이 부분은 실제 구현에서 repeatGroupId가 어떻게 관리되는지에 따라 달라집니다.
+      // generateRepeatingEvents 유틸은 repeatGroupId를 인자로 받습니다.
+      const expectedRepeatGroupId = events[0].repeat.id;
+      expect(expectedRepeatGroupId).toBeDefined();
+      expect(events[1].repeat.id).toBe(expectedRepeatGroupId);
+      expect(events[2].repeat.id).toBe(expectedRepeatGroupId);
+
+      // 추가적으로 UI에 3개의 이벤트가 표시되는지, 반복 아이콘이 있는지 등을 확인할 수 있습니다.
+      // 예시:
+      // const eventList = within(screen.getByTestId('event-list'));
+      // await waitFor(() => {
+      //   expect(eventList.getAllByText('매일 아침 조깅')).toHaveLength(3);
+      //   // 각 이벤트에 반복 아이콘/태그가 있는지 확인하는 로직 추가
+      // });
     }
   });
-
-  // TODO: 여기에 더 많은 반복 일정 관련 통합 테스트 케이스 추가
-  // - 매주, 매월, 매년 반복 생성 및 API 검증
-  // - 생성된 반복 일정이 캘린더 및 목록에 올바르게 표시되는지 (반복 아이콘 등)
-  // - 반복 일정 단일 수정 시 API 호출 (PUT /api/events/:id) 및 데이터 검증 (repeat.type이 'none'으로)
-  // - 반복 일정 단일 삭제 시 API 호출 (DELETE /api/events/:id) 및 UI 반영 검증
 });
