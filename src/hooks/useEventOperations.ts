@@ -70,15 +70,16 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const saveRepeatedEvents = async (eventData: Event | EventForm) => {
     try {
       let response;
-      const repeatedEvents = getRepeatedEvents(eventData);
 
       if (editing) {
         response = await fetch('/api/events-list', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ events: repeatedEvents }),
+          body: JSON.stringify({ events: [eventData] }),
         });
       } else {
+        const repeatedEvents = getRepeatedEvents(eventData);
+
         response = await fetch('/api/events-list', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
