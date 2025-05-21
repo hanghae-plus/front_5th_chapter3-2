@@ -36,4 +36,41 @@ export const handlers = [
 
     return new HttpResponse(null, { status: 404 });
   }),
+
+  http.post('/api/events-list', async ({ request }) => {
+    const newEvents = (await request.json()) as { event: Event[] };
+    const eventList: Event[] = newEvents.event.map((event, index) => ({
+      ...event,
+      id: String(events.length + index + 1),
+    }));
+    return HttpResponse.json(eventList, { status: 201 });
+  }),
+
+  http.put('/api/events-list', async ({ request }) => {
+    const updatedEvents = (await request.json()) as { event: Event[] };
+    const eventList = [...updatedEvents.event];
+    let isUpdated = false;
+    updatedEvents.event.forEach((event) => {
+      const index = eventList.findIndex((target) => target.id === event.id);
+      if (index !== -1) {
+        isUpdated = true;
+        eventList[index] = { ...eventList[index], ...event };
+      }
+    });
+
+    if (isUpdated) {
+      return HttpResponse.json(eventList, { status: 200 });
+    }
+
+    return new HttpResponse(null, { status: 404 });
+  }),
+
+  http.delete('/api/events-list', async ({ request }) => {
+    const deletedEvents = (await request.json()) as { eventIds: string[] };
+    const eventList = [...events];
+    const afterDeletedEvents = eventList.filter(
+      (event) => !deletedEvents.eventIds.includes(event.id)
+    );
+    return HttpResponse.json(afterDeletedEvents, { status: 204 });
+  }),
 ];
