@@ -284,3 +284,30 @@ describe('반복 일정 등록 시 반복 간격 설정을 했을 때', () => {
     expect(repeatEvents[3].repeat.id).toBe('repeat-1');
   });
 });
+
+describe('특수 날짜 테스트', () => {
+  it('윤년 2월 29일 이벤트 생성 시 윤년마다 이벤트가 생성된다.', () => {
+    const event: Event = {
+      id: '1',
+      title: 'test',
+      date: '2020-02-29',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: 'test',
+      location: 'test',
+      category: 'test',
+      repeat: {
+        type: 'yearly',
+        interval: 1,
+      },
+      notificationTime: 10,
+    };
+  
+    const repeatEvents = createRepeatEvents(event);
+  
+    expect(repeatEvents.length).toBe(2);
+    expect(repeatEvents[0].date).toBe('2020-02-29');
+    expect(repeatEvents[1].date).not.toBe('2021-02-28');
+    expect(repeatEvents[1].date).toBe('2024-02-29');
+  });
+})
