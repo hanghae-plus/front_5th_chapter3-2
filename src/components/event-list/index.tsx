@@ -18,7 +18,7 @@ import {
   useSearchContext,
 } from '@/hooks/contexts';
 
-export const EventSearch = () => {
+export const EventList = () => {
   const { editEvent } = useEventFormContext();
 
   const { deleteEvent } = useEventOperationsContext();

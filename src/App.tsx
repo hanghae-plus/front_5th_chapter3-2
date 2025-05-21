@@ -2,8 +2,8 @@ import { Box, Flex } from '@chakra-ui/react';
 
 import { Calendar } from '@/components/calendar';
 import { AlertEventDialog } from '@/components/event-alert-dialog';
+import { EventList } from '@/components/event-list';
 import { EventManageForm } from '@/components/event-manage-form';
-import { EventSearch } from '@/components/event-search';
 import { Notifications } from '@/components/notifications';
 
 const App = () => {
@@ -12,7 +12,7 @@ const App = () => {
       <Flex gap={6} h="full">
         <EventManageForm />
         <Calendar />
-        <EventSearch />
+        <EventList />
       </Flex>
 
       <AlertEventDialog />
