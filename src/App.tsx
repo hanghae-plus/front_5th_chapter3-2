@@ -163,6 +163,7 @@ function App() {
       setIsOverlapDialogOpen(true);
     } else {
       if (isRepeating) {
+        console.log('뭘 보내는데?', eventData);
         await saveRepeatEvent(eventData);
       } else {
         await saveEvent(eventData); //

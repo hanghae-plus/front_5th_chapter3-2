@@ -68,9 +68,50 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   };
 
   const saveRepeatEvent = async (eventData: Event | EventForm) => {
-    // 반복 이벤트 리스트를 만들어주는 유틸함수로 전달
-    // editing인 경우(put), 추가인 경우 (post)
-    const repeatEventList = makeRepeatEventList(eventData);
+    console.log('올바르게 실행됨');
+    try {
+      // 반복 일정 리스트 생성
+      const repeatEvents = makeRepeatEventList(eventData);
+
+      if (repeatEvents.length === 0) {
+        toast({
+          title: '반복 일정 생성 실패',
+          description: '유효하지 않은 반복 설정입니다.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+      console.log('반복일정', repeatEvents);
+      // 서버에 반복 일정 리스트 저장
+      const response = await fetch('/api/events-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: repeatEvents }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save repeat events');
+      }
+
+      await fetchEvents();
+      onSave?.();
+      toast({
+        title: '반복 일정이 추가되었습니다.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error saving repeat events:', error);
+      toast({
+        title: '반복 일정 저장 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const deleteEvent = async (id: string) => {
