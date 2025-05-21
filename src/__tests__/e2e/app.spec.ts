@@ -60,4 +60,65 @@ test.describe('일정 관리 App CRUD 테스트', () => {
 
     await expect(eventListView.locator('div', { hasText: 'test event' })).toHaveCount(0);
   });
+
+  test('3. 새로운 Event를 생성하고 수정하는 시나리오를 테스트한다.', async ({ page }) => {
+    // 테스트 시점 날짜로 고정
+    const date = new Date();
+    const formattedDate = date.toISOString().split('T')[0];
+
+    // 1. 새로운 이벤트 생성
+    await page.getByLabel('제목').fill('수정 테스트 이벤트');
+    await page.getByLabel('날짜').fill(formattedDate);
+    await page.getByLabel('시작 시간').fill('20:00');
+    await page.getByLabel('종료 시간').fill('21:00');
+    await page.getByLabel('설명').fill('수정 전 설명');
+
+    await page.getByTestId('event-submit-button').click();
+
+    // 생성 성공 토스트 메시지 확인
+    const toast = page.getByText('일정이 추가되었습니다.').first();
+    await expect(toast).toBeVisible();
+
+    // 2. 생성된 이벤트 수정
+    const eventCard = page
+      .getByTestId('event-list')
+      .locator('div')
+      .filter({ hasText: '수정 테스트 이벤트' })
+      .first();
+
+    // 수정 버튼 클릭
+    const editBtn = eventCard.getByRole('button', { name: 'Edit event' });
+    await editBtn.click();
+
+    // 수정 폼 필드 업데이트
+    await page.getByLabel('제목').fill('수정된 테스트 이벤트');
+    await page.getByLabel('시작 시간').fill('23:00');
+    await page.getByLabel('종료 시간').fill('23:30');
+    await page.getByLabel('설명').fill('수정된 설명');
+
+    // 수정 저장
+    await page.getByTestId('event-submit-button').click();
+
+    // 수정 성공 토스트 메시지 확인
+    const updateToast = page.getByText('일정이 수정되었습니다.').first();
+    await expect(updateToast).toBeVisible();
+
+    // 3. 수정된 내용 확인
+    const eventListView = page.getByTestId('event-list');
+    await expect(eventListView.getByText('수정된 테스트 이벤트').first()).toBeVisible();
+    await expect(eventListView.getByText('23:00 - 23:30').first()).toBeVisible();
+    await expect(eventListView.getByText('수정된 설명').first()).toBeVisible();
+
+    // 4. 테스트 데이터 정리 (삭제)
+    const updatedEventCard = eventListView
+      .locator('div')
+      .filter({ hasText: '수정된 테스트 이벤트' })
+      .first();
+
+    const deleteBtn = updatedEventCard.getByRole('button', { name: 'Delete event' });
+    await deleteBtn.click();
+
+    const toast2 = page.getByText('일정이 삭제되었습니다.').first();
+    await expect(toast2).toBeVisible();
+  });
 });
