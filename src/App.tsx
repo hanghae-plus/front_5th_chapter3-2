@@ -41,6 +41,7 @@ import {
 import { useRef, useState } from 'react';
 import { IoIosAlarm } from 'react-icons/io';
 
+import EventRepeatEndSelect from './feature/events/ui/EventRepeatEndSelect.tsx';
 import EventRepeatSelect from './feature/events/ui/EventRepeatSelect.tsx';
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
@@ -93,6 +94,8 @@ function App() {
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatEndType,
+    setRepeatEndType,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -391,12 +394,18 @@ function App() {
                     min={1}
                   />
                 </FormControl>
+              </HStack>
+              <HStack width="100%" marginTop={4}>
+                <EventRepeatEndSelect
+                  repeatEndType={repeatEndType}
+                  setRepeatEndType={setRepeatEndType}
+                />
                 <FormControl>
-                  <FormLabel>반복 종료일</FormLabel>
                   <Input
                     type="date"
                     value={repeatEndDate}
                     onChange={(e) => setRepeatEndDate(e.target.value)}
+                    marginTop={8}
                   />
                 </FormControl>
               </HStack>
