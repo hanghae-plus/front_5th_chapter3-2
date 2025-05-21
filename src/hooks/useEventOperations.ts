@@ -157,6 +157,47 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  const updateAllRepeatEvents = async (updatedFields: Event | EventForm, repeatId: string) => {
+    try {
+      const allRepeatEventsIds = getAllRepeatEventsIds(repeatId, events);
+      const eventsToUpdate = allRepeatEventsIds.map((id) => {
+        const event = events.find((e) => e.id === id);
+        return {
+          ...updatedFields,
+          id: event?.id,
+          date: event?.date,
+        };
+      });
+
+      const response = await fetch(`/api/events-list`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: eventsToUpdate }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update all repeat events');
+      }
+
+      await fetchEvents();
+      onSave?.();
+      toast({
+        title: '반복 일정 모두 수정 완료',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error updating all repeat events:', error);
+      toast({
+        title: '반복 일정 모두 수정 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   async function init() {
     await fetchEvents();
     toast({
@@ -171,5 +212,13 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent, saveRepeatEvents, deleteAllRepeatEvents };
+  return {
+    events,
+    fetchEvents,
+    saveEvent,
+    deleteEvent,
+    saveRepeatEvents,
+    deleteAllRepeatEvents,
+    updateAllRepeatEvents,
+  };
 };

@@ -9,6 +9,7 @@ import {
   setupMockHandlerDeletion,
   setupMockHandlerDeletionAllRepeatEvents,
   setupMockHandlerUpdating,
+  setupMockHandlerUpdatingAllRepeatEvents,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
@@ -622,5 +623,36 @@ describe('반복 일정 전체 수정 및 삭제', () => {
     await waitFor(() => {
       expect(eventList).toHaveTextContent(/결과가 없습니다/i);
     });
+  });
+
+  it('반복 일정의 전체 수정시 반복 일정이 모두 수정된다', async () => {
+    setupMockHandlerUpdatingAllRepeatEvents();
+
+    const { user } = setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const editButtons = await screen.findAllByLabelText('Edit event');
+
+    await act(async () => {
+      await user.click(editButtons[1]);
+    });
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 회의');
+
+    const repeatAllEditButton = await screen.findByTestId('repeat-all-edit-button');
+
+    await act(async () => {
+      await user.click(repeatAllEditButton);
+    });
+
+    await screen.findByText('반복 일정 모두 수정 완료');
+
+    const eventList = await screen.findByTestId('event-list');
+
+    const modifiedEvents = within(eventList).getAllByText('수정된 회의');
+
+    expect(modifiedEvents).toHaveLength(2);
   });
 });
