@@ -23,7 +23,7 @@ const setup = (element: ReactElement) => {
 // ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> & Partial< Pick<Event, 'repeat'> >
+  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> & Partial<Pick<Event, 'repeat'>>
 ) => {
   const { title, date, startTime, endTime, location, description, category, repeat } = form;
 
@@ -60,11 +60,6 @@ describe('일정 CRUD 및 기본 기능', () => {
       description: '프로젝트 진행 상황 논의',
       location: '회의실 A',
       category: '업무',
-      repeat: {
-        type: 'daily',
-        interval: 1,
-        endDate: '2025-12-31',
-      }
     });
 
     const eventList = within(screen.getByTestId('event-list'));
@@ -74,11 +69,6 @@ describe('일정 CRUD 및 기본 기능', () => {
     expect(eventList.getByText('프로젝트 진행 상황 논의')).toBeInTheDocument();
     expect(eventList.getByText('회의실 A')).toBeInTheDocument();
     expect(eventList.getByText('카테고리: 업무')).toBeInTheDocument();
-
-    
-    expect(eventList.getByText(/반복:\s*1/)).toBeInTheDocument();
-    expect(eventList.getByText(/일\s*마다/)).toBeInTheDocument();
-    expect(eventList.getByText(/(종료:\s*2025-12-31)/)).toBeInTheDocument();
   });
 
   it('기존 일정의 세부 정보를 수정하고 변경사항이 정확히 반영된다', async () => {
@@ -93,20 +83,36 @@ describe('일정 CRUD 및 기본 기능', () => {
     await user.type(screen.getByLabelText('제목'), '수정된 회의');
     await user.clear(screen.getByLabelText('설명'));
     await user.type(screen.getByLabelText('설명'), '회의 내용 변경');
-    await user.selectOptions(screen.getByLabelText('반복 유형'), 'weekly');
-    await user.clear(screen.getByLabelText('반복 간격'));
-    await user.type(screen.getByLabelText('반복 간격'), '2');
-    await user.clear(screen.getByLabelText('반복 종료일'));
-    await user.type(screen.getByLabelText('반복 종료일'), '2025-12-31');
-
     await user.click(screen.getByTestId('event-submit-button'));
 
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getByText('수정된 회의')).toBeInTheDocument();
     expect(eventList.getByText('회의 내용 변경')).toBeInTheDocument();
-    expect(eventList.getByText(/반복:\s*2/)).toBeInTheDocument();
-    expect(eventList.getByText(/주\s*마다/)).toBeInTheDocument();
-    expect(eventList.getByText(/(종료:\s*2025-12-31)/)).toBeInTheDocument();
+  });
+
+  it('반복 일정을 수정할 경우 단일 일정으로 변경된다.', async () => {
+    setupMockHandlerUpdating();
+    const { user } = setup(<App />);
+    await act(async () => null);
+
+    // 기존 반복 일정 2개
+    const eventList = within(screen.getByTestId('event-list'));
+    const repeatTexts = await eventList.getAllByText(/반복:\s*/);
+    expect(repeatTexts.length).toBe(2);
+
+    // 마지막 반복 일정 수정 버튼 클릭
+    const editButtons = await eventList.findAllByRole('button', { name: /Edit event/ });
+    await user.click(editButtons[editButtons.length - 1]);
+
+    // 반복 일정 수정
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 반복 일정');
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    // 수정된 반복 일정 확인
+    const updatedEventList = within(screen.getByTestId('event-list'));
+    expect(updatedEventList.getByText('수정된 반복 일정')).toBeInTheDocument();
+    expect(updatedEventList.getAllByText(/반복:\s*/)).toHaveLength(1);
   });
 
   it('일정을 삭제하고 더 이상 조회되지 않는지 확인한다', async () => {

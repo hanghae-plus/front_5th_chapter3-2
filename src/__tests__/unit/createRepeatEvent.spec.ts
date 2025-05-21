@@ -211,7 +211,7 @@ describe('반복 일정 등록 시 반복 종료를 입력할 때', () => {
     expect(repeatEvents.length).toBe(1);
     expect(repeatEvents[0].date).toBe('2025-07-06');
   });
-})
+});
 
 describe('반복 일정 등록 시 반복 간격 설정을 했을 때', () => {
   it('매일 반복 이벤트를 등록 시 반복 일정 정보에 맞는 이벤트를 생성한다.', () => {
@@ -302,9 +302,9 @@ describe('특수 날짜 테스트', () => {
       },
       notificationTime: 10,
     };
-  
+
     const repeatEvents = createRepeatEvents(event);
-  
+
     expect(repeatEvents.length).toBe(2);
     expect(repeatEvents[0].date).toBe('2020-02-29');
     expect(repeatEvents[1].date).not.toBe('2021-02-28');
@@ -327,9 +327,9 @@ describe('특수 날짜 테스트', () => {
       },
       notificationTime: 10,
     };
-  
+
     const repeatEvents = createRepeatEvents(event);
-  
+
     expect(repeatEvents.length).toBe(5);
     expect(repeatEvents[0].date).toBe('2025-01-31');
     expect(repeatEvents[1].date).not.toBe('2025-02-29');
@@ -340,4 +340,4 @@ describe('특수 날짜 테스트', () => {
     expect(repeatEvents[3].date).toBe('2025-07-31');
     expect(repeatEvents[4].date).toBe('2025-08-31');
   });
-})
+});

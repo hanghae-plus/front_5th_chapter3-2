@@ -206,5 +206,35 @@ describe('반복 일정 기능', () => {
       { ...newEvent, id: '1', repeat: { ...newEvent.repeat, id: 'repeat-1' } },
       { ...newEvent, date: '2025-01-02', id: '2', repeat: { ...newEvent.repeat, id: 'repeat-1' } },
     ]);
-  })
-})
+  });
+
+  it('반복 일정을 수정할 경우 단일 일정으로 변경된다.', async () => {
+    setupMockHandlerUpdating();
+
+    const { result } = renderHook(() => useEventOperations(true));
+
+    await act(() => Promise.resolve(null));
+
+    // 기존 일정 4개 (0, 1: 반복 X, 2, 3: 반복)
+    expect(result.current.events.length).toBe(4);
+    const repeatEvents = result.current.events.filter((event) => event.repeat.type !== 'none');
+    expect(repeatEvents.length).toBe(2);
+
+    const updatedEvent: Event = { ...repeatEvents[0] };
+    updatedEvent.title = '수정된 반복 일정';
+    updatedEvent.date = '2025-09-20';
+
+    await act(async () => {
+      await result.current.saveEvent(updatedEvent);
+    });
+
+    expect(result.current.events.length).toBe(4);
+    // 수정된 반복 일정(index 2)은 단일 일정이 된다.
+    expect(result.current.events[2]).toEqual({
+      ...updatedEvent,
+      repeat: { type: 'none', interval: 0 },
+    });
+    // 수정되지 않은 반복 일정(index 3)은 그대로 유지된다.
+    expect(result.current.events[3]).toEqual(repeatEvents[1]);
+  });
+});

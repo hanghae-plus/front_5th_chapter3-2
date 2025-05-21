@@ -41,6 +41,24 @@ export const handlers = [
     return new HttpResponse(null, { status: 404 });
   }),
 
+  http.put('/api/events-list', async ({ request }) => {
+    const { events: eventsToUpdate } = (await request.json()) as { events: Event[] };
+
+    let isUpdated = false;
+    eventsToUpdate.forEach((event) => {
+      const eventIndex = events.findIndex((e) => e.id === event.id);
+      if (eventIndex > -1) {
+        isUpdated = true;
+      }
+    });
+
+    if (!isUpdated) {
+      return new HttpResponse('Event not found', { status: 404 });
+    }
+
+    return HttpResponse.json(events);
+  }),
+
   http.delete('/api/events/:id', ({ params }) => {
     const { id } = params;
     const index = events.findIndex((event) => event.id === id);
