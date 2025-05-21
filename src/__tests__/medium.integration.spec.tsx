@@ -624,4 +624,45 @@ describe('반복 일정 추가', () => {
       expect(eventList.getByText(date)).toBeInTheDocument();
     });
   });
+
+  it('반복 일정인 경우 캘린더에 반복 아이콘이 표시된다.', async () => {
+    const events: Event[] = [
+      {
+        id: '1',
+        title: '반복 일정',
+        date: '2025-09-15',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '반복 일정 설명',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 1, count: 2, id: '1' },
+        notificationTime: 10,
+      },
+      {
+        id: '2',
+        title: '반복 일정',
+        date: '2025-09-16',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '반복 일정 설명',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 1, count: 2, id: '1' },
+        notificationTime: 10,
+      },
+    ];
+    setupMockHandlerCreation(events);
+    setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const calendar = screen.getByTestId('month-view');
+
+    within(calendar)
+      .getAllByText('반복 일정')
+      .forEach((element) => {
+        expect(element.previousElementSibling).toHaveClass('chakra-icon');
+      });
+  });
 });
