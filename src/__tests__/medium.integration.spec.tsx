@@ -42,9 +42,11 @@ const saveSchedule = async (
 
 describe('일정 CRUD 및 기본 기능', () => {
   it('입력한 새로운 일정 정보에 맞춰 모든 필드가 이벤트 리스트에 정확히 저장된다.', async () => {
+    const { user } = setup(<App />);
+
     setupMockHandlerCreation();
 
-    const { user } = setup(<App />);
+    await act(() => Promise.resolve(null));
 
     await saveSchedule(user, {
       title: '새 회의',
@@ -55,8 +57,10 @@ describe('일정 CRUD 및 기본 기능', () => {
       location: '회의실 A',
       category: '업무',
     });
-
     const eventList = within(screen.getByTestId('event-list'));
+
+    await act(() => Promise.resolve(null));
+
     expect(eventList.getByText('새 회의')).toBeInTheDocument();
     expect(eventList.getByText('2025-10-15')).toBeInTheDocument();
     expect(eventList.getByText('14:00 - 15:00')).toBeInTheDocument();

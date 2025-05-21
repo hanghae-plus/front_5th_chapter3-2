@@ -10,7 +10,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 
 import { Event } from '../types';
 import EventDetails from './EventDetails';
@@ -36,13 +36,16 @@ const EventList: FC<EventListProps> = ({
   notifiedEvents,
   isRepeating,
 }) => {
-  const handleDeleteClick = (id: string) => {
-    if (isRepeating) {
-      deleteRepeatEvents([id]);
-    } else {
-      deleteEvent(id);
-    }
-  };
+  const handleDeleteClick = useCallback(
+    (id: string) => {
+      if (isRepeating) {
+        deleteRepeatEvents([id]);
+      } else {
+        deleteEvent(id);
+      }
+    },
+    [isRepeating, deleteEvent, deleteRepeatEvents]
+  );
 
   return (
     <VStack data-testid="event-list" w="500px" h="full" overflowY="auto">

@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 
 import { server } from '../setupTests';
 import { Event } from '../types';
-import { mockEvents } from './mockEvent';
+import { mockEventsData } from './mockEvent';
 
 // ! Hard 여기 제공 안함
 export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
@@ -185,7 +185,7 @@ export const setupMockHandlerDeletion = () => {
 export const setupMockHandlerEventListDeletion = () => {
   server.use(
     http.get('/api/events', () => {
-      return HttpResponse.json({ events: mockEvents });
+      return HttpResponse.json({ events: mockEventsData });
     }),
     http.delete('/api/events-list', async ({ request }) => {
       try {
@@ -195,10 +195,10 @@ export const setupMockHandlerEventListDeletion = () => {
           return HttpResponse.json({ error: 'eventIds가 배열이 아닙니다' }, { status: 400 });
         }
 
-        const filtered = mockEvents.filter((e) => !body.eventIds.includes(e.id));
+        const filtered = mockEventsData.filter((e) => !body.eventIds.includes(e.id));
 
-        mockEvents.length = 0;
-        mockEvents.push(...filtered);
+        mockEventsData.length = 0;
+        mockEventsData.push(...filtered);
 
         return new HttpResponse(null, { status: 204 });
       } catch (err) {

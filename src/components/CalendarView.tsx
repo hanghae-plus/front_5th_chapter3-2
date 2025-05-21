@@ -1,5 +1,5 @@
 import { VStack } from '@chakra-ui/react';
-import { FC } from 'react';
+import React, { FC } from 'react';
 
 import { Event } from '../types';
 import MonthView from './MonthView';
@@ -40,4 +40,4 @@ const CalendarView: FC<CalendarViewProps> = ({
   );
 };
 
-export default CalendarView;
+export default React.memo(CalendarView);

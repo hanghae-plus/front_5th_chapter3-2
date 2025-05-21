@@ -13,7 +13,7 @@ describe('반복 유형 선택', () => {
     const start = new Date('2024-02-29');
     const end = new Date('2032-12-31');
 
-    const result = generateYearlyRepeats(start, end);
+    const result = generateYearlyRepeats(start, end, 1);
     const dates = result.map((d) => d.toISOString().slice(0, 10));
 
     expect(dates).toEqual(['2024-02-29', '2028-02-29', '2032-02-29']);

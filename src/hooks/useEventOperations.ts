@@ -43,8 +43,6 @@ export const useEventOperations = (
         });
       } else if (isRepeating) {
         const repeatedEvents = generateRepeatedEvents(eventData as Event);
-        console.log('eventData', eventData);
-        console.log('repeatedEvents', repeatedEvents);
 
         response = await fetch(`/api/events-list`, {
           method: 'POST',
@@ -155,6 +153,5 @@ export const useEventOperations = (
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   return { events, fetchEvents, saveEvent, deleteEvent, deleteRepeatEvents };
 };

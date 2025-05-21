@@ -9,7 +9,6 @@ import {
 import EventItem from '../components/EventItem';
 import { useEventOperations } from '../hooks/useEventOperations';
 import { Event } from '../types';
-import { generateRepeats } from '../utils/repeatUtils';
 
 describe('반복 유형 선택 - 통합테스트', () => {
   it('2월 29일에 시작하는 연간 반복 일정은 윤년에만 생성되어 저장된다.', async () => {
@@ -220,12 +219,12 @@ describe('반복 종료', () => {
     const { result } = renderHook(() => useEventOperations(false, true));
     await act(() => Promise.resolve(null));
 
-    const startDate = new Date('2025-05-01');
     const endDate = new Date('2025-05-05');
 
     const baseEvent = {
       id: '',
       title: '종료 조건 테스트',
+      date: '2025-05-01',
       startTime: '09:00',
       endTime: '10:00',
       description: '',
@@ -237,19 +236,11 @@ describe('반복 종료', () => {
         endDate: endDate.toISOString().slice(0, 10),
       },
       notificationTime: 10,
-    } as Omit<Event, 'id' | 'date'>;
+    } as Omit<Event, 'id'>;
 
-    const events = generateRepeats(startDate, baseEvent.repeat).map((date) => ({
-      ...baseEvent,
-      id: '',
-      date: date.toISOString().slice(0, 10),
-    }));
-
-    for (const event of events) {
-      await act(async () => {
-        await result.current.saveEvent(event);
-      });
-    }
+    await act(async () => {
+      await result.current.saveEvent(baseEvent);
+    });
 
     const savedDates = result.current.events.map((e) => e.date);
 
@@ -268,11 +259,10 @@ describe('반복 종료', () => {
     const { result } = renderHook(() => useEventOperations(false, true));
     await act(() => Promise.resolve(null));
 
-    const startDate = new Date('2025-05-20');
-
     const baseEvent = {
       id: '',
       title: '반복 종료 테스트',
+      date: '2025-05-20',
       startTime: '10:00',
       endTime: '11:00',
       description: '',
@@ -284,19 +274,11 @@ describe('반복 종료', () => {
         count: 2,
       },
       notificationTime: 10,
-    } as Omit<Event, 'id' | 'date'>;
+    } as Omit<Event, 'id'>;
 
-    const events = generateRepeats(startDate, baseEvent.repeat).map((date) => ({
-      ...baseEvent,
-      id: '',
-      date: date.toISOString().slice(0, 10),
-    }));
-
-    for (const event of events) {
-      await act(async () => {
-        await result.current.saveEvent(event);
-      });
-    }
+    await act(async () => {
+      await result.current.saveEvent(baseEvent);
+    });
 
     const savedDates = result.current.events.map((e) => e.date);
 
@@ -309,12 +291,12 @@ describe('반복 종료', () => {
     const { result } = renderHook(() => useEventOperations(false, true));
     await act(() => Promise.resolve(null));
 
-    const startDate = new Date('2025-05-22');
     const EndDate = new Date('2025-09-30');
 
     const baseEvent = {
       id: '',
       title: '무한 반복 테스트',
+      date: '2025-05-22',
       startTime: '09:00',
       endTime: '10:00',
       description: '',
@@ -326,31 +308,15 @@ describe('반복 종료', () => {
         endDate: EndDate.toISOString().slice(0, 10),
       },
       notificationTime: 10,
-    } as Omit<Event, 'id' | 'date'>;
+    } as Omit<Event, 'id'>;
 
-    const events = generateRepeats(startDate, baseEvent.repeat).map((date) => ({
-      ...baseEvent,
-      id: '',
-      date: date.toISOString().slice(0, 10),
-    }));
-
-    // 일부만 저장 (성능 고려)
-    for (let i = 0; i < 5; i++) {
-      await act(async () => {
-        await result.current.saveEvent(events[i]);
-      });
-    }
+    await act(async () => {
+      await result.current.saveEvent(baseEvent);
+    });
 
     const savedDates = result.current.events.map((e) => e.date);
 
-    expect(savedDates).toEqual([
-      '2025-05-22',
-      '2025-05-23',
-      '2025-05-24',
-      '2025-05-25',
-      '2025-05-26',
-    ]);
-    expect(events.length).toBe(132);
+    expect(savedDates.length).toBe(132);
   });
 });
 describe('반복 일정 단일 수정', () => {
