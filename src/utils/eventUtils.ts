@@ -1,5 +1,5 @@
 import { Event } from '../types';
-import { getWeekDates, isDateInRange } from './dateUtils';
+import { getDaysInMonth, getWeekDates, isDateInRange } from './dateUtils';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
   return events.filter((event) => {
@@ -47,4 +47,47 @@ export function getFilteredEvents(
   }
 
   return searchedEvents;
+}
+export function getRepeatEvents(event: Event): Event[] {
+  const events: Event[] = [];
+  const { type, interval, endDate } = event.repeat;
+
+  const startDate = new Date(event.date);
+  const endDateObj = new Date(endDate ?? '2025-09-30');
+
+  let currentDate = new Date(startDate);
+  if (type === 'daily') {
+    while (currentDate <= endDateObj) {
+      events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
+      currentDate.setDate(currentDate.getDate() + interval);
+    }
+  } else if (type === 'weekly') {
+    while (currentDate <= endDateObj) {
+      events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
+      currentDate.setDate(currentDate.getDate() + interval * 7);
+    }
+  } else if (type === 'monthly') {
+    const day = startDate.getDate();
+    let year = startDate.getFullYear();
+    let month = startDate.getMonth();
+    let lastDayOfMonth = getDaysInMonth(year, month);
+    let eventDay = Math.min(day, lastDayOfMonth);
+
+    let nextDate = new Date(year, month, eventDay);
+
+    while (nextDate <= endDateObj) {
+      events.push({ ...event, date: nextDate.toISOString().split('T')[0] });
+      // 다음 반복
+      month += interval;
+      while (month >= 12) {
+        month -= 12;
+        year += 1;
+      }
+      lastDayOfMonth = getDaysInMonth(year, month + 1);
+      eventDay = Math.min(day, lastDayOfMonth);
+      nextDate = new Date(year, month, eventDay);
+    }
+  }
+
+  return events;
 }
