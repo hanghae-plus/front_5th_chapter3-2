@@ -492,3 +492,40 @@ describe('반복 일정 단일 수정', () => {
     expect(repeatIcon).not.toBeInTheDocument();
   });
 });
+
+describe('반복 일정 단일 삭제', () => {
+  it('반복 일정을 삭제하면 해당 일정만 삭제된다.', async () => {
+    setupMockHandlerEventsListCreation();
+
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-05-21',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 2, endDate: '2025-08-30' },
+      notificationTime: 5,
+    };
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newRepeatEvent);
+    });
+
+    await act(() => Promise.resolve(null));
+
+    setupMockHandlerDeletion(result.current.events);
+
+    await act(async () => {
+      await result.current.deleteEvent('1');
+    });
+
+    const expectedEvents = [{ ...newRepeatEvent, id: '2', date: '2025-07-21' }];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+});
