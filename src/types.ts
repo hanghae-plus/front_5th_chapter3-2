@@ -27,3 +27,5 @@ export interface Event extends EventForm {
   id: string;
   repeat: RepeatInfo;
 }
+
+export type RepeatEndType = 'none' | 'date' | 'count';

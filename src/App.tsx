@@ -37,15 +37,17 @@ import {
   Tr,
   useToast,
   VStack,
+  RadioGroup,
+  Radio,
 } from '@chakra-ui/react';
-import { useRef, useState, ChangeEvent } from 'react';
+import { useRef, useState } from 'react';
 
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { Event, EventForm, RepeatType, RepeatEndType } from './types';
 import {
   formatDate,
   formatMonth,
@@ -88,6 +90,10 @@ function App() {
     setRepeatType,
     repeatInterval,
     setRepeatInterval,
+    repeatEndType,
+    setRepeatEndType,
+    repeatCount,
+    setRepeatCount,
     repeatEndDate,
     setRepeatEndDate,
     notificationTime,
@@ -150,7 +156,8 @@ function App() {
       repeat: {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
+        endDate: repeatEndType !== 'date' ? undefined : repeatEndDate || undefined,
+        count: repeatEndType !== 'count' ? undefined : repeatCount,
       },
       notificationTime,
     };
@@ -400,6 +407,20 @@ function App() {
                     min={1}
                   />
                 </FormControl>
+              </HStack>
+              <RadioGroup
+                className="w-100"
+                value={repeatEndType}
+                onChange={(value) => setRepeatEndType(value as RepeatEndType)}
+              >
+                <div>반복 종료</div>
+                <HStack>
+                  <Radio value="none">없음</Radio>
+                  <Radio value="date">날짜</Radio>
+                  <Radio value="count">횟수</Radio>
+                </HStack>
+              </RadioGroup>
+              {repeatEndType === 'date' && (
                 <FormControl>
                   <FormLabel>반복 종료일</FormLabel>
                   <Input
@@ -408,7 +429,17 @@ function App() {
                     onChange={(e) => setRepeatEndDate(e.target.value)}
                   />
                 </FormControl>
-              </HStack>
+              )}
+              {repeatEndType === 'count' && (
+                <FormControl>
+                  <FormLabel>반복 횟수</FormLabel>
+                  <Input
+                    type="number"
+                    value={repeatCount}
+                    onChange={(e) => setRepeatCount(Number(e.target.value))}
+                  />
+                </FormControl>
+              )}
             </VStack>
           )}
 
@@ -558,7 +589,8 @@ function App() {
                     repeat: {
                       type: isRepeating ? repeatType : 'none',
                       interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
+                      endDate: repeatEndType !== 'date' ? undefined : repeatEndDate || undefined,
+                      count: repeatEndType !== 'count' ? undefined : repeatCount,
                     },
                     notificationTime,
                   });
