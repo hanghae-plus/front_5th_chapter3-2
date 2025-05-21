@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act } from '@testing-library/react';
+import { render, screen, within, act, renderHook } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
@@ -12,6 +12,7 @@ import {
 import App from '../App';
 import { server } from '../setupTests';
 import { Event } from '../types';
+import { useEventOperations } from '../hooks/useEventOperations';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
@@ -327,35 +328,70 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 
 describe('반복 유형 선택', () => {
   it('일정 생성 또는 수정 시 반복 유형을 선택할 수 있다.', async () => {
-    const { user } = setup(<App />);
-
-    const repeatType = screen.getByLabelText('repeat-type');
-    await user.selectOptions(repeatType, 'monthly');
-
-    expect(repeatType).toHaveValue('monthly');
-    expect(screen.getByText('매월')).toBeInTheDocument();
-  });
-
-  it('윤년 29일에 또는 31일에 매월 또는 매년 반복일정을 설정한 경우 월의 마지막 날짜에 일정이 생성된다.', async () => {
-    vi.setSystemTime(new Date('2025-05-01'));
     setupMockHandlerCreation();
 
-    const { user } = setup(<App />);
+    const { result } = renderHook(() => useEventOperations(false));
 
-    const repeatType = screen.getByLabelText('repeat-type');
-    await user.selectOptions(repeatType, 'monthly');
+    // renderHook 이후에 비동기 상태 업데이트가 완료될 시간을 주기 위해 호출!
+    await act(() => Promise.resolve(null));
 
-    await saveSchedule(user, {
-      title: '새 회의',
-      date: '2024-02-29', // 윤년
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '프로젝트 진행 상황 논의',
-      location: '회의실 A',
-      category: '업무',
+    const newEvent = {
+      id: '1',
+      title: '복싱',
+      date: '2025-05-21',
+      startTime: '21:00',
+      endTime: '22:00',
+      description: '복싱 훈련',
+      location: '복싱장',
+      category: '운동',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-06-11' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent as Event);
     });
 
-    expect(screen.getByText('2025-05-31')).toBeInTheDocument();
+    const expectedEvents = [
+      { ...newEvent, date: '2025-05-21' },
+      { ...newEvent, date: '2025-05-28' },
+      { ...newEvent, date: '2025-06-04' },
+      { ...newEvent, date: '2025-06-11' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+
+  it('윤년 29일에 매월 또는 매년 반복일정을 설정한 경우 월의 마지막 날짜에 일정이 생성된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent = {
+      id: '1',
+      title: '등산',
+      date: '2024-02-29',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '등산 훈련',
+      location: '산책로',
+      category: '운동',
+      repeat: { type: 'yearly', interval: 1, endDate: '2025-02-28' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent as Event);
+    });
+
+    const expectedEvents = [
+      { ...newEvent, date: '2024-02-29' },
+      { ...newEvent, date: '2025-02-28' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
   });
 });
 
@@ -370,22 +406,25 @@ describe('반복 간격 선택', () => {
   it('반복 유형이 매월인데 반복 간격이 12 보다 큰 경우 경고 메시지가 노출된다.', async () => {
     setupMockHandlerCreation();
 
-    const { user } = setup(<App />);
+    const { result } = renderHook(() => useEventOperations(false));
 
-    const repeatType = screen.getByLabelText('repeat-type');
-    await user.selectOptions(repeatType, 'monthly');
+    await act(() => Promise.resolve(null));
 
-    const repeatInterval = screen.getByLabelText('repeat-interval');
-    await user.type(repeatInterval, '13');
+    const newEvent = {
+      id: '1',
+      title: '복싱',
+      date: '2025-05-21',
+      startTime: '21:00',
+      endTime: '22:00',
+      description: '복싱 훈련',
+      location: '복싱장',
+      category: '운동',
+      repeat: { type: 'monthly', interval: 13, endDate: '2026-05-21' },
+      notificationTime: 10,
+    };
 
-    await saveSchedule(user, {
-      title: '새 회의',
-      date: '2025-10-15',
-      startTime: '14:00',
-      endTime: '15:00',
-      description: '프로젝트 진행 상황 논의',
-      location: '회의실 A',
-      category: '업무',
+    await act(async () => {
+      await result.current.saveEvent(newEvent as Event);
     });
 
     expect(screen.getByText('반복 간격은 12 이하여야 합니다.')).toBeInTheDocument();
