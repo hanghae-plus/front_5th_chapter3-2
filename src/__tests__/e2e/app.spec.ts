@@ -12,6 +12,7 @@ test.describe('일정 관리 App CRUD 테스트', () => {
     const toast = page.getByText('일정 로딩 완료!').first();
     await expect(toast).toBeVisible();
 
+    // 실제 api에서 가져온 이벤트 목록과 일치하는지 확인
     const response = await fetch('http://localhost:5173/api/events');
     const { events } = await response.json();
 
