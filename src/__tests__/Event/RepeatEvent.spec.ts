@@ -482,3 +482,70 @@ describe('반복 일정 표시', () => {
     expect(shouldNotShowRepeatText).toBe(true);
   });
 });
+
+describe('반복 일정 삭제', () => {
+  beforeEach(() => {
+    setupMockHandlerCreation();
+  });
+
+  test('반복 일정을 단일 삭제하면 해당 일정만 삭제된다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    const newEvent: EventForm = {
+      title: '매일 아침 회의',
+      date: '2025-05-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '아침 스크럼',
+      location: '회의실 A',
+      category: '회의',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-05-17', // 3일 동안 반복
+      },
+      notificationTime: 10,
+    };
+
+    // 반복 일정 생성
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    // 생성된 일정 확인
+    expect(result.current.events).toHaveLength(3);
+    const initialDates = result.current.events.map((event) => event.date).sort();
+    expect(initialDates).toEqual(['2025-05-15', '2025-05-16', '2025-05-17']);
+
+    // 중간 일정(5월 16일) 삭제
+    const targetEventId = result.current.events.find((event) => event.date === '2025-05-16')?.id;
+    console.log('targetEventId', targetEventId);
+    await act(async () => {
+      if (targetEventId) {
+        await result.current.deleteEvent(targetEventId);
+      }
+    });
+
+    // 삭제 후 일정 확인
+    expect(result.current.events).toHaveLength(2);
+    const remainingDates = result.current.events.map((event) => event.date).sort();
+    expect(remainingDates).toEqual(['2025-05-15', '2025-05-17']);
+
+    // 나머지 일정들의 속성이 그대로 유지되는지 확인
+    result.current.events.forEach((event) => {
+      expect(event).toMatchObject({
+        title: newEvent.title,
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+        description: newEvent.description,
+        location: newEvent.location,
+        category: newEvent.category,
+        notificationTime: newEvent.notificationTime,
+        repeat: {
+          type: 'daily',
+          interval: 1,
+        },
+      });
+    });
+  });
+});
