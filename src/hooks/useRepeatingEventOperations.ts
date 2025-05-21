@@ -74,7 +74,7 @@ export const useRepeatingEventOperations = (onSuccess?: () => void) => {
     // 서버의 /api/events-list 핸들러는 요청 본문에서 events 배열을 받아 각 요소에 id를 새로 부여합니다.
     // 따라서 EventForm에서 id가 없는 Omit<Event, 'id'> 형태로 보내는 것이 더 명확할 수 있습니다.
     const payloadEvents = eventsToCreateWithFullRepeatInfo.map((event) => {
-      const { id, ...eventData } = event; // 클라이언트에서 생성한 id는 제외하고 보낼 수 있음
+      const { ...eventData } = event;
       return {
         ...eventData,
         repeat: {

@@ -180,8 +180,7 @@ function App() {
   const saveEventWithRepeat = async (eventData: Event | EventForm) => {
     // 반복 설정이 있고 새 이벤트 생성인 경우 saveRepeatingEvents 사용
     if (isRepeating && !editingEvent) {
-      // id와 repeat 필드를 제외한 이벤트 데이터 추출
-      const { repeat, id, ...baseEventData } = eventData as any;
+      const { repeat, ...baseEventData } = eventData as any;
 
       // 반복 유형 정보 추출
       const repeatInfo = {

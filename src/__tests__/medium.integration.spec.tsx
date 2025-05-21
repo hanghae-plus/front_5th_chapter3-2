@@ -422,14 +422,64 @@ describe('반복 일정 기능 통합 테스트', () => {
       expect(expectedRepeatGroupId).toBeDefined();
       expect(events[1].repeat.id).toBe(expectedRepeatGroupId);
       expect(events[2].repeat.id).toBe(expectedRepeatGroupId);
-
-      // 추가적으로 UI에 3개의 이벤트가 표시되는지, 반복 아이콘이 있는지 등을 확인할 수 있습니다.
-      // 예시:
-      // const eventList = within(screen.getByTestId('event-list'));
-      // await waitFor(() => {
-      //   expect(eventList.getAllByText('매일 아침 조깅')).toHaveLength(3);
-      //   // 각 이벤트에 반복 아이콘/태그가 있는지 확인하는 로직 추가
-      // });
     }
+  });
+
+  it('반복 간격을 3으로 설정하면 API 요청에 3이 반영되어야 한다', async () => {
+    // 테스트 설정 및 MSW 핸들러 코드
+
+    let capturedRequestData = null;
+    let apiCalled = false;
+    server.use(
+      http.post('/api/events-list', async ({ request }) => {
+        apiCalled = true;
+        const jsonData = await request.json();
+        capturedRequestData = jsonData;
+        // 응답 생성 코드
+        return HttpResponse.json(/* ... */);
+      })
+    );
+
+    const { user } = setup(<App />);
+
+    // 기본 이벤트 정보 입력
+    await fillBasicEventForm(user, {
+      title: '반복 간격 테스트',
+      date: '2025-07-01',
+    });
+
+    // 반복 설정 체크 및 간격 설정
+    await act(async () => {
+      await user.click(screen.getByLabelText('반복 일정'));
+      await user.selectOptions(screen.getByLabelText('반복 유형'), 'weekly');
+
+      // 반복 간격 입력 (3주마다)
+      await user.clear(screen.getByLabelText('반복 간격'));
+      await user.type(screen.getByLabelText('반복 간격'), '3');
+
+      await user.type(screen.getByLabelText('반복 종료일'), '2025-08-15');
+    });
+
+    // 저장 버튼 클릭
+    await act(async () => {
+      await user.click(screen.getByTestId('event-submit-button'));
+    });
+
+    // API가 호출되었는지, 그리고 전송된 데이터가 올바른지 검증
+    await waitFor(() => {
+      expect(apiCalled).toBe(true);
+    });
+
+    expect(capturedRequestData).not.toBeNull();
+    const events = capturedRequestData!.events;
+
+    // 이벤트들이 모두 동일한 간격 값(3)을 가지고 있는지 확인
+    expect(events.every((event: EventForm) => event.repeat.interval === 3)).toBe(true);
+
+    // 3주마다 반복되므로 7/1, 7/22, 8/12 = 총 3개 이벤트
+    expect(events).toHaveLength(3);
+    expect(events[0].date).toBe('2025-07-01');
+    expect(events[1].date).toBe('2025-07-22');
+    expect(events[2].date).toBe('2025-08-12');
   });
 });
