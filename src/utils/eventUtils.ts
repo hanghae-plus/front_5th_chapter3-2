@@ -1,3 +1,4 @@
+import { eventStyle } from '../constants/event';
 import { Event } from '../types';
 import { getWeekDates, isDateInRange } from './dateUtils';
 
@@ -47,4 +48,13 @@ export function getFilteredEvents(
   }
 
   return searchedEvents;
+}
+
+export function getEventColor(notifiedEvents: string[], event: Event): string {
+  const isNotified = notifiedEvents.includes(event.id);
+  const isRepeatEvent = event.repeat.type !== 'none';
+
+  if (isNotified) return eventStyle.notification;
+  if (isRepeatEvent) return eventStyle.repeat;
+  return eventStyle.default;
 }
