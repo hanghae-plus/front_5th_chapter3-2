@@ -433,11 +433,11 @@ describe('8th basic integration test - 반복 일정', () => {
       expect(within(eventList).getAllByText(formData.title).length).toBe(4);
 
       const allEventTags = await screen.findAllByTestId('schedule-tag');
-      console.log(allEventTags.length);
+
       expect(allEventTags.length).toBe(6);
 
       const repeatIcons = await screen.findAllByTestId('repeat-icon');
-      console.log(repeatIcons.length);
+
       expect(repeatIcons.length).toBe(4);
     });
     it('일정 수정 시 반복 일정이 정확히 표시된다.', async () => {
@@ -478,11 +478,11 @@ describe('8th basic integration test - 반복 일정', () => {
       expect(within(eventList).getAllByText(mockEvents[0].title).length).toBe(4);
 
       const allEventTags = await screen.findAllByTestId('schedule-tag');
-      console.log(allEventTags.length);
+
       expect(allEventTags.length).toBe(5);
 
       const repeatIcons = await screen.findAllByTestId('repeat-icon');
-      console.log(repeatIcons.length);
+
       expect(repeatIcons.length).toBe(4);
     });
   });
@@ -529,11 +529,11 @@ describe('8th basic integration test - 반복 일정', () => {
       expect(within(eventList).getAllByText(formData.title).length).toBe(3);
 
       const allEventTags = await screen.findAllByTestId('schedule-tag');
-      console.log(allEventTags.length);
+
       expect(allEventTags.length).toBe(5);
 
       const repeatIcons = await screen.findAllByTestId('repeat-icon');
-      console.log(repeatIcons.length);
+
       expect(repeatIcons.length).toBe(3);
     });
     it('일정 수정 시 반복 종료일을 선택할 수 있다.', async () => {
@@ -574,11 +574,11 @@ describe('8th basic integration test - 반복 일정', () => {
       expect(within(eventList).getAllByText(mockEvents[0].title).length).toBe(3);
 
       const allEventTags = await screen.findAllByTestId('schedule-tag');
-      console.log(allEventTags.length);
+
       expect(allEventTags.length).toBe(4);
 
       const repeatIcons = await screen.findAllByTestId('repeat-icon');
-      console.log(repeatIcons.length);
+
       expect(repeatIcons.length).toBe(3);
     });
   });
@@ -625,11 +625,11 @@ describe('8th basic integration test - 반복 일정', () => {
       renderComponent();
 
       const beforeAllEventTags = await screen.findAllByTestId('schedule-tag');
-      console.log(beforeAllEventTags.length);
+
       expect(beforeAllEventTags.length).toBe(4);
 
       const beforeRepeatIcons = await screen.findAllByTestId('repeat-icon');
-      console.log(beforeRepeatIcons.length);
+
       expect(beforeRepeatIcons.length).toBe(2);
 
       // * 1. 수정 버튼 클릭
@@ -664,11 +664,11 @@ describe('8th basic integration test - 반복 일정', () => {
       renderComponent();
 
       const beforeAllEventTags = await screen.findAllByTestId('schedule-tag');
-      console.log(beforeAllEventTags.length);
+
       expect(beforeAllEventTags.length).toBe(4);
 
       const beforeRepeatIcons = await screen.findAllByTestId('repeat-icon');
-      console.log(beforeRepeatIcons.length);
+
       expect(beforeRepeatIcons.length).toBe(2);
 
       // * 1. 삭제 버튼 클릭

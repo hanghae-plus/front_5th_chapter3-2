@@ -13,7 +13,6 @@ export const useEventForm = (initialEvent?: Event) => {
     initialEvent ? convertEventToForm(initialEvent) : DEFAULT_EVENT_FORM
   );
   const [isRepeating, setIsRepeating] = useState(() => {
-    console.log('initialEvent: ', initialEvent?.repeat.type);
     return initialEvent?.repeat?.type && initialEvent.repeat.type !== 'none' ? true : false;
   });
 

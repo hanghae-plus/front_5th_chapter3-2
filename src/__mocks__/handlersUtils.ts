@@ -50,7 +50,7 @@ export const setupMockHandlerCreation = (initEvents: Event[] = []) => {
   //* 이벤트 생성 핸들러
   const handler = http.post('/api/events', async ({ request }) => {
     const eventData = (await request.json()) as Omit<Event, 'id'>;
-    console.log(eventData);
+
     const newEvent = {
       id: String(store.getEvents().length + 1),
       ...eventData,
@@ -133,14 +133,9 @@ export const setupMockHandlerUpdateToRepeating = (initEvents: Event[] = []) => {
 
     if (index === -1) return new HttpResponse(null, { status: 404 });
 
-    console.log('이벤트 업데이트:', updatedEvent);
-    console.log('업데이트 전 이벤트 목록:', store.getEvents());
-
     //* 이벤트 업데이트
     const events = store.getEvents();
     events[index] = { ...events[index], ...updatedEvent, id: eventId };
-
-    console.log('업데이트 후 이벤트 목록:', store.getEvents());
 
     return HttpResponse.json({ events: store.getEvents() });
   });
@@ -151,9 +146,6 @@ export const setupMockHandlerUpdateToRepeating = (initEvents: Event[] = []) => {
     const { events } = Array.isArray(reqData)
       ? { events: reqData }
       : (reqData as { events: Omit<Event, 'id'>[] });
-
-    console.log('반복 이벤트 생성 요청 데이터:', events);
-    console.log('생성 전 이벤트 목록:', store.getEvents());
 
     // * 모든 반복 이벤트에 동일한 repeatId 적용
     const isRepeatEvent = events[0]?.repeat?.type !== 'none';
@@ -180,8 +172,6 @@ export const setupMockHandlerUpdateToRepeating = (initEvents: Event[] = []) => {
 
       store.addEvent(newEvent);
     });
-
-    console.log('생성 후 이벤트 목록:', store.getEvents());
 
     return HttpResponse.json({ events: store.getEvents() });
   });
