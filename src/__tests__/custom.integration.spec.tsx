@@ -163,7 +163,7 @@ it('반복 일정은 캘린더에 아이콘과 함꼐 구분할 수 있다.', as
     description: '반복 일정 1 설명',
     location: '집',
     category: '개인',
-    repeat: { type: 'weekly', interval: 1, endDate: '2025-5-20' },
+    repeat: { type: 'weekly', interval: 1, endDate: '2025-6-10' },
   });
 
   const monthView = screen.getByTestId('month-view');
