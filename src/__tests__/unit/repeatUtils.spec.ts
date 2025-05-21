@@ -52,6 +52,9 @@ describe('repeatUtils', () => {
       expect(calculateNextRepeatDate('2025-01-15', 'monthly', 2, 15)).toBe('2025-03-15');
       // 실패했던 케이스와 유사한 상황: 2월 28일 다음 +1달 (원래 시작일 31일) -> 3월 31일 기대
       expect(calculateNextRepeatDate('2025-02-28', 'monthly', 1, 31)).toBe('2025-03-31');
+      expect(calculateNextRepeatDate('2025-11-15', 'monthly', 3, 15)).toBe('2026-02-15'); // 연도 변경
+      expect(calculateNextRepeatDate('2025-10-31', 'monthly', 4, 31)).toBe('2026-02-28'); // 연도 변경 및 월말 조정 (평년)
+      expect(calculateNextRepeatDate('2023-10-31', 'monthly', 4, 31)).toBe('2024-02-29'); // 연도 변경 및 월말 조정 (윤년)
     });
 
     it('매년 반복 시 interval만큼 다음 해 같은 날짜로 반환하며, 윤년 월말 처리를 한다', () => {
@@ -59,6 +62,7 @@ describe('repeatUtils', () => {
       expect(calculateNextRepeatDate('2024-02-29', 'yearly', 1, 29)).toBe('2025-02-28');
       expect(calculateNextRepeatDate('2023-02-28', 'yearly', 1, 28)).toBe('2024-02-28');
       expect(calculateNextRepeatDate('2024-02-29', 'yearly', 2, 29)).toBe('2026-02-28');
+      expect(calculateNextRepeatDate('2024-02-29', 'yearly', 4, 29)).toBe('2028-02-29'); // 윤년 -> 윤년
     });
   });
 
@@ -81,7 +85,6 @@ describe('repeatUtils', () => {
         type: 'daily',
         interval: 1,
         endDate: '2025-05-03',
-        // id: mockRepeatGroupId // repeatInfo 자체에는 그룹 ID가 필수는 아님, generate 함수 인자로 받음
       };
       const events = generateRepeatingEvents(
         { ...baseEventData, date: '2025-05-01' },
@@ -137,32 +140,79 @@ describe('repeatUtils', () => {
     });
 
     it('endDate가 설정되지 않으면, 무한 반복으로 간주하여 (예제에서는) 최대 N개까지만 생성하거나 빈 배열을 반환한다', () => {
-      // 이 테스트는 정책에 따라 달라집니다.
-      // 여기서는 endDate가 없으면 빈 배열을 반환하도록 가정 (또는 특정 최대 개수 제한)
       const noEndDateRepeatInfo: RepeatInfo = { type: 'daily', interval: 1 }; // endDate 없음
       const events = generateRepeatingEvents(
         { ...baseEventData, date: '2025-05-01' },
         noEndDateRepeatInfo,
         mockRepeatGroupId
       );
-      // 예: 최대 100개까지만 생성하거나, endDate 없이는 생성하지 않도록 정책을 정하고 테스트
-      // expect(events.length).toBeLessThanOrEqual(100); 또는
-      expect(events).toHaveLength(0); // endDate 필수 정책이라고 가정
+      // 현재 generateRepeatingEvents 함수는 endDate가 없으면 빈 배열을 반환하도록 되어 있습니다.
+      expect(events).toHaveLength(0);
     });
 
-    it('반복 간격(interval)을 고려하여 이벤트를 생성한다', () => {
-      const dailyRepeatInfo: RepeatInfo = { type: 'daily', interval: 2, endDate: '2025-05-05' };
-      const events = generateRepeatingEvents(
+    // --- 반복 간격(interval) 관련 테스트 케이스 추가/확장 ---
+    it('generateRepeatingEvents 함수는 다양한 반복 간격을 고려하여 이벤트를 생성해야 한다', () => {
+      // 매일, 간격 2일
+      const dailyIntervalEvents = generateRepeatingEvents(
         { ...baseEventData, date: '2025-05-01' },
-        dailyRepeatInfo,
+        { type: 'daily', interval: 2, endDate: '2025-05-06' }, // 5/1, 5/3, 5/5
         mockRepeatGroupId
       );
-      expect(events).toHaveLength(3); // 5/1, 5/3, 5/5
-      expect(events[0].date).toBe('2025-05-01');
-      expect(events[1].date).toBe('2025-05-03');
-      expect(events[2].date).toBe('2025-05-05');
+      expect(dailyIntervalEvents).toHaveLength(3);
+      expect(dailyIntervalEvents.map((e) => e.date)).toEqual([
+        '2025-05-01',
+        '2025-05-03',
+        '2025-05-05',
+      ]);
+
+      // 매주, 간격 2주
+      const weeklyIntervalEvents = generateRepeatingEvents(
+        { ...baseEventData, date: '2025-05-01' }, // 목요일
+        { type: 'weekly', interval: 2, endDate: '2025-05-29' }, // 5/1, 5/15, 5/29
+        mockRepeatGroupId
+      );
+      expect(weeklyIntervalEvents).toHaveLength(3);
+      expect(weeklyIntervalEvents.map((e) => e.date)).toEqual([
+        '2025-05-01',
+        '2025-05-15',
+        '2025-05-29',
+      ]);
+
+      // 매월, 간격 3개월, 월말 처리
+      const monthlyIntervalEvents = generateRepeatingEvents(
+        { ...baseEventData, date: '2025-01-31' },
+        { type: 'monthly', interval: 3, endDate: '2025-08-01' }, // 1/31, 4/30, 7/31
+        mockRepeatGroupId
+      );
+      expect(monthlyIntervalEvents).toHaveLength(3);
+      expect(monthlyIntervalEvents.map((e) => e.date)).toEqual([
+        '2025-01-31',
+        '2025-04-30',
+        '2025-07-31',
+      ]);
+
+      // 매년, 간격 2년, 윤년 시작
+      const yearlyIntervalEvents = generateRepeatingEvents(
+        { ...baseEventData, date: '2024-02-29' },
+        { type: 'yearly', interval: 2, endDate: '2029-01-01' }, // 2024-02-29, 2026-02-28, 2028-02-29
+        mockRepeatGroupId
+      );
+      expect(yearlyIntervalEvents).toHaveLength(3);
+      expect(yearlyIntervalEvents.map((e) => e.date)).toEqual([
+        '2024-02-29',
+        '2026-02-28',
+        '2028-02-29',
+      ]);
+    });
+
+    it('반복 종료일(endDate)을 정확히 지켜 이벤트를 생성해야 한다', () => {
+      const events = generateRepeatingEvents(
+        { ...baseEventData, date: '2025-12-30' },
+        { type: 'daily', interval: 1, endDate: '2026-01-01' }, // 12/30, 12/31, 1/1
+        mockRepeatGroupId
+      );
+      expect(events).toHaveLength(3);
+      expect(events.map((e) => e.date)).toEqual(['2025-12-30', '2025-12-31', '2026-01-01']);
     });
   });
 });
-
-// it('반복 간격을 3으로 설정하면 API 요청에 3이 반영되어야 한다', async () => { });
