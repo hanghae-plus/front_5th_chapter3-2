@@ -18,6 +18,7 @@ const createTestEvent = (overrides: Partial<EventForm> = {}): EventForm => ({
   repeat: {
     type: 'none', // 기본값은 반복 없음
     interval: 1,
+    endType: 'date',
   },
   notificationTime: 10,
   ...overrides,
@@ -66,13 +67,14 @@ describe('반복 일정 유틸리티', () => {
       repeat: {
         type: 'monthly',
         interval: 1,
+        endType: 'date',
       },
     });
 
     it('매일 반복: 간격에 따라 날짜 확인', () => {
       const dailyEvent: EventForm = {
         ...baseEvent,
-        repeat: { type: 'daily', interval: 2 }, // 2일마다
+        repeat: { type: 'daily', interval: 2, endType: 'date' }, // 2일마다
       };
 
       // 같은 날(시작일)
@@ -89,7 +91,7 @@ describe('반복 일정 유틸리티', () => {
     it('매주 반복: 간격과 요일 확인', () => {
       const weeklyEvent: EventForm = {
         ...baseEvent,
-        repeat: { type: 'weekly', interval: 2 }, // 2주마다
+        repeat: { type: 'weekly', interval: 2, endType: 'date' }, // 2주마다
       };
 
       // 2023-04-15는 토요일
@@ -107,7 +109,7 @@ describe('반복 일정 유틸리티', () => {
     it('매월 반복: 같은 날짜에 반복', () => {
       const monthlyEvent: EventForm = {
         ...baseEvent,
-        repeat: { type: 'monthly', interval: 1 }, // 매월
+        repeat: { type: 'monthly', interval: 1, endType: 'date' }, // 매월
       };
 
       // 같은 날(시작일)
@@ -125,7 +127,7 @@ describe('반복 일정 유틸리티', () => {
       const monthlyEvent: EventForm = {
         ...baseEvent,
         date: '2023-01-31', // 1월 31일
-        repeat: { type: 'monthly', interval: 1 },
+        repeat: { type: 'monthly', interval: 1, endType: 'date' },
       };
 
       // 시작일
@@ -143,7 +145,7 @@ describe('반복 일정 유틸리티', () => {
       const yearlyEvent: EventForm = {
         ...baseEvent,
         date: '2023-02-15', // 2월 15일
-        repeat: { type: 'yearly', interval: 1 },
+        repeat: { type: 'yearly', interval: 1, endType: 'date' },
       };
 
       // 같은 날(시작일)
@@ -161,7 +163,7 @@ describe('반복 일정 유틸리티', () => {
       const yearlyEvent: EventForm = {
         ...baseEvent,
         date: '2024-02-29', // 윤년의 2월 29일
-        repeat: { type: 'yearly', interval: 1 },
+        repeat: { type: 'yearly', interval: 1, endType: 'date' },
       };
 
       // 시작일 (윤년)
@@ -179,6 +181,7 @@ describe('반복 일정 유틸리티', () => {
         repeat: {
           type: 'daily',
           interval: 1,
+          endType: 'date',
           endDate: '2023-04-20',
         },
       };
@@ -200,6 +203,7 @@ describe('반복 일정 유틸리티', () => {
         repeat: {
           type: 'daily',
           interval: 2, // 2일마다
+          endType: 'date',
           endDate: '2023-04-21',
         },
       });
@@ -227,7 +231,7 @@ describe('반복 일정 유틸리티', () => {
 
     it('반복 일정이 아닌 경우 빈 배열을 반환한다', () => {
       const nonRepeatingEvent = createTestEvent({
-        repeat: { type: 'none', interval: 1 },
+        repeat: { type: 'none', interval: 1, endType: 'date' },
       });
 
       const events = createRepeatingEvents(nonRepeatingEvent);
@@ -240,6 +244,7 @@ describe('반복 일정 유틸리티', () => {
         repeat: {
           type: 'monthly',
           interval: 1,
+          endType: 'date',
           endDate: '2023-04-30',
         },
       });
@@ -261,6 +266,7 @@ describe('반복 일정 유틸리티', () => {
         repeat: {
           type: 'yearly',
           interval: 1,
+          endType: 'date',
           endDate: '2032-12-31',
         },
       });

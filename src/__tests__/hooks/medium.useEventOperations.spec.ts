@@ -35,7 +35,7 @@ it('저장되어있는 초기 이벤트 데이터를 적절하게 불러온다',
       description: '기존 팀 미팅',
       location: '회의실 B',
       category: '업무',
-      repeat: { type: 'none', interval: 0 },
+      repeat: { type: 'none', interval: 0, endType: 'date' },
       notificationTime: 10,
     },
   ]);
@@ -57,7 +57,7 @@ it('정의된 이벤트 정보를 기준으로 적절하게 저장이 된다', a
     description: '새로운 팀 미팅',
     location: '회의실 A',
     category: '업무',
-    repeat: { type: 'none', interval: 0 },
+    repeat: { type: 'none', interval: 0, endType: 'date' },
     notificationTime: 5,
   };
 
@@ -82,7 +82,7 @@ it("새로 정의된 'title', 'endTime' 기준으로 적절하게 일정이 업�
     description: '기존 팀 미팅',
     location: '회의실 B',
     category: '업무',
-    repeat: { type: 'none', interval: 0 },
+    repeat: { type: 'none', interval: 0, endType: 'date' },
     notificationTime: 10,
     title: '수정된 회의',
     endTime: '11:00',
@@ -144,7 +144,7 @@ it("존재하지 않는 이벤트 수정 시 '일정 저장 실패'라는 토스
     description: '이 이벤트는 존재하지 않습니다',
     location: '어딘가',
     category: '기타',
-    repeat: { type: 'none', interval: 0 },
+    repeat: { type: 'none', interval: 0, endType: 'date' },
     notificationTime: 10,
   };
 
@@ -194,14 +194,16 @@ describe('반복 일정 테스트', () => {
     location: '',
     category: '',
     notificationTime: 0,
-    repeat: { type: 'none', interval: 0, endDate: undefined },
+    repeat: { type: 'none', interval: 0, endType: 'date' },
     ...override,
   });
 
   it('반복 유형 선택 시 매일 설정된 간격만큼 이벤트가 생성된다', async () => {
     setupMockHandlerCreation();
     const { result } = renderHook(() => useEventOperations(false));
-    const event = createEvent({ repeat: { type: 'daily', interval: 1, endDate: '2025-05-03' } });
+    const event = createEvent({
+      repeat: { type: 'daily', interval: 1, endType: 'date', endDate: '2025-05-03' },
+    });
     await act(async () => await result.current.saveEvent(event));
 
     expect(result.current.events).toEqual([
@@ -214,7 +216,9 @@ describe('반복 일정 테스트', () => {
   it('반복 간격 설정 시 간격이 적용되어 생성된다 (격일)', async () => {
     setupMockHandlerCreation();
     const { result } = renderHook(() => useEventOperations(false));
-    const event = createEvent({ repeat: { type: 'daily', interval: 2, endDate: '2025-05-05' } });
+    const event = createEvent({
+      repeat: { type: 'daily', interval: 2, endType: 'date', endDate: '2025-05-05' },
+    });
     await act(async () => await result.current.saveEvent(event));
 
     expect(result.current.events).toEqual([
@@ -227,7 +231,9 @@ describe('반복 일정 테스트', () => {
   it('종료일이 지정되지 않은 경우 시스템 종료일인 2025-09-30까지만 생성된다', async () => {
     setupMockHandlerCreation();
     const { result } = renderHook(() => useEventOperations(false));
-    const event = createEvent({ repeat: { type: 'monthly', interval: 1 } });
+    const event = createEvent({
+      repeat: { type: 'monthly', interval: 1, endType: 'date' },
+    });
     await act(async () => await result.current.saveEvent(event));
 
     expect(result.current.events).toEqual([
@@ -256,7 +262,7 @@ describe('반복 일정 테스트', () => {
       location: '',
       category: '',
       notificationTime: 0,
-      repeat: { type: 'daily', interval: 1, endDate: '2025-05-30' },
+      repeat: { type: 'daily', interval: 1, endType: 'date', endDate: '2025-05-30' },
     };
 
     await act(async () => await result.current.saveEvent({ ...event, title: '수정된 일정' }));
@@ -266,7 +272,9 @@ describe('반복 일정 테스트', () => {
   it('반복 일정의 특정 인스턴스를 삭제하면 해당 인스턴스만 삭제된다', async () => {
     setupMockHandlerCreation();
     // 반복 일정 생성
-    const event = createEvent({ repeat: { type: 'daily', interval: 1, endDate: '2025-05-03' } });
+    const event = createEvent({
+      repeat: { type: 'daily', interval: 1, endType: 'date', endDate: '2025-05-03' },
+    });
     const createdEvent = [
       { ...event, id: '1', date: '2025-05-01' },
       { ...event, id: '2', date: '2025-05-02' },
@@ -298,7 +306,7 @@ describe('반복 일정 테스트', () => {
     const { result } = renderHook(() => useEventOperations(false));
     const event = createEvent({
       date: '2024-02-29',
-      repeat: { type: 'yearly', interval: 1, endDate: '2028-03-01' },
+      repeat: { type: 'yearly', interval: 1, endType: 'date', endDate: '2028-03-01' },
     });
     await act(async () => await result.current.saveEvent(event));
 
@@ -313,7 +321,7 @@ describe('반복 일정 테스트', () => {
     const { result } = renderHook(() => useEventOperations(false));
     const event = createEvent({
       date: '2025-05-31',
-      repeat: { type: 'monthly', interval: 1, endDate: '2025-07-31' },
+      repeat: { type: 'monthly', interval: 1, endType: 'date', endDate: '2025-07-31' },
     });
     await act(async () => await result.current.saveEvent(event));
 
@@ -329,7 +337,7 @@ describe('반복 일정 테스트', () => {
     const { result } = renderHook(() => useEventOperations(false));
     const event = createEvent({
       date: '2025-05-07',
-      repeat: { type: 'weekly', interval: 1, endDate: '2025-05-21' },
+      repeat: { type: 'weekly', interval: 1, endType: 'date', endDate: '2025-05-21' },
     });
     await act(async () => await result.current.saveEvent(event));
 
@@ -343,7 +351,9 @@ describe('반복 일정 테스트', () => {
   it('반복 없음 설정 시 단일 일정만 생성된다', async () => {
     setupMockHandlerCreation();
     const { result } = renderHook(() => useEventOperations(false));
-    const event = createEvent({ repeat: { type: 'none', interval: 0, endDate: undefined } });
+    const event = createEvent({
+      repeat: { type: 'none', interval: 0, endType: 'date', endDate: undefined },
+    });
 
     await act(async () => await result.current.saveEvent(event));
     expect(result.current.events).toEqual([{ ...event, id: '1' }]);
