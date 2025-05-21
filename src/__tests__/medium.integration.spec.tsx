@@ -658,8 +658,21 @@ describe('반복 간격 설정', () => {
 
 describe('반복 일정 표시', () => {
   it('반복 일정의 경우 반복 아이콘이 일정 제목 앞에 존재한다.', async () => {
-    // 1. 반복 일정 생성
-    // 2. 일정 목록에서 해당 일정의 반복 아이콘 존재 여부 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '반복 아이콘 테스트',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복 아이콘 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByTestId('repeat-icon')).toBeInTheDocument();
   });
 });
 
