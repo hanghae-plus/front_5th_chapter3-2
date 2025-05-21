@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-import { Event } from '../../types';
 import { getFilteredEvents } from '../../utils/eventUtils';
 
 test.describe('일정 관리 App CRUD 테스트', () => {
