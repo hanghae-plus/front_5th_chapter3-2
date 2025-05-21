@@ -415,8 +415,8 @@ describe('반복 일정 설정', () => {
     await user.click(screen.getByLabelText('Next'));
 
     const calendarAfter1Month = within(screen.getByTestId('month-view'));
-    expect(calendarAfter1Month.getAllByTestId('repeat-icon')).toHaveLength(6);
-    expect(calendarAfter1Month.getAllByText('반복되는 회의')).toHaveLength(6);
+    expect(calendarAfter1Month.getAllByTestId('repeat-icon')).toHaveLength(4);
+    expect(calendarAfter1Month.getAllByText('반복되는 회의')).toHaveLength(4);
   });
 
   it(`매일 반복 설정된 일정을 저장하면 주간 뷰 달력으로 바꿔도 매일 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
@@ -465,7 +465,7 @@ describe('반복 일정 설정', () => {
       location: '회의실 C',
       category: '업무',
       repeat: {
-        type: 'monthly',
+        type: 'weekly',
         interval: 1,
       },
     });
@@ -501,14 +501,14 @@ describe('반복 일정 설정', () => {
     });
 
     const calendar = within(screen.getByTestId('month-view'));
-    expect(calendar.queryByTestId('repeat-icon')).toBeInTheDocument();
-    expect(calendar.queryByText('새로 반복되는 회의')).toBeInTheDocument();
+    expect(calendar.getAllByTestId('repeat-icon')).toHaveLength(1);
+    expect(calendar.getAllByText('새로 반복되는 회의')).toHaveLength(1);
 
     await user.click(screen.getByLabelText('Next'));
 
     const calendarAfter1Month = within(screen.getByTestId('month-view'));
-    expect(calendarAfter1Month.queryByTestId('repeat-icon')).toBeInTheDocument();
-    expect(calendarAfter1Month.queryByText('새로 반복되는 회의')).toBeInTheDocument();
+    expect(calendarAfter1Month.getAllByTestId('repeat-icon')).toHaveLength(1);
+    expect(calendarAfter1Month.getAllByText('새로 반복되는 회의')).toHaveLength(1);
 
     await user.click(screen.getByLabelText('Next'));
 
