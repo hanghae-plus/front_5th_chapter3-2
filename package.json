@@ -11,6 +11,10 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:integration": "playwright test integration",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
     "build": "tsc -b && vite build",
     "lint": "eslint . --ext ts,tsx,js --report-unused-disable-directives --max-warnings 0"
   },
@@ -26,11 +30,14 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.52.0",
     "@testing-library/jest-dom": "^6.4.5",
     "@testing-library/react": "^15.0.7",
     "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.15.21",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@types/wait-on": "^5.3.4",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
     "@typescript-eslint/parser": "^7.13.1",
     "@vitejs/plugin-react-swc": "^3.5.0",
@@ -46,10 +53,12 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-storybook": "^0.6.12",
     "eslint-plugin-vitest": "^0.2.6",
-    "vite-plugin-eslint": "^1.8.1",
     "jsdom": "^25.0.1",
+    "playwright": "^1.52.0",
     "typescript": "^5.2.2",
     "vite": "^5.3.1",
-    "vitest": "^2.0.2"
+    "vite-plugin-eslint": "^1.8.1",
+    "vitest": "^2.0.2",
+    "wait-on": "^8.0.3"
   }
 }
