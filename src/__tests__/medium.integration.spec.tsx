@@ -10,6 +10,7 @@ import {
   setupMockHandlerUpdating,
   setupMockHandlerRecurringCreation,
   setupMockHandlerRecurringDeletion,
+  setupMockHandlerRecurringUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
@@ -563,5 +564,22 @@ describe('반복 일정 설정', () => {
 
     expect(eventList.getAllByText('삭제할 반복 이벤트')).toHaveLength(6);
   });
-  //TODO: 일정 수정 케이스 추가
+  it('반복 일정을 수정하면 해당 일정은 단일 일정으로 변경돼 반복일정 아이콘이 사라진다.', async () => {
+    setupMockHandlerRecurringUpdating();
+    const { user } = setup(<App />);
+
+    const allEditButton = await screen.findAllByLabelText('Edit event');
+    await user.click(allEditButton[0]);
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 반복 일정');
+    await user.clear(screen.getByLabelText('설명'));
+    await user.type(screen.getByLabelText('설명'), '반복 일정 회의 내용 변경');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('수정된 반복 일정')).toBeInTheDocument();
+    expect(eventList.getAllByTestId('repeat-icon')).toHaveLength(3);
+  });
 });
