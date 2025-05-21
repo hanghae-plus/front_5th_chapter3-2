@@ -328,7 +328,7 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 });
 
 describe('반복 유형 선택', () => {
-  it('일정 생성 또는 수정 시 반복 유형을 선택할 수 있다.', async () => {
+  it('월별 반복 일정을 생성하면 월별 반복 일정이 생성된다.', async () => {
     setupMockHandlerEventsListCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
@@ -339,13 +339,13 @@ describe('반복 유형 선택', () => {
     const newEvent = {
       id: '1',
       title: '복싱',
-      date: '2025-05-21',
+      date: '2025-10-21',
       startTime: '21:00',
       endTime: '22:00',
       description: '복싱 훈련',
       location: '복싱장',
       category: '운동',
-      repeat: { type: 'weekly', interval: 1, endDate: '2025-06-11' },
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-12-31' },
       notificationTime: 10,
     };
 
@@ -354,10 +354,9 @@ describe('반복 유형 선택', () => {
     });
 
     const expectedEvents = [
-      { ...newEvent, id: '1', date: '2025-05-21' },
-      { ...newEvent, id: '2', date: '2025-05-28' },
-      { ...newEvent, id: '3', date: '2025-06-04' },
-      { ...newEvent, id: '4', date: '2025-06-11' },
+      { ...newEvent, id: '1', date: '2025-10-21' },
+      { ...newEvent, id: '2', date: '2025-11-21' },
+      { ...newEvent, id: '3', date: '2025-12-21' },
     ];
 
     expect(result.current.events).toEqual(expectedEvents);
@@ -527,5 +526,46 @@ describe('반복 일정 단일 삭제', () => {
     const expectedEvents = [{ ...newRepeatEvent, id: '2', date: '2025-07-21' }];
 
     expect(result.current.events).toEqual(expectedEvents);
+  });
+});
+
+describe('반복 일정 표시', () => {
+  it('반복 일정을 추가하면 캘린더 뷰에서 반복 일정에 반복 아이콘이 표시된다.', async () => {
+    setupMockHandlerEventsListCreation([
+      {
+        id: '1',
+        title: '새 회의',
+        date: '2025-10-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+      {
+        id: '2',
+        title: '새 회의',
+        date: '2025-12-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+    ]);
+
+    setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const monthView = within(screen.getByTestId('month-view'));
+
+    const repeatIcon = monthView.getByLabelText('repeat-icon');
+
+    expect(repeatIcon).toBeInTheDocument();
   });
 });

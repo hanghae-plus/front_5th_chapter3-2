@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -139,6 +140,12 @@ function App() {
       return;
     }
 
+    const repeatEventData = {
+      type: editingEvent ? 'none' : isRepeating ? repeatType : 'none',
+      interval: editingEvent ? 0 : repeatInterval,
+      endDate: editingEvent ? undefined : repeatEndDate || undefined,
+    };
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -148,11 +155,7 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat: repeatEventData,
       notificationTime,
     };
 
@@ -206,6 +209,13 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {event.repeat.type !== 'none' && (
+                              <RepeatIcon
+                                aria-label="repeat-icon"
+                                color="red.500"
+                                style={{ marginLeft: '5px' }}
+                              />
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -275,6 +285,13 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && (
+                                    <RepeatIcon
+                                      aria-label="repeat-icon"
+                                      color="gray.500"
+                                      fontSize="sm"
+                                    />
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -552,7 +569,7 @@ function App() {
                 colorScheme="red"
                 onClick={() => {
                   setIsOverlapDialogOpen(false);
-                  if (isRepeating) {
+                  if (repeatType) {
                     saveRepeatEvent({
                       id: editingEvent ? editingEvent.id : undefined,
                       title,
