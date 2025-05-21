@@ -5,6 +5,7 @@ import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
+  setupMockHandlerRecurringCreation,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
 import { server } from '../../setupTests.ts';
@@ -188,7 +189,7 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 // 반복 일정
 describe('반복 일정', () => {
   it(`매일 반복되는 이벤트를 저장하면 하루 간격으로 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -296,7 +297,7 @@ describe('반복 일정', () => {
   });
 
   it(`이틀마다 반복되는 이벤트를 저장하면 이틀 간격으로 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -416,7 +417,7 @@ describe('반복 일정', () => {
   });
 
   it(`5일마다 반복되는 이벤트를 저장하면 5일 간격으로 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -500,7 +501,7 @@ describe('반복 일정', () => {
   });
 
   it(`매주 반복되는 이벤트를 저장하면 일주일 간격으로 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -607,7 +608,7 @@ describe('반복 일정', () => {
     ]);
   });
   it(`3주마다 반복되는 일정을 저장하면 3주 간격으로 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -679,7 +680,7 @@ describe('반복 일정', () => {
   });
 
   it(`매달 반복되는 일정을 저장하면 한달 간격으로 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -762,7 +763,7 @@ describe('반복 일정', () => {
     ]);
   });
   it(`5달마다 반복되는 일정을 저장하면 5달 간격으로 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -834,7 +835,7 @@ describe('반복 일정', () => {
   });
 
   it(`매년 반복되는 일정을 저장하면 1년 간격으로 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -905,7 +906,7 @@ describe('반복 일정', () => {
     ]);
   });
   it(`3년마다 반복되는 일정을 저장하면 3년 간격으로 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -965,7 +966,7 @@ describe('반복 일정', () => {
   });
 
   it(`2월 29일마다 반복되는 일정을 저장하면 평년의 2월은 제외하고 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -1025,7 +1026,7 @@ describe('반복 일정', () => {
   });
 
   it(`30일마다 반복되는 일정을 저장하면 30일이 없는 달은 제외하고 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -1096,7 +1097,7 @@ describe('반복 일정', () => {
     ]);
   });
   it(`31마다 반복되는 일정을 저장하면 31일이 없는 달은 제외하고 일정이 생성된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { result } = renderHook(() => useEventOperations(false));
     const newEvent: EventForm = {
@@ -1175,7 +1176,7 @@ describe('반복 일정', () => {
     const { result } = renderHook(() => useEventOperations(false));
 
     await act(async () => {
-      await result.current.deleteRepeatedEvent(['2']);
+      await result.current.deleteRepeatedEvents(['2']);
     });
 
     await act(() => Promise.resolve(null));

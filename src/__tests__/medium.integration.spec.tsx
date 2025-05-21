@@ -8,6 +8,7 @@ import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
+  setupMockHandlerRecurringCreation,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
@@ -357,7 +358,7 @@ describe('반복 일정 설정', () => {
   });
 
   it(`매일 반복되는 일정을 생성하면 종료일까지 매일 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { user } = setup(<App />);
 
@@ -389,7 +390,7 @@ describe('반복 일정 설정', () => {
 
   it(`5일 간격으로 반복되는 일정을 생성하면 종료일까지 5일마다 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
     vi.setSystemTime(new Date('2025-06-13'));
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { user } = setup(<App />);
 
@@ -421,7 +422,7 @@ describe('반복 일정 설정', () => {
 
   it(`매일 반복 설정된 일정을 저장하면 주간 뷰 달력으로 바꿔도 매일 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
     vi.setSystemTime(new Date('2025-09-21'));
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { user } = setup(<App />);
     await user.selectOptions(screen.getByLabelText('view'), 'week');
@@ -452,7 +453,7 @@ describe('반복 일정 설정', () => {
   });
   it(`매주 반복 설정된 일정을 저장하면 9월 30일까지 매달 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
     vi.setSystemTime(new Date('2025-08-01'));
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { user } = setup(<App />);
 
@@ -481,7 +482,7 @@ describe('반복 일정 설정', () => {
     expect(calendarAfter1Month.getAllByText('새로 반복되는 회의')).toHaveLength(4);
   });
   it(`매달 반복 설정된 일정을 저장하면 설정한 종료일까지 매달 해당 날짜에 아이콘과 함께 일정이 표시된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { user } = setup(<App />);
 
@@ -517,7 +518,7 @@ describe('반복 일정 설정', () => {
   });
 
   it(`매년 반복 설정된 일정을 저장하면, 설정한 종료일까지 매년 해당 날짜에 반복 아이콘과 함께 일정이 표시된다.`, async () => {
-    setupMockHandlerCreation();
+    setupMockHandlerRecurringCreation();
 
     const { user } = setup(<App />);
 
