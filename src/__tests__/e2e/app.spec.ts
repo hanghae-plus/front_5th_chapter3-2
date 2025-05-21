@@ -26,9 +26,11 @@ test.describe('일정 관리 App CRUD 테스트', () => {
   test('2. POST API를 통해 저장된 새로운 Event를 렌더하고 저장한 이벤트를 DELETE API를 통해 삭제 한다.', async ({
     page,
   }) => {
+    // 테스트 시점 날짜로 고정
     const date = new Date();
     const formattedDate = date.toISOString().split('T')[0];
 
+    // create event test
     await page.getByLabel('제목').fill('test event');
     await page.getByLabel('날짜').fill(formattedDate);
     await page.getByLabel('시작 시간').fill('14:00');
@@ -47,8 +49,9 @@ test.describe('일정 관리 App CRUD 테스트', () => {
     await expect(eventListView.getByText('14:00 - 15:00').first()).toBeVisible();
     await expect(eventListView.getByText('test description').first()).toBeVisible();
 
+    // delete event test
     const eventCard = eventListView.locator('div').filter({ hasText: 'test event' }).first();
-    // 2) 그 카드 안의 [Delete event] 버튼 클릭
+
     const deleteBtn = eventCard.getByRole('button', { name: 'Delete event' });
     await deleteBtn.click();
 
