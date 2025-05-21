@@ -69,7 +69,7 @@ describe('useEventForm - 반복 종료 조건', () => {
     expect(repeatInfo.interval).toBe(1);
     expect(repeatInfo.endDate).toBe('2025-05-10');
     expect(repeatInfo.maxOccurrences).toBeUndefined();
-    expect(repeatInfo.id).toBeUndefined(); // id는 포함되지 않아야 함
+    expect(repeatInfo.id).toBeUndefined();
 
     // 시나리오 2: 날짜 종료 조건 (날짜 없음 - 기본값 사용)
     act(() => {

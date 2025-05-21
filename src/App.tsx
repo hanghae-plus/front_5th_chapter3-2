@@ -92,6 +92,10 @@ function App() {
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatEndType,
+    setRepeatEndType,
+    repeatMaxOccurrences,
+    setRepeatMaxOccurrences,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -100,6 +104,7 @@ function App() {
     setEditingEvent,
     handleStartTimeChange,
     handleEndTimeChange,
+    createRepeatInfo,
     resetForm,
     editEvent,
   } = useEventForm();
@@ -190,14 +195,10 @@ function App() {
   const saveEventWithRepeat = async (eventData: Event | EventForm) => {
     // 반복 설정이 있고 새 이벤트 생성인 경우 saveRepeatingEvents 사용
     if (isRepeating && !editingEvent) {
-      const { repeat, ...baseEventData } = eventData as any;
+      const { repeat, ...baseEventData } = eventData;
 
       // 반복 유형 정보 추출
-      const repeatInfo = {
-        type: repeat.type as RepeatType,
-        interval: repeat.interval,
-        endDate: repeat.endDate,
-      };
+      const repeatInfo = createRepeatInfo();
 
       // 반복 일정 저장 함수 호출
       await saveRepeatingEvents(baseEventData, repeatInfo);
@@ -482,31 +483,45 @@ function App() {
                   <option value="yearly">매년</option>
                 </Select>
               </FormControl>
-              <HStack width="100%">
-                <FormControl>
-                  <FormLabel>반복 간격</FormLabel>
-                  <Input
-                    type="number"
-                    value={String(repeatInterval)} // 항상 문자열로 변환하여 value에 전달
-                    onChange={(e) => {
-                      setRepeatInterval(Number(e.target.value));
-                    }}
-                    onBlur={(e) => {
-                      const numValue = Number(repeatInterval);
-                      if (e.target.value === '' || isNaN(numValue) || numValue < 1) {
-                        setRepeatInterval(1);
-                      } else {
-                        setRepeatInterval(Math.floor(numValue));
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        (e.target as HTMLInputElement).blur();
-                      }
-                    }}
-                    min={1}
-                  />
-                </FormControl>
+
+              <FormControl>
+                <FormLabel>반복 간격</FormLabel>
+                <Input
+                  type="number"
+                  value={String(repeatInterval)}
+                  onChange={(e) => {
+                    setRepeatInterval(Number(e.target.value));
+                  }}
+                  onBlur={(e) => {
+                    const numValue = Number(repeatInterval);
+                    if (e.target.value === '' || isNaN(numValue) || numValue < 1) {
+                      setRepeatInterval(1);
+                    } else {
+                      setRepeatInterval(Math.floor(numValue));
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      (e.target as HTMLInputElement).blur();
+                    }
+                  }}
+                  min={1}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>종료 조건</FormLabel>
+                <Select
+                  value={repeatEndType}
+                  onChange={(e) => setRepeatEndType(e.target.value as 'date' | 'count' | 'never')}
+                >
+                  <option value="date">날짜 지정</option>
+                  <option value="count">횟수 지정</option>
+                  <option value="never">종료 없음</option>
+                </Select>
+              </FormControl>
+
+              {repeatEndType === 'date' && (
                 <FormControl>
                   <FormLabel>반복 종료일</FormLabel>
                   <Input
@@ -515,7 +530,29 @@ function App() {
                     onChange={(e) => setRepeatEndDate(e.target.value)}
                   />
                 </FormControl>
-              </HStack>
+              )}
+
+              {repeatEndType === 'count' && (
+                <FormControl>
+                  <FormLabel>반복 횟수</FormLabel>
+                  <Input
+                    type="number"
+                    value={repeatMaxOccurrences !== undefined ? String(repeatMaxOccurrences) : ''}
+                    onChange={(e) => {
+                      setRepeatMaxOccurrences(e.target.value);
+                    }}
+                    onBlur={(e) => {
+                      const numValue = Number(e.target.value);
+                      if (e.target.value === '' || isNaN(numValue) || numValue < 1) {
+                        setRepeatMaxOccurrences(10);
+                      } else {
+                        setRepeatMaxOccurrences(Math.floor(numValue));
+                      }
+                    }}
+                    min={1}
+                  />
+                </FormControl>
+              )}
             </VStack>
           )}
 
