@@ -22,8 +22,8 @@ export const useEventForm = (initialEvent?: Event) => {
     initialEvent?.repeat.endDate
       ? 'date'
       : initialEvent?.repeat.count !== undefined
-      ? 'count'
-      : 'none'
+        ? 'count'
+        : 'none'
   );
   const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
   const [repeatCount, setRepeatCount] = useState(initialEvent?.repeat.count || 1);
