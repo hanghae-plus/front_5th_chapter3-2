@@ -19,14 +19,19 @@ describe('useEventForm - 반복 간격 설정', () => {
     expect(result.current.repeatInterval).toBe(3);
   });
 
-  it('반복 간격은 1 미만으로 설정할 수 없어야 한다', () => {
+  it('반복 간격은 UI 레벨에서 1 미만으로 설정되지 않지만, 임시적으로 0을 허용한다', () => {
+    // 처음엔 '반복 간격은 1 미만으로 설정할 수 없어야 한다'로 시나리오를 짯으나,
+    // 1미만 값은 1이 무조건 1이 되게 되어서, ui에서 수정할 수 있게 변경
+    // 통합테스트에서 ui 검증
     const { result } = renderHook(() => useEventForm());
 
+    // 0 값 설정 시도
     act(() => {
       result.current.setRepeatInterval(0);
     });
 
-    expect(result.current.repeatInterval).toBe(1); // 최소값 1로 유지되어야 함
+    // 훅 내부에서는 0을 허용함 (UI에서 검증하기 전 상태)
+    expect(result.current.repeatInterval).toBe(0);
   });
 
   it('기존 이벤트를 편집할 때 반복 간격 값이 정확하게 로드되어야 한다', () => {

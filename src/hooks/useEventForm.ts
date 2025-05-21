@@ -29,11 +29,7 @@ export const useEventForm = (initialEvent?: Event) => {
   });
 
   const setRepeatInterval = (value: number) => {
-    if (value < 1) {
-      setRepeatIntervalState(1); // 1 미만이면 1로 설정
-    } else {
-      setRepeatIntervalState(value);
-    }
+    setRepeatIntervalState(value);
   };
 
   useEffect(() => {
@@ -88,7 +84,7 @@ export const useEventForm = (initialEvent?: Event) => {
     setCategory(event.category);
     setIsRepeating(event.repeat.type !== 'none');
     setRepeatType(event.repeat.type);
-    setRepeatInterval(event.repeat.interval);
+    setRepeatIntervalState(event.repeat?.interval !== undefined ? event.repeat.interval : 1);
     setRepeatEndDate(event.repeat.endDate || '');
     setNotificationTime(event.notificationTime);
   };

@@ -121,6 +121,14 @@ function App() {
 
   const toast = useToast();
 
+  const getFinalRepeatInterval = (currentInterval: string | number): number => {
+    const numericValue = Number(currentInterval);
+    if (isNaN(numericValue) || numericValue < 1) {
+      return 1;
+    }
+    return Math.floor(numericValue); // 정수 값으로 반환
+  };
+
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
       toast({
@@ -142,6 +150,8 @@ function App() {
       return;
     }
 
+    const finalRepeatInterval = getFinalRepeatInterval(repeatInterval);
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -153,7 +163,7 @@ function App() {
       category,
       repeat: {
         type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
+        interval: finalRepeatInterval,
         endDate: repeatEndDate || undefined,
         // 수정 모드이고 반복 설정이 유지될 경우 repeat.id 보존
         id: isRepeating && editingEvent?.repeat.id ? editingEvent.repeat.id : undefined,
@@ -201,6 +211,8 @@ function App() {
   const proceedWithOverlap = async () => {
     setIsOverlapDialogOpen(false);
 
+    const finalRepeatInterval = getFinalRepeatInterval(repeatInterval);
+
     // 이벤트 기본 데이터 구성
     const baseEventData = {
       title,
@@ -216,7 +228,7 @@ function App() {
     // 반복 정보 구성
     const repeatInfo = {
       type: isRepeating ? repeatType : 'none',
-      interval: repeatInterval,
+      interval: finalRepeatInterval,
       endDate: repeatEndDate || undefined,
     };
 
@@ -469,8 +481,23 @@ function App() {
                   <FormLabel>반복 간격</FormLabel>
                   <Input
                     type="number"
-                    value={repeatInterval}
-                    onChange={(e) => setRepeatInterval(Number(e.target.value))}
+                    value={String(repeatInterval)} // 항상 문자열로 변환하여 value에 전달
+                    onChange={(e) => {
+                      setRepeatInterval(Number(e.target.value));
+                    }}
+                    onBlur={(e) => {
+                      const numValue = Number(repeatInterval);
+                      if (e.target.value === '' || isNaN(numValue) || numValue < 1) {
+                        setRepeatInterval(1);
+                      } else {
+                        setRepeatInterval(Math.floor(numValue));
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
                     min={1}
                   />
                 </FormControl>

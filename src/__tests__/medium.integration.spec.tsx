@@ -454,8 +454,11 @@ describe('반복 일정 기능 통합 테스트', () => {
       await user.selectOptions(screen.getByLabelText('반복 유형'), 'weekly');
 
       // 반복 간격 입력 (3주마다)
-      await user.clear(screen.getByLabelText('반복 간격'));
-      await user.type(screen.getByLabelText('반복 간격'), '3');
+      const intervalInput = screen.getByLabelText('반복 간격');
+      await user.clear(intervalInput);
+      await waitFor(() => expect(intervalInput).toHaveValue(0));
+      await user.type(intervalInput, '3');
+      await waitFor(() => expect(intervalInput).toHaveValue(3));
 
       await user.type(screen.getByLabelText('반복 종료일'), '2025-08-15');
     });
