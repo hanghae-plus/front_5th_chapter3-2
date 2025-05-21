@@ -55,8 +55,8 @@ import {
   getWeeksAtMonth,
 } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
+import { generateRepeatDates } from './utils/repeatUtils';
 import { getTimeErrorMessage } from './utils/timeValidation';
-
 const categories = ['업무', '개인', '가족', '기타'];
 
 const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
@@ -103,8 +103,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, setEvents, saveEvent, deleteEvent } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -160,7 +161,10 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      const events = generateRepeatDates(eventData);
+      for (const event of events) {
+        await saveEvent({ ...eventData, date: event });
+      }
       resetForm();
     }
   };
@@ -357,7 +361,13 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              isChecked={isRepeating}
+              onChange={(e) => {
+                setIsRepeating(e.target.checked);
+                setRepeatType(e.target.checked ? 'daily' : 'none');
+              }}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
