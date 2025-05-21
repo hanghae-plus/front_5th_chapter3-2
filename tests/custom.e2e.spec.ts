@@ -41,45 +41,74 @@ const fillScheduleForm = async (page: Page, data: Omit<Event, 'id'>) => {
     await proceedButton.click();
   }
 };
+test.describe.serial('반복 일정 테스트', () => {
+  test('일정의 각 항목을 작성하고 제출하면 캘린더와 목록에 표기된다', async ({ page }) => {
+    // 테스트 당시의 일자를 기준으로 테스트 이벤트를 생성
+    const now = new Date();
+    const date = formatDate(now, 10);
+    const endDate = formatDate(new Date(now.getFullYear(), now.getMonth() + 2, 0));
 
-test('일정의 각 항목을 작성하고 제출하면 캘린더와 목록에 표기된다', async ({ page }) => {
-  // 테스트 당시의 일자를 기준으로 테스트 이벤트를 생성
-  const now = new Date();
-  const date = formatDate(now, 10);
-  const endDate = formatDate(new Date(now.getFullYear(), now.getMonth() + 2, 0));
+    await page.goto('/');
+    await fillScheduleForm(page, {
+      title: '반복 일정 1',
+      date,
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '일정 1 설명',
+      location: '집',
+      category: '개인',
+      repeat: { type: 'weekly', interval: 2, endDate },
+      notificationTime: 60,
+    });
 
-  await page.goto('/');
-  await fillScheduleForm(page, {
-    title: '반복 일정 1',
-    date,
-    startTime: '10:00',
-    endTime: '11:00',
-    description: '일정 1 설명',
-    location: '집',
-    category: '개인',
-    repeat: { type: 'weekly', interval: 2, endDate },
-    notificationTime: 60,
+    const monthView = page.getByTestId('month-view');
+    const calendarEvents = monthView.locator('text=반복 일정 1');
+    await expect(calendarEvents.first()).toBeVisible();
+
+    const eventList = page.getByTestId('event-list');
+    const listEvents = eventList.locator('text=반복 일정 1');
+    await expect(listEvents.first()).toBeVisible();
   });
 
-  const monthView = page.getByTestId('month-view');
-  const calendarEvents = monthView.locator('text=반복 일정 1');
-  await expect(calendarEvents.first()).toBeVisible();
+  test('다음 달 버튼을 클릭했을 때 목록과 캘린더에 저장된 반복 일정이 표기되고, 목록에서 반복 일정 수정 시 해당 항목만 수정된다.', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Next' }).click();
 
-  const eventList = page.getByTestId('event-list');
-  const listEvents = eventList.locator('text=반복 일정 1');
-  await expect(listEvents.first()).toBeVisible();
-});
+    const monthView = page.getByTestId('month-view');
+    const calendarEvents = monthView.locator('text=반복 일정 1');
+    await expect(calendarEvents.first()).toBeVisible();
 
-test('다음 달의 일정과 미리 알림을 설정하면, 다음 달 버튼을 클릭했을 때 캘린더에 일정과 함께 아이콘이 렌더링된다.', async ({
-  page,
-}) => {
-  await page.goto('/');
-  await expect(page.getByText('일정 추가')).toBeVisible();
-});
+    const eventList = page.getByTestId('event-list');
+    const listEvents = eventList.locator('text=반복 일정 1');
+    await expect(listEvents.first()).toBeVisible();
 
-test('2주 간격의 반복 일정을 다음 달 말일까지 등록하면, 반복 횟수에 따라 일정이 캘린더에 표시되고 다음 달 이동 버튼을 클릭해도 일정이 표기된다.', async ({
-  page,
-}) => {
-  await page.goto('/');
-  await expect(page.getByText('일정 추가')).toBeVisible();
+    const targetEvent = eventList
+      .locator('[data-testid^="event-id-"]')
+      .filter({
+        hasText: '반복 일정 1',
+      })
+      .first();
+
+    await targetEvent.getByRole('button', { name: 'Edit event' }).click();
+
+    await page.getByLabel('제목').fill('');
+    await page.getByLabel('제목').fill('수정된 반복 해제 일정 1');
+
+    await page.getByTestId('event-submit-button').click();
+
+    const updatedCalendarEvents = monthView.locator('text=수정된 반복 해제 일정 1');
+    await expect(updatedCalendarEvents.first()).toBeVisible();
+
+    const updatedListEvents = eventList.locator('text=수정된 반복 해제 일정 1');
+    await expect(updatedListEvents.first()).toBeVisible();
+  });
+
+  test('2주 간격의 반복 일정을 다음 달 말일까지 등록하면, 반복 횟수에 따라 일정이 캘린더에 표시되고 다음 달 이동 버튼을 클릭해도 일정이 표기된다.', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await expect(page.getByText('일정 추가')).toBeVisible();
+  });
 });
