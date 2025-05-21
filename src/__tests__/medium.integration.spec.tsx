@@ -23,9 +23,10 @@ const setup = (element: ReactElement) => {
 // ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'>
+  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> &
+    Partial<Pick<Event, 'repeat' | 'notificationTime'>>
 ) => {
-  const { title, date, startTime, endTime, location, description, category } = form;
+  const { title, date, startTime, endTime, location, description, category, repeat } = form;
 
   await user.click(screen.getAllByText('일정 추가')[0]);
 
@@ -36,6 +37,10 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
+
+  if (repeat?.type !== 'none') {
+    user.click(screen.getByLabelText('반복 설정'));
+  }
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -325,18 +330,4 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
 
-describe('반복 일정', () => {
-  describe('반복 유형 선택', () => {
-    it('일정 생성 시 반복 유형을 "매일"로 선택하면, 해당 일정이 매일 반복 된다.', () => {});
-    it('일정 생성 시 반복 유형을 "매주"로 선택하면, 해당 일정이 매주 반복 된다.', () => {});
-    it('일정 생성 시 반복 유형을 "매월"로 선택하면, 해당 일정이 매월 반복 된다.', () => {});
-    it('일정 생성 시 반복 유형을 "매년"으로 선택하면, 해당 일정이 매냔 반복 된다.', () => {});
-
-    it('일정 수정 시 반복 유형을 "매일"로 선택하면, 해당 일정이 매일 반복 된다.', () => {});
-    it('일정 수정 시 반복 유형을 "매주"로 선택하면, 해당 일정이 매주 반복 된다.', () => {});
-    it('일정 수정 시 반복 유형을 "매월"로 선택하면, 해당 일정이 매월 반복 된다.', () => {});
-    it('일정 수정 시 반복 유형을 "매년"으로 선택하면, 해당 일정이 매냔 반복 된다.', () => {});
-
-    it('윤년 29일 또는 31일로 선택하면, 해당 날짜가 존재할 때만 표시된다.', () => {});
-  });
-});
+describe('반복 일정', () => {});
