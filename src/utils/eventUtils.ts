@@ -56,12 +56,24 @@ export function generateRepeatEvents(event: Event | EventForm) {
     : new Date('2025-09-30');
   let currentDate = new Date(event.date);
 
-  while (currentDate <= repeatEndDate) {
-    repeatEvents.push({
-      ...event,
-      date: formatDate(currentDate),
-    });
-    currentDate = getDateByInterval(currentDate, event.repeat.type, event.repeat.interval);
+  if (event.repeatEndType === 'endCount' && event.repeatEndCount) {
+    let count = 0;
+    while (count < event.repeatEndCount) {
+      repeatEvents.push({
+        ...event,
+        date: formatDate(currentDate),
+      });
+      currentDate = getDateByInterval(currentDate, event.repeat.type, event.repeat.interval);
+      count++;
+    }
+  } else {
+    while (currentDate <= repeatEndDate) {
+      repeatEvents.push({
+        ...event,
+        date: formatDate(currentDate),
+      });
+      currentDate = getDateByInterval(currentDate, event.repeat.type, event.repeat.interval);
+    }
   }
 
   return repeatEvents;

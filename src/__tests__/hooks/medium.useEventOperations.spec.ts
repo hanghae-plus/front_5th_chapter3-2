@@ -425,3 +425,38 @@ describe('반복 간격 설정', () => {
     });
   });
 });
+
+describe('반복 종료', () => {
+  it('종료 회수 선택시 특정 횟수만큼 반복 일정이 생성된다', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-20' },
+      notificationTime: 10,
+      repeatEndType: 'endCount',
+      repeatEndCount: 3,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvents(newEvent);
+    });
+
+    console.log({
+      events: result.current.events,
+    });
+
+    expect(result.current.events).toHaveLength(3);
+  });
+});
