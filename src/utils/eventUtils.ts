@@ -54,55 +54,61 @@ export function getRepeatedEvents(event: EventForm) {
   const { type, interval, endDate } = repeat;
   const finalEndDate = endDate ? new Date(endDate) : new Date('2025-09-30');
   const repeatedEvents: EventForm[] = [];
-  let originMonth = new Date(date).getMonth(),
+  const startDate = new Date(date);
+  const originMonth = new Date(date).getMonth(),
     originDate = new Date(date).getDate();
-  let currentDate = new Date(date);
 
-  switch (type) {
-    case 'daily':
-      while (currentDate <= finalEndDate) {
-        repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+  let currentDate = new Date(startDate);
 
-        currentDate.setDate(currentDate.getDate() + interval);
+  const pushEvent = () => {
+    repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+  };
+
+  if (type === 'daily') {
+    while (currentDate <= finalEndDate) {
+      pushEvent();
+
+      currentDate.setDate(currentDate.getDate() + interval);
+    }
+  }
+
+  if (type === 'weekly') {
+    while (currentDate <= finalEndDate) {
+      pushEvent();
+
+      currentDate.setDate(currentDate.getDate() + 7 * interval);
+    }
+  }
+
+  if (type === 'monthly') {
+    while (currentDate <= finalEndDate) {
+      pushEvent();
+
+      const nextDate = new Date(currentDate);
+      nextDate.setMonth(nextDate.getMonth() + interval);
+
+      if (nextDate.getDate() !== originDate) {
+        nextDate.setDate(originDate);
       }
-      break;
-    case 'weekly':
-      while (currentDate <= finalEndDate) {
-        repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+      currentDate = nextDate;
+    }
+  }
 
-        currentDate.setDate(currentDate.getDate() + 7 * interval);
+  if (type === 'yearly') {
+    while (currentDate <= finalEndDate) {
+      if (currentDate.getDate() === originDate) {
+        pushEvent();
       }
-      break;
-    case 'monthly':
-      while (currentDate <= finalEndDate) {
-        repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
 
-        const currentMonth = currentDate.getMonth();
-        const nextDate = currentDate;
-        nextDate.setMonth(nextDate.getMonth() + interval);
+      const nextDate = new Date(currentDate);
+      nextDate.setFullYear(nextDate.getFullYear() + interval);
 
-        if (currentMonth !== currentDate.getMonth()) {
-          currentDate.setDate(originDate);
-        }
-        currentDate.setMonth(nextDate.getMonth());
+      if (originMonth !== currentDate.getMonth()) {
+        nextDate.setMonth(originMonth);
+        nextDate.setDate(originDate);
       }
-      break;
-    case 'yearly':
-      while (currentDate <= finalEndDate) {
-        if (currentDate.getDate() === originDate) {
-          repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
-        }
-
-        const nextDate = currentDate;
-        nextDate.setFullYear(nextDate.getFullYear() + interval);
-
-        if (originMonth !== currentDate.getMonth()) {
-          currentDate.setMonth(originMonth);
-          currentDate.setDate(originDate);
-        }
-        currentDate.setFullYear(nextDate.getFullYear());
-      }
-      break;
+      currentDate = nextDate;
+    }
   }
 
   return repeatedEvents;
