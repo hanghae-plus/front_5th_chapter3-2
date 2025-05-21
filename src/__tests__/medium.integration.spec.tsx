@@ -678,35 +678,90 @@ describe('반복 일정 표시', () => {
 
 describe('반복 종료', () => {
   it('반복 종료 조건을 특정 날짜까지로 지정할 수 있다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 종료일을 2024-12-31로 설정
-    // 4. 일정 저장
-    // 5. 2024-12-31 이후에는 일정이 표시되지 않는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '종료일 있는 반복',
+      date: '2024-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '종료일 있는 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2024-12-31' },
+    });
+
+    // 2024-12-31 이전 날짜 확인
+    await user.type(screen.getByLabelText('date'), '2024-12-30');
+    const beforeEndDateList = within(screen.getByTestId('event-list'));
+    expect(beforeEndDateList.getByText('종료일 있는 반복')).toBeInTheDocument();
+
+    // 2024-12-31 이후 날짜 확인
+    await user.type(screen.getByLabelText('date'), '2025-01-01');
+    const afterEndDateList = within(screen.getByTestId('event-list'));
+    expect(afterEndDateList.queryByText('종료일 있는 반복')).not.toBeInTheDocument();
   });
 
   it('반복 종료 조건을 특정 횟수로 지정할 수 있다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 횟수를 3회로 설정
-    // 4. 일정 저장
-    // 5. 3회 반복 후에는 일정이 표시되지 않는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '3회 반복',
+      date: '2024-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '3회 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, count: 3 }, // 3일 동안만 반복
+    });
+
+    // 3일째 날짜 확인
+    await user.type(screen.getByLabelText('date'), '2024-10-17');
+    const thirdDayList = within(screen.getByTestId('event-list'));
+    expect(thirdDayList.getByText('3회 반복')).toBeInTheDocument();
+
+    // 4일째 날짜 확인
+    await user.type(screen.getByLabelText('date'), '2024-10-18');
+    const fourthDayList = within(screen.getByTestId('event-list'));
+    expect(fourthDayList.queryByText('3회 반복')).not.toBeInTheDocument();
   });
 
   it('반복을 종료 없음으로 지정할 수 있다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 종료일을 설정하지 않음
-    // 4. 일정 저장
-    // 5. 일정이 계속 반복되는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '무한 반복',
+      date: '2024-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '무한 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+    });
+
+    // 먼 미래 날짜로 확인
+    await user.type(screen.getByLabelText('date'), '2025-12-31');
+    const futureList = within(screen.getByTestId('event-list'));
+    expect(futureList.getByText('무한 반복')).toBeInTheDocument();
   });
 
   it('반복 종료일이 올바르지 않은 날짜에 대해 Invalid Date를 반환한다.', async () => {
-    // 1. 일정 추가 버튼 클릭
-    // 2. 반복 체크박스 활성화
-    // 3. 반복 종료일을 잘못된 형식(예: 2024-13-45)으로 입력
-    // 4. 일정 저장 시도
-    // 5. Invalid Date 오류가 발생하는지 확인
+    const { user } = setup(<App />);
+
+    await saveRecurringSchedule(user, {
+      title: '잘못된 종료일',
+      date: '2024-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '잘못된 종료일 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2024-13-45' },
+    });
+
+    expect(screen.getByText('Invalid Date')).toBeInTheDocument();
   });
 });
 
