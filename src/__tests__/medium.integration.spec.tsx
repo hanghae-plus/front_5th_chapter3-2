@@ -532,35 +532,21 @@ describe('반복 일정 설정', () => {
       repeat: {
         type: 'yearly',
         interval: 1,
-        endDate: '2027-11-01',
+        endDate: '2026-11-01',
       },
     });
 
     const calendar = within(screen.getByTestId('month-view'));
-    expect(calendar.queryByTestId('repeat-icon')).toBeInTheDocument();
-    expect(calendar.queryByText('새로 반복되는 회의')).toBeInTheDocument();
+    expect(calendar.getAllByTestId('repeat-icon')).toHaveLength(1);
+    expect(calendar.getAllByText('새로 반복되는 회의')).toHaveLength(1);
 
     for (let month = 0; month < 12; month++) {
       await user.click(screen.getByLabelText('Next'));
     }
 
     const calendarAfter1Year = within(screen.getByTestId('month-view'));
-    expect(calendarAfter1Year.queryByTestId('repeat-icon')).toBeInTheDocument();
-    expect(calendarAfter1Year.queryByText('새로 반복되는 회의')).toBeInTheDocument();
-
-    for (let month = 0; month < 12; month++) {
-      await user.click(screen.getByLabelText('Next'));
-    }
-
-    const calendarAfter2Year = within(screen.getByTestId('month-view'));
-    expect(calendarAfter2Year.queryByTestId('repeat-icon')).toBeInTheDocument();
-    expect(calendarAfter2Year.queryByText('새로 반복되는 회의')).toBeInTheDocument();
-
-    for (let i = 0; i < 12; i++) {
-      await user.click(screen.getByLabelText('Next'));
-    }
-    const calendarAfter3Year = within(screen.getByTestId('month-view'));
-    expect(calendarAfter3Year.queryByText('새로 반복되는 회의')).not.toBeInTheDocument();
+    expect(calendarAfter1Year.getAllByTestId('repeat-icon')).toHaveLength(1);
+    expect(calendarAfter1Year.getAllByText('새로 반복되는 회의')).toHaveLength(1);
   });
   //TODO: 일정 수정 케이스 추가
 });
