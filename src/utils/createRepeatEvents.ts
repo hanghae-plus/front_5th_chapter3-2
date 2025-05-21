@@ -1,6 +1,36 @@
 import { Event, RepeatType } from '../types';
 import { formatDate } from './dateUtils';
 
+// baseDate가 31일인 경우, n번째 31일이 있는 달의 31일 날짜를 반환
+const getNthMonthWith31 = (baseDate: Date, n: number): Date => {
+  let year = baseDate.getFullYear();
+  let month = baseDate.getMonth();
+  let count = 0;
+  // n번째 31일이 존재하는 달을 찾을 때까지 달을 증가시킨다.
+  while (count < n) {
+    month++;
+    if (month > 11) {
+      year += Math.floor(month / 12);
+      month = month % 12;
+    }
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    // 해당 달에 31일이 존재하면 count 증가
+    if (daysInMonth >= 31) {
+      count++;
+    }
+  }
+  return new Date(year, month, 31);
+};
+
+const getNextMonth = (baseDate: Date, n: number): Date => {
+  const nextMonth = baseDate.getMonth() + n;
+  if (nextMonth > 11) {
+    baseDate.setFullYear(baseDate.getFullYear() + Math.floor(nextMonth / 12));
+  }
+  baseDate.setMonth(nextMonth);
+  return baseDate;
+};
+
 const isLeapYear = (year: number): boolean =>
   (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 
@@ -26,7 +56,11 @@ const getNextRepeatDate = (baseDate: Date, type: RepeatType, i: number): Date =>
       nextDate.setDate(nextDate.getDate() + i * 7);
       break;
     case 'monthly':
-      nextDate.setMonth(nextDate.getMonth() + i);
+      // 31일 처리
+      if (baseDate.getDate() === 31) {
+        return getNthMonthWith31(baseDate, i);
+      }
+      return getNextMonth(baseDate, i);
       break;
     case 'yearly':
       // 윤년 처리
