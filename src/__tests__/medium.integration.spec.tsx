@@ -222,7 +222,6 @@ describe('반복 간격 설정', () => {
   });
 });
 
-// TODO: 이벤트 추가할 때 반복 체크 박스 누르면 반복 유형 event.repeat.type none 에서 바로 초기값 바뀌게!!!
 describe('반복 일정 표시', () => {
   it('캘린더 뷰에서 반복 일정은 일정 제목 앞에 반복 아이콘으로 구분되어 표시되어야 한다.', async () => {
     setupMockHandlerUpdating();

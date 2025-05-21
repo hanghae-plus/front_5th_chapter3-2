@@ -19,6 +19,7 @@ export const useEventForm = (initialEvent?: Event) => {
   const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat.type || 'none');
   const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat.interval || 1);
   const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
+  const [repeatCount, setRepeatCount] = useState(initialEvent?.repeat.count || 0);
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -27,6 +28,15 @@ export const useEventForm = (initialEvent?: Event) => {
     startTimeError: null,
     endTimeError: null,
   });
+
+  const handleRepeatingChange = (value: boolean) => {
+    setIsRepeating(value);
+    if (value) {
+      setRepeatType('daily'); // 반복 체크가 켜지면 daily로 설정
+    } else {
+      setRepeatType('none'); // 반복 체크가 꺼지면 none으로 설정
+    }
+  };
 
   const handleStartTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newStartTime = e.target.value;
@@ -52,6 +62,7 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatType('none');
     setRepeatInterval(1);
     setRepeatEndDate('');
+    setRepeatCount(0);
     setNotificationTime(10);
   };
 
@@ -68,6 +79,7 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatType(event.repeat.type);
     setRepeatInterval(event.repeat.interval);
     setRepeatEndDate(event.repeat.endDate || '');
+    setRepeatCount(event.repeat.count || 0);
     setNotificationTime(event.notificationTime);
   };
 
@@ -87,13 +99,15 @@ export const useEventForm = (initialEvent?: Event) => {
     category,
     setCategory,
     isRepeating,
-    setIsRepeating,
+    setIsRepeating: handleRepeatingChange,
     repeatType,
     setRepeatType,
     repeatInterval,
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatCount,
+    setRepeatCount,
     notificationTime,
     setNotificationTime,
     startTimeError,
