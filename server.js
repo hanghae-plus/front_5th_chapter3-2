@@ -125,12 +125,20 @@ app.put('/api/events-list', async (req, res) => {
 
 app.delete('/api/events-list', async (req, res) => {
   const events = await getEvents();
-  const newEvents = events.events.filter((event) => !req.body.eventIds.includes(event.id)); // ? ids를 전달하면 해당 아이디를 기준으로 events에서 제거
+
+  
+  // 클라이언트가 보낸 이벤트 배열을 그대로 저장 (repeat.id 포함되어 있음)
+  const newEvents = req.body.events.map((event) => ({
+    id: randomUUID(), // 각 이벤트는 새로운 id 생성
+    ...event,
+  }));
+
+  //const newEvents = events.events.filter((event) => !req.body.eventIds.includes(event.id)); // ? ids를 전달하면 해당 아이디를 기준으로 events에서 제거
 
   fs.writeFileSync(
     `${__dirname}/src/__mocks__/response/realEvents.json`,
     JSON.stringify({
-      events: newEvents,
+      events:  [...events.events, ...newEvents],
     })
   );
 
