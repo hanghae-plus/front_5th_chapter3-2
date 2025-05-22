@@ -39,12 +39,13 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
+
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
-import { useSearch } from './hooks/useSearch.ts';
 import { useRecurringEvents } from './hooks/useRegisterSchedule.ts';
+import { useSearch } from './hooks/useSearch.ts';
 import { RepeatType } from './types';
 import {
   formatDate,

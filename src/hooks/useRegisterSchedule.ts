@@ -66,8 +66,9 @@ export function useRecurringEvents({
       : [formData.date];
 
     for (const date of allDates) {
-      const eventToSave: EventForm = {
+      const eventToSave: Event = {
         ...formData,
+        id: '',
         date,
         repeat: {
           type: isRepeating ? repeatType : 'none',
@@ -83,7 +84,7 @@ export function useRecurringEvents({
         return false;
       }
 
-      await saveEvent(eventToSave as Event);
+      await saveEvent(eventToSave);
     }
 
     resetForm();
