@@ -14,7 +14,6 @@ import {
 import { ChangeEvent, FC } from 'react';
 
 import { EventFormProps } from '../types';
-// eslint-disable-next-line import/order
 import RepeatForm from './RepeatForm';
 
 const categories = ['업무', '개인', '가족', '기타'];
