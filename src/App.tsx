@@ -39,13 +39,13 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
-
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { useRecurringEvents } from './hooks/useRegisterSchedule.ts';
+import { RepeatType } from './types';
 import {
   formatDate,
   formatMonth,
@@ -55,8 +55,6 @@ import {
   getWeeksAtMonth,
 } from './utils/dateUtils';
 import { getTimeErrorMessage } from './utils/timeValidation';
-
-import { useRecurringEvents } from './hooks/useRegisterSchedule.ts';
 
 const categories = ['업무', '개인', '가족', '기타'];
 
