@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -112,6 +113,8 @@ function App() {
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
   const { searchTerm, filteredEvents, setSearchTerm } = useSearch(events, currentDate, view);
 
+  console.log(filteredEvents);
+
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -139,6 +142,12 @@ function App() {
       return;
     }
 
+    const repeatEventData = {
+      type: editingEvent ? 'none' : isRepeating ? repeatType : 'none',
+      interval: editingEvent ? 0 : repeatInterval,
+      endDate: editingEvent ? undefined : repeatEndDate || undefined,
+    };
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -148,11 +157,7 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat: repeatEventData,
       notificationTime,
     };
 
@@ -161,40 +166,50 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      if (isRepeating) {
-        // 반복 유형에 따른 처리
-        switch (repeatType) {
-          case 'daily':
-          case 'weekly':
-          case 'monthly':
-          case 'yearly':
-            if (!repeatEndDate) {
-              toast({
-                title: '반복 종료일을 설정해주세요.',
-                status: 'error',
-                duration: 3000,
-                isClosable: true,
-              });
-              return;
-            }
-            if (repeatInterval < 1) {
-              toast({
-                title: '반복 간격은 1 이상이어야 합니다.',
-                status: 'error',
-                duration: 3000,
-                isClosable: true,
-              });
-              return;
-            }
-            await saveRepeatEvent(eventData as EventForm);
-            break;
-          default:
-            await saveEvent(eventData);
-        }
+      if (eventData.repeat.type !== 'none') {
+        await saveRepeatEvent(eventData);
       } else {
         await saveEvent(eventData);
       }
       resetForm();
+    }
+  };
+
+  const handleOverlap = () => {
+    setIsOverlapDialogOpen(false);
+    if (repeatType) {
+      saveRepeatEvent({
+        id: editingEvent ? editingEvent.id : undefined,
+        title,
+        date,
+        startTime,
+        endTime,
+        description,
+        location,
+        category,
+        repeat: {
+          type: repeatType,
+          interval: repeatInterval,
+          endDate: repeatEndDate || undefined,
+        },
+        notificationTime,
+      });
+    } else {
+      saveEvent({
+        id: editingEvent ? editingEvent.id : undefined,
+        title,
+        date,
+        startTime,
+        endTime,
+        description,
+        location,
+        category,
+        repeat: {
+          type: 'none',
+          interval: 0,
+        },
+        notificationTime,
+      });
     }
   };
 
@@ -234,6 +249,13 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {event.repeat.type !== 'none' && (
+                              <RepeatIcon
+                                aria-label="반복 일정 아이콘"
+                                color="gray.500"
+                                fontSize="sm"
+                              />
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -303,6 +325,13 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && (
+                                    <RepeatIcon
+                                      aria-label="repeat-icon"
+                                      color="gray.500"
+                                      fontSize="sm"
+                                    />
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -540,11 +569,7 @@ function App() {
                     <IconButton
                       aria-label="Delete event"
                       icon={<DeleteIcon />}
-                      onClick={() => {
-                        if (event.repeat.type !== 'none') {
-                          deleteEvent(event.id);
-                        }
-                      }}
+                      onClick={() => deleteEvent(event.id)}
                     />
                   </HStack>
                 </HStack>
@@ -579,14 +604,7 @@ function App() {
               <Button ref={cancelRef} onClick={() => setIsOverlapDialogOpen(false)}>
                 취소
               </Button>
-              <Button
-                colorScheme="red"
-                onClick={() => {
-                  setIsOverlapDialogOpen(false);
-                  addOrUpdateEvent();
-                }}
-                ml={3}
-              >
+              <Button colorScheme="red" onClick={handleOverlap} ml={3}>
                 계속 진행
               </Button>
             </AlertDialogFooter>

@@ -1,4 +1,4 @@
-import { EventForm, RepeatType } from '../types';
+import { EventForm, Event, RepeatType } from '../types';
 
 type DateCalculator = (date: Date, interval: number) => void;
 
@@ -16,29 +16,32 @@ const calculateNextDate = (currentDate: Date, repeatType: RepeatType, interval: 
   return nextDate;
 };
 
-export const createRepeatEvents = (baseEvent: EventForm) => {
-  const { repeat, ...eventWithoutRepeat } = baseEvent;
+export const createRepeatEvents = (event: Event | EventForm) => {
+  const { repeat, date } = event;
+  const { type, interval, endDate } = repeat;
 
-  if (repeat.type === 'none') {
-    return [baseEvent];
+  if (type === 'none') {
+    return [event];
   }
 
-  const events: EventForm[] = [];
-  const startDate = new Date(baseEvent.date);
-  const endDate = new Date(repeat.endDate || '2025-09-30');
-  let currentDate = new Date(startDate);
+  const repeatEndDate = endDate ? new Date(endDate) : new Date('2025-09-30');
+  let currentDate = new Date(date);
 
-  while (currentDate <= endDate) {
-    events.push({
-      ...eventWithoutRepeat,
+  const repeatEvents: (Event | EventForm)[] = [];
+
+  while (currentDate <= repeatEndDate) {
+    repeatEvents.push({
+      ...event,
       date: currentDate.toISOString().split('T')[0],
       repeat: {
-        ...repeat,
+        type,
+        interval,
+        endDate,
       },
     });
 
-    currentDate = calculateNextDate(currentDate, repeat.type, repeat.interval);
+    currentDate = calculateNextDate(currentDate, type, interval);
   }
 
-  return events;
+  return repeatEvents;
 };
