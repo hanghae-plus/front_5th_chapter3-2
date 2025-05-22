@@ -22,3 +22,10 @@ export interface EventForm {
 export interface Event extends EventForm {
   id: string;
 }
+
+export interface Repeat {
+  type: RepeatType;
+  interval: number;
+  endDate?: string;
+  id: string;
+}

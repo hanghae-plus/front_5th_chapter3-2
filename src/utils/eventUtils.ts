@@ -49,15 +49,6 @@ export function getFilteredEvents(
   return searchedEvents;
 }
 
-export function getRepeatEventIds(repeatId: string, events: Event[]) {
-  if (!repeatId) return [];
-
-  const repeatEvent = events.filter((event) => event.repeat.id === repeatId);
-  const repeatEventIds = repeatEvent.length > 0 ? repeatEvent.map((event) => event.id) : [];
-
-  return repeatEventIds;
-}
-
 export function createRepeatEvents(event: Event) {
   const {
     date,

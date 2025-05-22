@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
   InfoIcon,
 } from '@chakra-ui/icons';
 import {
@@ -57,6 +58,7 @@ import {
 } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
 import { getTimeErrorMessage } from './utils/timeValidation';
+import { isNumberInRange, validateRepeatEndDate } from './utils/validate.ts';
 
 const categories = ['업무', '개인', '가족', '기타'];
 
@@ -104,8 +106,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent, saveRepeatEvents } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -117,6 +120,38 @@ function App() {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const toast = useToast();
+
+  const onClickContinue = async () => {
+    setIsOverlapDialogOpen(false);
+
+    const repeat = editingEvent
+      ? {
+          type: 'none' as RepeatType,
+          interval: 0,
+        }
+      : {
+          type: isRepeating ? repeatType : 'none',
+          interval: repeatInterval,
+          endDate: repeatEndDate || undefined,
+        };
+
+    const eventData: Event | EventForm = {
+      id: editingEvent ? editingEvent.id : undefined,
+      title,
+      date,
+      startTime,
+      endTime,
+      description,
+      location,
+      category,
+      repeat,
+      notificationTime,
+    };
+
+    if (eventData.repeat.type !== 'none') await saveRepeatEvents(eventData);
+    else await saveEvent(eventData);
+    resetForm();
+  };
 
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
@@ -139,7 +174,20 @@ function App() {
       return;
     }
 
-    if (repeatInterval < 1 || repeatInterval > 12) {
+    if (isRepeating) {
+      const endDateError = validateRepeatEndDate({ date, repeat: { endDate: repeatEndDate } });
+      if (endDateError) {
+        toast({
+          title: endDateError,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+    }
+
+    if (!isNumberInRange({ value: repeatInterval, min: 1, max: 12 }) && isRepeating) {
       toast({
         title: '반복 간격은 1에서 12 사이의 숫자여야 합니다.',
         status: 'error',
@@ -148,6 +196,17 @@ function App() {
       });
       return;
     }
+
+    const repeat = editingEvent
+      ? {
+          type: 'none' as RepeatType,
+          interval: 0,
+        }
+      : {
+          type: isRepeating ? repeatType : 'none',
+          interval: repeatInterval,
+          endDate: repeatEndDate || undefined,
+        };
 
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
@@ -158,20 +217,16 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat,
       notificationTime,
     };
-
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      if (eventData.repeat.type !== 'none') await saveRepeatEvents(eventData);
+      else await saveEvent(eventData);
       resetForm();
     }
   };
@@ -281,6 +336,7 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && <RepeatIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -368,7 +424,11 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              isChecked={isRepeating}
+              onChange={(e) => setIsRepeating(e.target.checked)}
+              aria-label="repeat-checkbox"
+            >
               반복 일정
             </Checkbox>
           </FormControl>
@@ -394,6 +454,7 @@ function App() {
                 <Select
                   aria-label="repeat-type"
                   value={repeatType}
+                  disabled={editingEvent !== null}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
                   <option value="daily">매일</option>
@@ -421,6 +482,7 @@ function App() {
                   <Input
                     aria-label="repeat-interval"
                     type="number"
+                    disabled={editingEvent !== null}
                     value={repeatInterval}
                     onChange={(e) => setRepeatInterval(Number(e.target.value))}
                     max={12}
@@ -433,6 +495,8 @@ function App() {
                   <FormLabel>반복 종료일</FormLabel>
                   <Input
                     type="date"
+                    aria-label="repeat-end-date"
+                    disabled={editingEvent !== null}
                     value={repeatEndDate}
                     onChange={(e) => setRepeatEndDate(e.target.value)}
                   />
@@ -488,7 +552,14 @@ function App() {
             <Text>검색 결과가 없습니다.</Text>
           ) : (
             filteredEvents.map((event) => (
-              <Box key={event.id} borderWidth={1} borderRadius="lg" p={3} width="100%">
+              <Box
+                key={event.id}
+                borderWidth={1}
+                borderRadius="lg"
+                p={3}
+                width="100%"
+                data-testid="event-card"
+              >
                 <HStack justifyContent="space-between">
                   <VStack align="start">
                     <HStack>
@@ -527,18 +598,21 @@ function App() {
                       }
                     </Text>
                   </VStack>
-                  <HStack>
-                    <IconButton
-                      aria-label="Edit event"
-                      icon={<EditIcon />}
-                      onClick={() => editEvent(event)}
-                    />
-                    <IconButton
-                      aria-label="Delete event"
-                      icon={<DeleteIcon />}
-                      onClick={() => deleteEvent(event.id)}
-                    />
-                  </HStack>
+                  <VStack>
+                    <HStack>
+                      <IconButton
+                        aria-label="Edit event"
+                        icon={<EditIcon />}
+                        onClick={() => editEvent(event)}
+                      />
+
+                      <IconButton
+                        aria-label="Delete event"
+                        icon={<DeleteIcon />}
+                        onClick={() => deleteEvent(event.id)}
+                      />
+                    </HStack>
+                  </VStack>
                 </HStack>
               </Box>
             ))
@@ -572,26 +646,9 @@ function App() {
                 취소
               </Button>
               <Button
+                aria-label="continue-button"
                 colorScheme="red"
-                onClick={() => {
-                  setIsOverlapDialogOpen(false);
-                  saveEvent({
-                    id: editingEvent ? editingEvent.id : undefined,
-                    title,
-                    date,
-                    startTime,
-                    endTime,
-                    description,
-                    location,
-                    category,
-                    repeat: {
-                      type: isRepeating ? repeatType : 'none',
-                      interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
-                    },
-                    notificationTime,
-                  });
-                }}
+                onClick={() => onClickContinue()}
                 ml={3}
               >
                 계속 진행
