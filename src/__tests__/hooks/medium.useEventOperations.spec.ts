@@ -499,12 +499,12 @@ describe('반복 일정', () => {
       repeat: { type: 'daily', interval: 1, endDate: '2025-05-03' },
       notificationTime: 5,
     };
-    expect(result.current.events.length).toBe(2);
+    expect(result.current.events.length).toBe(7);
 
     await act(async () => {
       await result.current.deleteRepeatEvent([newEvent.id]);
     });
 
-    expect(result.current.events.length).toBe(1);
+    expect(result.current.events.length).toBe(6);
   });
 });

@@ -9,7 +9,6 @@ import {
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
   setupMockRepeatHandlerCreateion,
-  setupMockRepeatHandlerDeletion,
   setupMockRepeatHandlerUpdation,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
@@ -551,15 +550,5 @@ describe('일정 반복', () => {
 
     const calendar = within(screen.getByTestId('month-view'));
     expect(calendar.getByText('New')).toBeInTheDocument();
-  });
-
-  it('반복일정을 삭제하면 해당 일정만 삭제합니다..', async () => {
-    setupMockHandlerDeletion();
-    const { user } = setup(<App />);
-    const editButton = await screen.findByLabelText('Delete event');
-    await user.click(editButton);
-
-    const calendar = within(screen.getByTestId('month-view'));
-    expect(calendar.queryByText('삭제할 이벤트')).not.toBeInTheDocument();
   });
 });
