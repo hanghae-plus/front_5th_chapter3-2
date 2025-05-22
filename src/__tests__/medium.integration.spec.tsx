@@ -361,6 +361,41 @@ describe('반복 일정 생성 비즈니스 로직', () => {
     expect(events.every((e) => e.repeat.type === 'daily')).toBe(true);
   });
 
+  it('매일 반복 설정 시, 지정된 횟수만큼 이벤트 목록을 생성한다', async () => {
+    const baseEvent = {
+      title: '반복 테스트',
+      date: '2025-10-01',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '테스트 설명',
+      location: '회의실 A',
+      category: '업무',
+      notificationTime: 10,
+    };
+
+    const repeatInfo = {
+      type: 'daily' as RepeatType,
+      interval: 1,
+      endDate: '2025-10-20',
+      count: 10,
+    };
+
+    const events = generateRepeatEvents(baseEvent, repeatInfo);
+
+    expect(events).toHaveLength(10);
+    expect(events[0].date).toBe('2025-10-01');
+    expect(events[1].date).toBe('2025-10-02');
+    expect(events[2].date).toBe('2025-10-03');
+    expect(events[3].date).toBe('2025-10-04');
+    expect(events[4].date).toBe('2025-10-05');
+    expect(events[5].date).toBe('2025-10-06');
+    expect(events[6].date).toBe('2025-10-07');
+    expect(events[7].date).toBe('2025-10-08');
+    expect(events[8].date).toBe('2025-10-09');
+    expect(events[9].date).toBe('2025-10-10');
+    expect(events.every((e) => e.repeat.type === 'daily')).toBe(true);
+  });
+
   it('생성된 반복 이벤트들이 /api/events-list 로 전송된다', async () => {
     const spy = vi.fn();
 

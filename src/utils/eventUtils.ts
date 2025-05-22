@@ -55,6 +55,7 @@ export function generateRepeatEvents(
     type: RepeatType;
     interval: number;
     endDate: string;
+    count?: number;
   }
 ): EventForm[] {
   const { type, interval, endDate } = repeat;
@@ -64,8 +65,13 @@ export function generateRepeatEvents(
   const end = new Date(endDate);
 
   let current = new Date(startDate);
+  let count = 0;
 
   while (current <= end) {
+    if (!!repeat.count && count === repeat.count) {
+      break;
+    }
+
     results.push({
       ...baseEvent,
       date: current.toISOString().split('T')[0],
@@ -91,7 +97,9 @@ export function generateRepeatEvents(
         nextDate.setFullYear(current.getFullYear() + interval);
         break;
     }
+
     current = nextDate;
+    count++;
   }
 
   return results;
