@@ -61,8 +61,8 @@ const saveRepeatSchedule = async (
     await user.selectOptions(screen.getByLabelText('반복 유형'), repeat.type);
     await user.clear(screen.getByLabelText('반복 간격'));
     await user.type(screen.getByLabelText('반복 간격'), repeat.interval.toString());
-    
-    if(repeat.endDate){
+
+    if (repeat.endDate) {
       await user.type(screen.getByLabelText('반복 종료일'), repeat.endDate || '');
     }
   }
@@ -373,10 +373,10 @@ describe('반복 일정 생성', () => {
     });
 
     const eventList = within(screen.getByTestId('event-list'));
-    
-    expect(eventList.getAllByText("매일 반복").length).toBeGreaterThan(1);
-    expect(eventList.getAllByText("반복: 1일마다").length).toBeGreaterThan(1);
-  })
+
+    expect(eventList.getAllByText('매일 반복').length).toBeGreaterThan(1);
+    expect(eventList.getAllByText('반복: 1일마다').length).toBeGreaterThan(1);
+  });
 
   it('일정 생성 시 매주 반복을 설정할 수 있다.', async () => {
     setupMockHandlerCreation();
@@ -397,7 +397,7 @@ describe('반복 일정 생성', () => {
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getAllByText('매주 반복').length).toBeGreaterThan(1);
     expect(eventList.getAllByText('반복: 1주마다').length).toBeGreaterThan(1);
-  })
+  });
 
   it('일정 생성 시 매월 반복을 설정할 수 있다.', async () => {
     setupMockHandlerCreation();
@@ -418,10 +418,9 @@ describe('반복 일정 생성', () => {
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getAllByText('매월 반복').length).toBeGreaterThan(0);
     expect(eventList.getAllByText('반복: 1달마다').length).toBeGreaterThan(0);
-  })
+  });
 
-
-  it('2월 29일의 일정을 매월 반복으로 설정하면, 29일이 존재하지 않는 달에는 반복되지 않는다. ', async () => {
+  it('2월 29일의 일정을 매월 반복으로 설정하면, 29일이 존재하지 않는 달에는 반복되지 않는다.', async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
@@ -443,9 +442,9 @@ describe('반복 일정 생성', () => {
     await user.selectOptions(screen.getByLabelText('view'), 'month');
     await user.type(screen.getByLabelText('날짜'), '2024-03-29');
     expect(eventList.getByText('윤년 29일 반복')).toBeInTheDocument();
-  })
+  });
 
-  it('31일의 일정을 매월 반복으로 설정하면, 31일이 존재하지 않는 달에는 반복되지 않는다. ', async () => {
+  it('31일의 일정을 매월 반복으로 설정하면, 31일이 존재하지 않는 달에는 반복되지 않는다.', async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
@@ -471,9 +470,8 @@ describe('반복 일정 생성', () => {
     // 다다음달 31일에 일정이 있는지 확인
     await user.selectOptions(screen.getByLabelText('view'), 'month');
     await user.type(screen.getByLabelText('날짜'), '2024-07-31');
-    expect(eventList.getByText('31일 반복')).toBeInTheDocument();    
-  })  
-
+    expect(eventList.getByText('31일 반복')).toBeInTheDocument();
+  });
 
   it('각 반복 유형에 대해 간격을 설정할 수 있다.', async () => {
     setupMockHandlerCreation();
@@ -494,7 +492,7 @@ describe('반복 일정 생성', () => {
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getAllByText('2주 마다 반복').length).toBeGreaterThan(1);
     expect(eventList.getAllByText('반복: 2주마다').length).toBeGreaterThan(1);
-  })
+  });
 
   it('캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표시된다.', async () => {
     setupMockHandlerCreation([
@@ -519,8 +517,7 @@ describe('반복 일정 생성', () => {
 
     expect(eventList).toHaveTextContent('반복 테스트');
     expect(repeatIcon).toBeInTheDocument();
-    
-  })
+  });
 
   it('반복 종료 조건을 지정할 수 있다.', async () => {
     const date = new Date(2025, 4, 1, 12, 0, 0);
@@ -543,19 +540,16 @@ describe('반복 일정 생성', () => {
 
     const { user } = setup(<App />);
 
-
     const eventList = within(screen.getByTestId('event-list'));
-
-    
 
     //이전까지 일정 있는지 확인
     await user.type(screen.getByLabelText('날짜'), '2025-05-01');
     expect(eventList.getAllByText('반복 테스트').length).toBeGreaterThan(1);
-  })
+  });
 
   it('반복일정을 수정하면 단일 일정으로 변경되며, 아이콘도 사라진다.', async () => {
     const { user } = setup(<App />);
-    
+
     await saveRepeatSchedule(user, {
       title: '수정할 반복 일정',
       date: '2025-05-15',
@@ -580,7 +574,7 @@ describe('반복 일정 생성', () => {
     // 반복 아이콘이 사라졌는지 확인
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.queryByTestId('repeat-icon')).not.toBeInTheDocument();
-  })
+  });
 
   it('반복일정을 삭제하면 해당 일정만 삭제된다.', async () => {
     setupMockHandlerCreation([
@@ -623,21 +617,21 @@ describe('반복 일정 생성', () => {
     await waitFor(() => {
       expect(screen.getAllByLabelText('Delete event')).toHaveLength(1);
     });
-  })
-})
+  });
+});
 
 describe('반복 간격', () => {
   it('반복 간격을 설정하지 않으면 기본값으로 1이 설정되어야 한다.', () => {
     setup(<App />);
-  
+
     const repeatInterval = screen.getByLabelText('repeat-interval');
     expect(repeatInterval).toHaveValue(1);
   });
-  
+
   it('반복 간격이 1 미만이라면, 경고 메시지가 표시되어야 한다. (복사 붙여넣기 동작)', async () => {
     const { user } = setup(<App />);
     const repeatInterval = screen.getByLabelText('repeat-interval');
-  
+
     await user.clear(repeatInterval);
     await user.type(repeatInterval, '0');
     await saveSchedule(user, {
@@ -649,14 +643,14 @@ describe('반복 간격', () => {
       location: '회의실 A',
       category: '업무',
     });
-  
+
     expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
   });
-  
+
   it('반복 간격이 12 초과라면 경고 메시지가 표시되어야 한다. (복사 붙여넣기 동작)', async () => {
     const { user } = setup(<App />);
     const repeatInterval = screen.getByLabelText('repeat-interval');
-  
+
     await user.clear(repeatInterval);
     await user.type(repeatInterval, '13');
     await saveSchedule(user, {
@@ -668,14 +662,14 @@ describe('반복 간격', () => {
       location: '회의실 A',
       category: '업무',
     });
-  
+
     expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
   });
-  
+
   it('반복 간격이 유효한 숫자가 아니라면 경고 메시지가 표시되어야 한다.', async () => {
     const { user } = setup(<App />);
     const repeatInterval = screen.getByLabelText('repeat-interval');
-  
+
     await user.clear(repeatInterval);
     await user.type(repeatInterval, '0');
     await user.type(repeatInterval, '222');
@@ -688,11 +682,10 @@ describe('반복 간격', () => {
       location: '회의실 A',
       category: '업무',
     });
-  
+
     expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
   });
-  });
-
+});
 
 const getDateCellByDay = (container: HTMLElement, day: string) => {
   return Array.from(container.querySelectorAll('td')).find((td) =>

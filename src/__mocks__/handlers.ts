@@ -54,6 +54,4 @@ export const handlers = [
 
     return new HttpResponse(null, { status: 404 });
   }),
-
-  
 ];
