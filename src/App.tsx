@@ -79,7 +79,7 @@ function expandEvents(events, startDate, endDate) {
           ...event,
           id: `${event.id}-${dateStr}`, // 날짜를 포함한 고유 ID 생성
           parentId: event.id, // 원래 이벤트의 ID를 참조
-          date: dateStr
+          date: dateStr,
         });
       }
       switch (event.repeat.type) {
