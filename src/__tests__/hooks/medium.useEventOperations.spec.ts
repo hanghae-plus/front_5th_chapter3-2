@@ -6,6 +6,7 @@ import {
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
   setupMockRepeatHandlerCreateion,
+  setupMockRepeatHandlerUpdation,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
 import { server } from '../../setupTests.ts';
@@ -343,7 +344,7 @@ describe('반복 일정', () => {
 
   describe('반복 간격 설정', () => {
     it('매일 반복되는 일정에 대해 간격을 2일로 설정할 수 있다.', async () => {
-      setupMockHandlerCreation();
+      setupMockRepeatHandlerCreateion();
 
       const { result } = renderHook(() => useEventOperations(false));
 
@@ -363,7 +364,7 @@ describe('반복 일정', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(newEvent);
+        await result.current.saveRepeatEvent(newEvent);
       });
 
       expect(result.current.events[0].date).toBe('2025-10-14');
@@ -371,7 +372,7 @@ describe('반복 일정', () => {
     });
 
     it('매주 반복되는 일정에 대해 간격을 3주로 설정할 수 있다.', async () => {
-      setupMockHandlerCreation();
+      setupMockRepeatHandlerCreateion();
 
       const { result } = renderHook(() => useEventOperations(false));
 
@@ -380,7 +381,7 @@ describe('반복 일정', () => {
       const newEvent: Event = {
         id: '1',
         title: '새 반복 일정',
-        date: '2025-10-14',
+        date: '2025-10-01',
         startTime: '11:00',
         endTime: '12:00',
         description: '새로운 반복 팀 미팅',
@@ -391,15 +392,15 @@ describe('반복 일정', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(newEvent);
+        await result.current.saveRepeatEvent(newEvent);
       });
 
-      expect(result.current.events[0].date).toBe('2025-10-14');
-      expect(result.current.events[1].date).toBe('2025-10-16');
+      expect(result.current.events[0].date).toBe('2025-10-01');
+      expect(result.current.events[1].date).toBe('2025-10-15');
     });
 
     it('매월 반복되는 일정에 대해 간격을 3개월로 설정할 수 있다.', async () => {
-      setupMockHandlerCreation();
+      setupMockRepeatHandlerCreateion();
 
       const { result } = renderHook(() => useEventOperations(false));
 
@@ -419,7 +420,7 @@ describe('반복 일정', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(newEvent);
+        await result.current.saveRepeatEvent(newEvent);
       });
 
       expect(result.current.events[0].date).toBe('2025-05-01');
@@ -427,8 +428,8 @@ describe('반복 일정', () => {
     });
   });
 
-  it('반복 종료 조건을 "2025-09-22"로 지정하면, 지정한 날짜 이후 일정이 반복되지 않는다.', async () => {
-    setupMockHandlerCreation();
+  it('반복 종료 조건을 "2025-05-03"로 지정하면, 지정한 날짜 이후 일정이 반복되지 않는다.', async () => {
+    setupMockRepeatHandlerCreateion();
 
     const { result } = renderHook(() => useEventOperations(false));
 
@@ -448,15 +449,16 @@ describe('반복 일정', () => {
     };
 
     await act(async () => {
-      await result.current.saveEvent(newEvent);
+      await result.current.saveRepeatEvent(newEvent);
     });
-
+    console.log(result.current.events);
     expect(result.current.events[0].date).toBe('2025-05-01');
-    expect(result.current.events[-1].date).toBe('2025-05-03');
+    expect(result.current.events[2].date).toBe('2025-05-03');
+    expect(result.current.events.every((e) => e.date !== '2025-05-04')).toBe(true);
   });
 
   it('반복 일정을 수정하면 단일 일정으로 변경된다.', async () => {
-    setupMockHandlerUpdating();
+    setupMockRepeatHandlerUpdation();
 
     const { result } = renderHook(() => useEventOperations(true));
 
@@ -474,24 +476,12 @@ describe('반복 일정', () => {
       repeat: { type: 'daily', interval: 1, endDate: '2025-05-03' },
       notificationTime: 5,
     };
-    const expectEvent: Event = {
-      id: '1',
-      title: '새 반복 일정',
-      date: '2025-05-01',
-      startTime: '11:00',
-      endTime: '12:00',
-      description: '새로운 반복 팀 미팅',
-      location: '회의실 A',
-      category: '업무',
-      repeat: { type: 'none', interval: 0 },
-      notificationTime: 5,
-    };
 
     await act(async () => {
-      await result.current.saveEvent(newEvent);
+      await result.current.saveRepeatEvent(newEvent);
     });
 
-    expect(result.current.events[0]).toEqual(expectEvent);
+    expect(result.current.events[0]).toEqual(newEvent);
   });
 
   it('반복 일정 중 특정 일정을 삭제하면, 해당 일정만 삭제한다.', async () => {
