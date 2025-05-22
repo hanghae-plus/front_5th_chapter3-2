@@ -2,6 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import { getRepeatDates } from '../utils/repeatUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -27,20 +28,45 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   };
 
   const saveEvent = async (eventData: Event | EventForm) => {
+    const { repeat, date } = eventData as Event;
+    const repeatDate = getRepeatDates(new Date(date), repeat);
+    const repeatEvents = repeatDate.map((repeatDate, index) => ({
+      ...eventData,
+      id: `${(eventData as Event).id + index}`,
+      date: repeatDate,
+    }));
     try {
       let response;
       if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
+        if (repeat.type !== 'none') {
+          response = await fetch(`/api/events-list/${(eventData as Event).id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(repeatEvents),
+          });
+        } else {
+          {
+            response = await fetch(`/api/events/${(eventData as Event).id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(eventData),
+            });
+          }
+        }
       } else {
-        response = await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
+        if (repeat.type !== 'none') {
+          response = await fetch('/api/events-list', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(repeatEvents),
+          });
+        } else {
+          response = await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        }
       }
 
       if (!response.ok) {

@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -204,6 +205,9 @@ function App() {
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
+                            {event.repeat.type !== 'none' && (
+                              <RepeatIcon color="gray.500" aria-label="repeat-icon" />
+                            )}
                           </HStack>
                         </Box>
                       );
@@ -273,6 +277,9 @@ function App() {
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
+                                  {event.repeat.type !== 'none' && (
+                                    <RepeatIcon color="gray.500" aria-label="repeat-icon" />
+                                  )}
                                 </HStack>
                               </Box>
                             );
@@ -382,6 +389,7 @@ function App() {
                 <FormLabel>반복 유형</FormLabel>
                 <Select
                   value={repeatType}
+                  data-testid="repeat-type-select"
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
                   <option value="daily">매일</option>
