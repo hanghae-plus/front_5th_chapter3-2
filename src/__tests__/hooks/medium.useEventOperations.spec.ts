@@ -611,4 +611,41 @@ describe('반복 일정 기능', () => {
       expect(result.current.events[2].date).toBe('2025-10-15');
     });
   });
+
+  describe('반복 일정 삭제', () => {
+    it('반복 일정을 삭제하면 해당 일정이 삭제된다', async () => {
+      setupMockHandlerCreation();
+      const { result } = renderHook(() => useEventOperations(false));
+      await act(() => Promise.resolve(null));
+
+      const event: Event = {
+        id: '1',
+        title: '주간 팀 회의',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '매주 진행되는 팀 회의',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-15' },
+        notificationTime: 5,
+      };
+
+      await act(async () => {
+        await result.current.saveRepeatEvent(event);
+      });
+
+      setupMockHandlerDeletion();
+
+      await act(async () => {
+        await result.current.deleteEvent('1');
+      });
+
+      await act(async () => {
+        await result.current.fetchEvents();
+      });
+
+      expect(result.current.events).toEqual([]);
+    });
+  });
 });
