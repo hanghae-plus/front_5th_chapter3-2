@@ -1,4 +1,3 @@
-import { s } from 'framer-motion/client';
 import { useEffect, useState } from 'react';
 
 import { fetchHolidays } from '../apis/fetchHolidays';
