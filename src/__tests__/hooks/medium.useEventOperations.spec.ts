@@ -189,7 +189,28 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 });
 
 describe('반복 일정 기능 테스트', () => {
+  beforeEach(() => {
+    // 각 테스트 전에 서버 핸들러를 리셋하고 토스트 함수 초기화
+    server.resetHandlers();
+    toastFn.mockClear();
+  });
+
   it('일정 생성 시 반복 유형을 선택할 수 있다', async () => {
+    setupMockHandlerRepeatCreation([
+      {
+        id: 'repeat-1',
+        title: '반복 회의',
+        date: '2025-10-16',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '팀 정기 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1 },
+        notificationTime: 10,
+      },
+    ]);
+
     const { result } = renderHook(() => useEventOperations(false));
 
     await act(() => Promise.resolve(null));
@@ -220,6 +241,21 @@ describe('반복 일정 기능 테스트', () => {
   });
 
   it('각 반복 유형에 대해 간격을 설정할 수 있다', async () => {
+    setupMockHandlerRepeatCreation([
+      {
+        id: 'repeat-2',
+        title: '격주 회의',
+        date: '2025-10-16',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '격주 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 2 },
+        notificationTime: 10,
+      },
+    ]);
+
     const { result } = renderHook(() => useEventOperations(false));
 
     await act(() => Promise.resolve(null));
@@ -250,6 +286,21 @@ describe('반복 일정 기능 테스트', () => {
   });
 
   it('반복 종료 조건을 지정할 수 있다', async () => {
+    setupMockHandlerRepeatCreation([
+      {
+        id: 'repeat-3',
+        title: '종료일 있는 회의',
+        date: '2025-10-16',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '특정 날짜까지 반복',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-12-31' },
+        notificationTime: 10,
+      },
+    ]);
+
     const { result } = renderHook(() => useEventOperations(false));
 
     await act(() => Promise.resolve(null));
