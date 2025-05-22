@@ -59,6 +59,7 @@ import {
 } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
 import { getTimeErrorMessage } from './utils/timeValidation';
+import { validateRepeatEndDate } from './utils/validate';
 
 const categories = ['업무', '개인', '가족', '기타'];
 
@@ -143,6 +144,19 @@ function App() {
         isClosable: true,
       });
       return;
+    }
+
+    if (isRepeating && repeatEndType === 'endDate') {
+      const endDateError = validateRepeatEndDate({ date, repeat: { endDate: repeatEndDate } });
+      if (endDateError) {
+        toast({
+          title: endDateError,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
     }
 
     const eventData: Event | EventForm = {
