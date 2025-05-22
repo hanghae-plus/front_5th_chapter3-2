@@ -46,7 +46,6 @@ app.put('/api/events/:id', async (req, res) => {
     const updatedEvent = { 
       ...events.events[eventIndex], 
       ...req.body,
-      repeat: { type: 'none' } // 반복 일정 수정 시 단일 일정으로 변경
     };
     newEvents[eventIndex] = updatedEvent;
 

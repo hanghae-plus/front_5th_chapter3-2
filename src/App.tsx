@@ -44,6 +44,7 @@ import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
+import { useRecurrentEventDisplay } from './hooks/useRecurrentEventDisplay';
 import { useSearch } from './hooks/useSearch.ts';
 import { Event, EventForm, RepeatType } from './types';
 import {
@@ -110,6 +111,8 @@ function App() {
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
   const { searchTerm, filteredEvents, setSearchTerm } = useSearch(events, currentDate, view);
+  const { getRecurrentIcon, shouldDisplayRecurrentEvent, getRecurrentText } =
+    useRecurrentEventDisplay();
 
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
@@ -185,30 +188,28 @@ function App() {
               {weekDates.map((date) => (
                 <Td key={date.toISOString()} height="100px" verticalAlign="top" width="14.28%">
                   <Text fontWeight="bold">{date.getDate()}</Text>
-                  {filteredEvents
-                    .filter((event) => new Date(event.date).toDateString() === date.toDateString())
-                    .map((event) => {
-                      const isNotified = notifiedEvents.includes(event.id);
-                      return (
-                        <Box
-                          key={event.id}
-                          p={1}
-                          my={1}
-                          bg={isNotified ? 'red.100' : 'gray.100'}
-                          borderRadius="md"
-                          fontWeight={isNotified ? 'bold' : 'normal'}
-                          color={isNotified ? 'red.500' : 'inherit'}
-                        >
-                          <HStack spacing={1}>
-                            {isNotified && <BellIcon />}
-                            <Text flex="1" fontSize="sm">
-                              {event.title}
-                              {event.repeat.type !== 'none' && ' 🔁'}
-                            </Text>
-                          </HStack>
-                        </Box>
-                      );
-                    })}
+                  {getEventsForDay(filteredEvents, date.getDate(), date).map((event) => {
+                    const isNotified = notifiedEvents.includes(event.id);
+                    return (
+                      <Box
+                        key={event.id}
+                        p={1}
+                        my={1}
+                        bg={isNotified ? 'red.100' : 'gray.100'}
+                        borderRadius="md"
+                        fontWeight={isNotified ? 'bold' : 'normal'}
+                        color={isNotified ? 'red.500' : 'inherit'}
+                      >
+                        <HStack spacing={1}>
+                          {isNotified && <BellIcon />}
+                          <Text flex="1" fontSize="sm">
+                            {event.title}
+                          </Text>
+                          {getRecurrentIcon(event) && <Text fontSize="sm">🔁</Text>}
+                        </HStack>
+                      </Box>
+                    );
+                  })}
                 </Td>
               ))}
             </Tr>
@@ -257,7 +258,11 @@ function App() {
                               {holiday}
                             </Text>
                           )}
-                          {getEventsForDay(filteredEvents, day).map((event) => {
+                          {getEventsForDay(
+                            filteredEvents,
+                            day,
+                            new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+                          ).map((event) => {
                             const isNotified = notifiedEvents.includes(event.id);
                             return (
                               <Box
@@ -273,8 +278,8 @@ function App() {
                                   {isNotified && <BellIcon />}
                                   <Text flex="1" fontSize="sm">
                                     {event.title}
-                                    {event.repeat.type !== 'none' && ' 🔁'}
                                   </Text>
+                                  {event.repeat.type !== 'none' && <Text fontSize="sm">🔁</Text>}
                                 </HStack>
                               </Box>
                             );
@@ -480,17 +485,7 @@ function App() {
                     <Text>{event.description}</Text>
                     <Text>{event.location}</Text>
                     <Text>카테고리: {event.category}</Text>
-                    {event.repeat.type !== 'none' && (
-                      <Text>
-                        반복: {event.repeat.interval}
-                        {event.repeat.type === 'daily' && '일'}
-                        {event.repeat.type === 'weekly' && '주'}
-                        {event.repeat.type === 'monthly' && '월'}
-                        {event.repeat.type === 'yearly' && '년'}
-                        마다
-                        {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
-                      </Text>
-                    )}
+                    {event.repeat.type !== 'none' && <Text>{getRecurrentText(event)}</Text>}
                     <Text>
                       알림:{' '}
                       {

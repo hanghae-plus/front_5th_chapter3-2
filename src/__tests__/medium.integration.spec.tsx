@@ -130,7 +130,7 @@ describe('일정 뷰', () => {
     await user.selectOptions(screen.getByLabelText('view'), 'week');
 
     const weekView = within(screen.getByTestId('week-view'));
-    expect(weekView.getByText('이번주 팀 회의')).toBeInTheDocument();
+    expect(weekView.getAllByText('이번주 팀 회의')).toBeTruthy();
   });
 
   it('월별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.', async () => {
@@ -160,7 +160,7 @@ describe('일정 뷰', () => {
     });
 
     const monthView = within(screen.getByTestId('month-view'));
-    expect(monthView.getByText('이번달 팀 회의')).toBeInTheDocument();
+    expect(monthView.getAllByText('이번달 팀 회의')).toBeTruthy();
   });
 
   it('달력에 1월 1일(신정)이 공휴일로 표시되는지 확인한다', async () => {
