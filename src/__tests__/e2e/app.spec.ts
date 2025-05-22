@@ -207,5 +207,58 @@ test.describe('일정 관리 App CRUD 테스트', () => {
       await expect(updatedEventCard.getByText('매주')).toBeVisible();
       await expect(updatedEventCard.getByText('2')).toBeVisible();
     });
+
+    test('4.2 반복 일정 생성 후 삭제', async ({ page }) => {
+      const startDate = new Date();
+      const endDate = new Date(startDate.getTime() + REPEAT_DURATION);
+
+      const [formattedStartDate, formattedEndDate] = [
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0],
+      ];
+
+      // 1. 새로운 반복 일정 생성
+      await page.getByLabel('제목').fill('수정 테스트 반복 이벤트');
+      await page.getByLabel('날짜').fill(formattedStartDate);
+      await page.getByLabel('시작 시간').fill('20:00');
+      await page.getByLabel('종료 시간').fill('21:00');
+
+      // 반복 세부 설정
+      await page.getByLabel('반복 일정').check();
+      await page.getByLabel('반복 유형').selectOption({ value: 'daily' });
+      await page.getByLabel('반복 간격').fill('1');
+      await page.getByLabel('반복 종료일').fill(formattedEndDate);
+
+      await page.getByTestId('event-submit-button').click();
+
+      // 만약 일정 겹침 경고가 뜨면 계속 진행 버튼 눌러서 이벤트 생성
+      await proceedWarningDialog(page);
+
+      // 생성 성공 토스트 메시지 확인
+      const createToast = page.getByText('일정이 추가되었습니다.').first();
+      await expect(createToast).toBeVisible();
+
+      // 2. 생성된 반복 일정 중 단일 일정을 삭제
+      const eventListView = page.getByTestId('event-list');
+
+      const eventCard = eventListView
+        .locator('div')
+        .filter({ hasText: '수정 테스트 반복 이벤트' })
+        .first();
+
+      const deleteBtn = eventCard.getByRole('button', { name: 'Delete event' });
+      await deleteBtn.click();
+
+      // 삭제 성공 토스트 메시지 확인
+      const deleteToast = page.getByText('일정이 삭제되었습니다.').first();
+      await expect(deleteToast).toBeVisible();
+
+      // 삭제된 일정 제외 나머지 일정이 단일 일정으로 변경되었는지 확인
+      const remainingEventCard = eventListView
+        .locator('div')
+        .filter({ hasText: '수정 테스트 반복 이벤트' })
+        .first();
+      await expect(remainingEventCard).toBeVisible();
+    });
   });
 });
