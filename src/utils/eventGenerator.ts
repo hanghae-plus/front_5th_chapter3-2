@@ -115,10 +115,10 @@ export const generateRepeatEvents = (event: Event): Event[] => {
   if (event.repeat.endDate) {
     endDate = new Date(event.repeat.endDate);
   } else {
-    // 종료 날짜가 없는 경우 기본적으로 현재 날짜부터 1년 후 까지 생성
-    const today = new Date();
-    endDate = new Date(today);
-    endDate.setFullYear(today.getFullYear() + 1);
+    // 종료 날짜가 없는 경우 이벤트 날짜 기준으로 1년 후까지 생성
+    const eventStartDate = new Date(event.date);
+    endDate = new Date(eventStartDate);
+    endDate.setFullYear(eventStartDate.getFullYear() + 1);
   }
 
   events.push(baseEvent);
@@ -126,7 +126,7 @@ export const generateRepeatEvents = (event: Event): Event[] => {
   for (let i = 0; i < maxOccurrences; i++) {
     currentDate = getNextOccurrence(baseEvent, currentDate);
 
-    if (endDate && currentDate > endDate) {
+    if (endDate && currentDate >= endDate) {
       break;
     }
 

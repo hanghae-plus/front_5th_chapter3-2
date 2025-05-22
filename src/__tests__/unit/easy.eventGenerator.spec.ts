@@ -60,9 +60,94 @@ describe('eventGenerator 테스트', () => {
     expect(aprilOccurrence.getDate()).toBe(30); // 4월은 30일까지만 있으므로
   });
 
-  it('일(daily) 반복 간격(interval)을 올바르게 처리한다', async () => {});
+  it('일(daily) 반복 간격(interval)을 올바르게 처리한다', async () => {
+    const triDailyEvent: Event = {
+      id: 'tri-daily',
+      title: '3일마다',
+      date: '2025-01-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '3일마다 반복',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 3 },
+      notificationTime: 10,
+    };
 
-  it('주간(weekly) 반복 간격(interval)을 올바르게 처리한다', async () => {});
+    const nextTriDaily = getNextOccurrence(triDailyEvent, new Date('2025-01-02'));
+    expect(nextTriDaily.getDate()).toBe(4);
+  });
 
-  it('generateRepeatEvents가 종료 날짜를 올바르게 처리한다', () => {});
+  it('주간(weekly) 반복 간격(interval)을 올바르게 처리한다', async () => {
+    const biWeeklyEvent: Event = {
+      id: 'bi-weekly',
+      title: '2주마다',
+      date: '2025-01-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '2주마다 반복',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 2 },
+      notificationTime: 10,
+    };
+
+    const nextBiWeekly = getNextOccurrence(biWeeklyEvent, new Date('2025-01-02'));
+    expect(nextBiWeekly.getDate()).toBe(15);
+  });
+
+  it('generateRepeatEvents가 종료 날짜를 올바르게 처리한다', async () => {
+    // 종료 날짜가 있는 매주 반복 이벤트
+    const weeklyEventWithEnd: Event = {
+      id: 'weekly-limited',
+      title: '기간 제한 매주 반복',
+      date: '2025-01-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '3주간만 반복',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'weekly',
+        interval: 1,
+        endDate: '2025-01-21', // 3주 후
+      },
+      notificationTime: 10,
+    };
+
+    const repeatEvents = generateRepeatEvents(weeklyEventWithEnd);
+
+    // 원본 + 2회 반복 = 총 3개
+    expect(repeatEvents).toHaveLength(3);
+    expect(repeatEvents[0].date).toBe('2025-01-01'); // 원본
+    expect(repeatEvents[1].date).toBe('2025-01-08'); // 1주 후
+    expect(repeatEvents[2].date).toBe('2025-01-15'); // 2주 후
+    // 2025-01-22는 종료 날짜(2025-01-21) 이후이므로 생성되지 않음
+
+    // 종료 날짜가 없는 경우 (현재 날짜부터 1년 후까지)
+    const unlimitedEvent: Event = {
+      id: 'unlimited',
+      title: '무제한 반복',
+      date: '2025-01-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '1년간 반복',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        // endDate 없음
+      },
+      notificationTime: 10,
+    };
+
+    const unlimitedEvents = generateRepeatEvents(unlimitedEvent);
+
+    // 원본(1월) + 11회 반복(2월~12월) = 총 12개
+    expect(unlimitedEvents).toHaveLength(12);
+    expect(unlimitedEvents[0].date).toBe('2025-01-01'); // 1월 (원본)
+    expect(unlimitedEvents[1].date).toBe('2025-02-01'); // 2월
+    expect(unlimitedEvents[11].date).toBe('2025-12-01'); // 12월 (마지막)
+  });
 });
