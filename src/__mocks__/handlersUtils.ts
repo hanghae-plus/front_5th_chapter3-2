@@ -13,7 +13,31 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
     }),
     http.post('/api/events', async ({ request }) => {
       const newEvent = (await request.json()) as Event;
-      newEvent.id = String(mockEvents.length + 1); // 간단한 ID 생성
+
+      // 반복 이벤트인 경우
+      if (newEvent.repeat?.type !== 'none') {
+        const count = newEvent.repeat.endType === 'count' ? newEvent.repeat.endCount || 1 : 3; // 기본값 3으로 설정
+
+        // count만큼 이벤트 생성
+        for (let i = 0; i < count; i++) {
+          const event = {
+            ...newEvent,
+            id: String(mockEvents.length + i + 1),
+            date: new Date(
+              new Date(newEvent.date).setDate(
+                new Date(newEvent.date).getDate() + i * newEvent.repeat.interval
+              )
+            )
+              .toISOString()
+              .split('T')[0],
+          };
+          mockEvents.push(event);
+        }
+        return HttpResponse.json(mockEvents[mockEvents.length - 1], { status: 201 });
+      }
+
+      // 일반 이벤트인 경우
+      newEvent.id = String(mockEvents.length + 1);
       mockEvents.push(newEvent);
       return HttpResponse.json(newEvent, { status: 201 });
     })

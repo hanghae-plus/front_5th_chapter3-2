@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act } from '@testing-library/react';
+import { render, screen, within, act, waitFor } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
@@ -23,9 +23,10 @@ const setup = (element: ReactElement) => {
 // ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'>
+  form: Omit<Event, 'id' | 'notificationTime'> & { isRecurring?: boolean }
 ) => {
-  const { title, date, startTime, endTime, location, description, category } = form;
+  const { title, date, startTime, endTime, location, description, category, repeat, isRecurring } =
+    form;
 
   await user.click(screen.getAllByText('일정 추가')[0]);
 
@@ -36,6 +37,20 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
+
+  if (isRecurring) {
+    await user.click(screen.getByTestId('repeat-checkbox'));
+    await user.selectOptions(screen.getByTestId('repeat-type-select'), repeat.type);
+    await user.selectOptions(screen.getByTestId('repeat-end-type-select'), repeat.endType);
+
+    if (repeat.endType === 'date' && repeat.endDate) {
+      await user.type(screen.getByLabelText('반복 종료일'), repeat.endDate);
+    }
+
+    if (repeat.endType === 'count' && repeat.endCount) {
+      await user.type(screen.getByLabelText('반복 종료 횟수'), String(repeat.endCount));
+    }
+  }
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -54,6 +69,8 @@ describe('일정 CRUD 및 기본 기능', () => {
       description: '프로젝트 진행 상황 논의',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0, endType: 'none' },
+      isRecurring: false,
     });
 
     const eventList = within(screen.getByTestId('event-list'));
@@ -125,6 +142,8 @@ describe('일정 뷰', () => {
       description: '이번주 팀 회의입니다.',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0, endType: 'none' },
+      isRecurring: false,
     });
 
     await user.selectOptions(screen.getByLabelText('view'), 'week');
@@ -157,6 +176,8 @@ describe('일정 뷰', () => {
       description: '이번달 팀 회의입니다.',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0, endType: 'none' },
+      isRecurring: false,
     });
 
     const monthView = within(screen.getByTestId('month-view'));
@@ -264,8 +285,9 @@ describe('일정 충돌', () => {
         description: '기존 팀 미팅',
         location: '회의실 B',
         category: '업무',
-        repeat: { type: 'none', interval: 0 },
+        repeat: { type: 'none', interval: 0, endType: 'none' },
         notificationTime: 10,
+        isRecurring: false,
       },
     ]);
 
@@ -279,6 +301,8 @@ describe('일정 충돌', () => {
       description: '설명',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0, endType: 'none' },
+      isRecurring: false,
     });
 
     expect(screen.getByText('일정 겹침 경고')).toBeInTheDocument();
@@ -323,4 +347,81 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('반복 일정 아이콘 표시', () => {
+  it('반복 일정 생성 시 Month 달력에 repeat 아이콘이 표시된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+    await saveSchedule(user, {
+      title: '반복 회의',
+      date: '2025-10-02',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '매일 반복 회의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endType: 'date', endDate: '2025-10-05' },
+      isRecurring: true,
+    });
+
+    // 월 뷰의 특정 날짜 셀 안에서만 검색
+    const monthView = await screen.findByTestId('month-view');
+    const dateCell = within(monthView).getByText('2').closest('td');
+    expect(dateCell).not.toBeNull();
+
+    const eventBox = within(dateCell!).getByText('반복 회의').closest('div');
+    expect(eventBox).not.toBeNull();
+    expect(within(eventBox!).getByTestId('repeat-icon')).toBeInTheDocument();
+  });
+
+  it('반복 일정 생성 시 Week 달력에 repeat 아이콘이 표시된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+    await saveSchedule(user, {
+      title: '반복 수업',
+      date: '2025-10-02',
+      startTime: '13:00',
+      endTime: '14:00',
+      description: '매주 수업',
+      location: '강의실 101',
+      category: '개인',
+      repeat: { type: 'weekly', interval: 1, endType: 'date', endDate: '2025-10-09' },
+      isRecurring: true,
+    });
+
+    await user.selectOptions(screen.getByLabelText('view'), 'week');
+
+    // 주 뷰의 특정 날짜 셀 안에서만 검색
+    const weekView = await screen.findByTestId('week-view');
+    const dateCell = within(weekView).getByText('2').closest('td');
+    expect(dateCell).not.toBeNull();
+
+    const eventBox = within(dateCell!).getByText('반복 수업').closest('div');
+    expect(eventBox).not.toBeNull();
+    expect(within(eventBox!).getByTestId('repeat-icon')).toBeInTheDocument();
+  });
+
+  it('단일 일정 생성 시 repeat 아이콘이 표시되지 않는다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+    await saveSchedule(user, {
+      title: '단일 미팅',
+      date: '2025-10-11',
+      startTime: '15:00',
+      endTime: '16:00',
+      description: '단일 일정',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { type: 'none', interval: 0, endType: 'none' },
+      isRecurring: false,
+    });
+
+    const monthView = within(await screen.findByTestId('month-view'));
+    const eventBox = monthView.getByText('단일 미팅').closest('div')!;
+    expect(within(eventBox).queryByTestId('repeat-icon')).not.toBeInTheDocument();
+  });
 });
