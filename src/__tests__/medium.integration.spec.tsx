@@ -749,7 +749,7 @@ describe('반복 일정 단일 수정', () => {
     notificationTime: 0,
   };
 
-  it.only('사용자가 반복 일정 중 하나를 수정하면 해당 일정은 단일 일정으로 변경된다', async () => {
+  it('사용자가 반복 일정 중 하나를 수정하면 해당 일정은 단일 일정으로 변경된다', async () => {
     setupMockHandlerRepeat();
 
     const { result } = renderHook(() => useEventOperations(true));
