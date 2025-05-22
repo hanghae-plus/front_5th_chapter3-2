@@ -44,7 +44,6 @@ import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
-import { useRepeatEvent } from './hooks/useRepeatEvent.ts';
 import { useSearch } from './hooks/useSearch.ts';
 import { Event, EventForm, RepeatType } from './types';
 import {
@@ -104,14 +103,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const {
-    events: repeatEvents,
-    createRepeatEvent,
-    updateRepeatEvent,
-    deleteRepeatEvent,
-  } = useRepeatEvent();
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent, saveRepeatEvent } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -168,10 +162,34 @@ function App() {
       setIsOverlapDialogOpen(true);
     } else {
       if (isRepeating) {
-        createRepeatEvent(eventData);
-        // Save each repeated event
-        for (const event of repeatEvents) {
-          await saveEvent(event);
+        // 반복 유형에 따른 처리
+        switch (repeatType) {
+          case 'daily':
+          case 'weekly':
+          case 'monthly':
+          case 'yearly':
+            if (!repeatEndDate) {
+              toast({
+                title: '반복 종료일을 설정해주세요.',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+              });
+              return;
+            }
+            if (repeatInterval < 1) {
+              toast({
+                title: '반복 간격은 1 이상이어야 합니다.',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+              });
+              return;
+            }
+            await saveRepeatEvent(eventData as EventForm);
+            break;
+          default:
+            await saveEvent(eventData);
         }
       } else {
         await saveEvent(eventData);
@@ -524,9 +542,8 @@ function App() {
                       icon={<DeleteIcon />}
                       onClick={() => {
                         if (event.repeat.type !== 'none') {
-                          deleteRepeatEvent(event.id);
+                          deleteEvent(event.id);
                         }
-                        deleteEvent(event.id);
                       }}
                     />
                   </HStack>
@@ -566,22 +583,7 @@ function App() {
                 colorScheme="red"
                 onClick={() => {
                   setIsOverlapDialogOpen(false);
-                  saveEvent({
-                    id: editingEvent ? editingEvent.id : undefined,
-                    title,
-                    date,
-                    startTime,
-                    endTime,
-                    description,
-                    location,
-                    category,
-                    repeat: {
-                      type: isRepeating ? repeatType : 'none',
-                      interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
-                    },
-                    notificationTime,
-                  });
+                  addOrUpdateEvent();
                 }}
                 ml={3}
               >
