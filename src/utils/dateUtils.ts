@@ -1,4 +1,4 @@
-import { Event } from '../types.ts';
+import { Event, RepeatType } from '../types.ts';
 
 /**
  * 주어진 년도와 월의 일수를 반환합니다.
@@ -107,4 +107,111 @@ export function formatDate(currentDate: Date, day?: number) {
     fillZero(currentDate.getMonth() + 1),
     fillZero(day ?? currentDate.getDate()),
   ].join('-');
+}
+
+/**
+ * 주어진 시작일부터 특정 반복 규칙에 따라 유효한 날짜 목록을 생성합니다.
+ *
+ * @param {string} startDate - 반복 시작 날짜 (YYYY-MM-DD 형식).
+ * @param {RepeatType} repeatType - 반복 유형 ('daily', 'weekly', 'monthly', 'yearly').
+ * @param {number} interval - 반복 간격 (1 이상의 양수).
+ * @param {string} [endDate] - 반복 종료 날짜 (YYYY-MM-DD 형식, 선택 사항). 이 날짜를 포함합니다.
+ * @returns {string[]} 반복되는 날짜들의 문자열 배열 (YYYY-MM-DD 형식)
+ */
+export function getRepeatDates(
+  startDate: string,
+  repeatType: RepeatType,
+  interval: number,
+  endDate?: string
+): string[] {
+  const results: string[] = [];
+
+  if (interval <= 0) {
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : undefined;
+    return !end || start <= end ? [formatDate(start)] : [];
+  }
+
+  let currentDate = new Date(startDate);
+  const initialDate = new Date(startDate);
+  const finalDate = endDate ? new Date(endDate) : undefined;
+
+  if (finalDate && currentDate > finalDate) return [];
+
+  const MAX_ITERATIONS = 1000;
+  let count = 0;
+
+  const shouldContinue = () => (!finalDate || currentDate <= finalDate) && count < MAX_ITERATIONS;
+
+  while (shouldContinue()) {
+    results.push(formatDate(currentDate));
+    count++;
+
+    const prev = currentDate.getTime();
+    currentDate = calculateNextRepeatDate(currentDate, initialDate, repeatType, interval);
+
+    if (currentDate.getTime() === prev) {
+      console.warn(
+        `Infinite loop detected: repeatType=${repeatType}, date=${formatDate(currentDate)}`
+      );
+      break;
+    }
+  }
+
+  return results;
+}
+
+/**
+ * 현재 반복 날짜와 규칙에 따라 다음 반복 날짜를 계산합니다.
+ * 이 함수는 getRepeatDates의 헬퍼 함수입니다.
+ *
+ * @private
+ * @param {Date} currentIterationDate - 현재 반복 계산의 기준이 되는 Date 객체.
+ * @param {Date} originalStartDate - 반복 규칙의 기준이 되는 최초 시작 Date 객체.
+ * @param {RepeatType} repeatType - 반복 유형.
+ * @param {number} interval - 반복 간격.
+ * @returns {Date} 계산된 다음 반복 날짜를 나타내는 새로운 Date 객체.
+ */
+export function calculateNextRepeatDate(
+  currentIterationDate: Date,
+  originalStartDate: Date,
+  repeatType: RepeatType,
+  interval: number
+): Date {
+  const nextDate = new Date(currentIterationDate);
+
+  switch (repeatType) {
+    case 'daily':
+      nextDate.setDate(nextDate.getDate() + interval);
+      return nextDate;
+
+    case 'weekly':
+      nextDate.setDate(nextDate.getDate() + 7 * interval);
+      return nextDate;
+
+    case 'monthly': {
+      const originalDay = originalStartDate.getDate();
+      const nextMonth = nextDate.getMonth() + interval;
+      const temp = new Date(nextDate.getFullYear(), nextMonth, 1);
+
+      const year = temp.getFullYear();
+      const month = temp.getMonth();
+      const maxDay = getDaysInMonth(year, month + 1);
+
+      return new Date(year, month, Math.min(originalDay, maxDay));
+    }
+
+    case 'yearly': {
+      const originalDay = originalStartDate.getDate();
+      const originalMonth = originalStartDate.getMonth();
+      const nextYear = nextDate.getFullYear() + interval;
+      const maxDay = getDaysInMonth(nextYear, originalMonth + 1);
+
+      return new Date(nextYear, originalMonth, Math.min(originalDay, maxDay));
+    }
+
+    default:
+      console.error(`Unknown repeat type in calculateNextRepeatDate: ${repeatType}`);
+      return nextDate;
+  }
 }

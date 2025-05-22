@@ -1,4 +1,4 @@
-import { Event } from '../../types';
+import { Event, RepeatType } from '../../types';
 import {
   fillZero,
   formatDate,
@@ -9,6 +9,8 @@ import {
   getWeekDates,
   getWeeksAtMonth,
   isDateInRange,
+  getRepeatDates,
+  calculateNextRepeatDate,
 } from '../../utils/dateUtils';
 
 describe('getDaysInMonth', () => {
@@ -296,5 +298,124 @@ describe('formatDate', () => {
   it('일이 한 자리 수일 때 앞에 0을 붙여 포맷팅한다', () => {
     const testDate = new Date('2023-12-05');
     expect(formatDate(testDate)).toBe('2023-12-05');
+  });
+});
+
+describe('calculateNextRepeatDate', () => {
+  it('주어진 날짜에 대해 다음 반복 날짜를 계산한다 (일간)', () => {
+    const current = new Date('2025-01-01');
+    const start = new Date('2025-01-01');
+
+    const result = calculateNextRepeatDate(current, start, 'daily', 3);
+
+    expect(result.toISOString().slice(0, 10)).toBe('2025-01-04');
+  });
+
+  it('주어진 날짜에 대해 다음 반복 날짜를 계산한다 (주간)', () => {
+    const current = new Date('2025-01-01'); // Wednesday
+    const start = new Date('2025-01-01');
+
+    const result = calculateNextRepeatDate(current, start, 'weekly', 2);
+
+    expect(result.toISOString().slice(0, 10)).toBe('2025-01-15');
+  });
+
+  it('주어진 날짜에 대해 다음 반복 날짜를 계산한다 (월간)', () => {
+    const current = new Date('2025-01-15');
+    const start = new Date('2025-01-15');
+
+    const result = calculateNextRepeatDate(current, start, 'monthly', 1);
+
+    expect(result.toISOString().slice(0, 10)).toBe('2025-02-15');
+  });
+
+  it('주어진 날짜에 대해 다음 반복 날짜가 유효하지 않다면, 마지막 날로 설정한다 (월간/윤년)', () => {
+    const current = new Date('2025-01-31');
+    const start = new Date('2025-01-31');
+
+    const result = calculateNextRepeatDate(current, start, 'monthly', 1);
+
+    expect(result.toISOString().slice(0, 10)).toBe('2025-02-28');
+  });
+
+  it('주어진 날짜에 대해 다음 반복 날짜가 유효하지 않다면, 마지막 날로 설정한다 (년간/윤년)', () => {
+    const current = new Date('2024-02-29');
+    const start = new Date('2024-02-29');
+
+    const result = calculateNextRepeatDate(current, start, 'yearly', 1);
+
+    expect(result.toISOString().slice(0, 10)).toBe('2025-02-28');
+  });
+
+  it('주어진 반복 주기가 유효하지 않다면, 시작일을 반환한다', () => {
+    const current = new Date('2025-01-01');
+    const start = new Date('2025-01-01');
+    const invalidType = 'foobar' as RepeatType;
+
+    const result = calculateNextRepeatDate(current, start, invalidType, 1);
+
+    expect(result.toISOString().slice(0, 10)).toBe('2025-01-01');
+  });
+});
+
+describe('getRepeatDates', () => {
+  it('주어진 반복 주기가 2일 간격이라면, 2일 간격으로 날짜를 반환한다', () => {
+    const result = getRepeatDates('2024-01-01', 'daily', 2, '2024-01-07');
+
+    expect(result).toEqual(['2024-01-01', '2024-01-03', '2024-01-05', '2024-01-07']);
+  });
+
+  it('주어진 반복 주기가 1주일 간격이라면, 월간 반복 날짜를 반환한다', () => {
+    const result = getRepeatDates('2024-01-01', 'weekly', 1, '2024-01-29');
+
+    expect(result).toEqual(['2024-01-01', '2024-01-08', '2024-01-15', '2024-01-22', '2024-01-29']);
+  });
+
+  it('주어진 반복주기가 1달 간격이라면, 윤년을 포함한 월간 반복 날짜를 반환한다', () => {
+    const result = getRepeatDates('2024-01-31', 'monthly', 1, '2024-04-01');
+
+    expect(result).toEqual(['2024-01-31', '2024-02-29', '2024-03-31']);
+  });
+
+  it('주어진 반복주기가 1년이라면, 윤년 2월 29일부터 시작하는 연간 반복 날짜를 반환한다', () => {
+    const result = getRepeatDates('2020-02-29', 'yearly', 1, '2024-03-01');
+
+    expect(result).toEqual(['2020-02-29', '2021-02-28', '2022-02-28', '2023-02-28', '2024-02-29']);
+  });
+
+  it('interval이 0 이하이고 start <= end인 경우 시작 날짜만 반환한다', () => {
+    const result = getRepeatDates('2024-01-01', 'daily', 0, '2024-01-03');
+
+    expect(result).toEqual(['2024-01-01']);
+  });
+
+  it('interval이 0 이하이고 start > end인 경우 빈 배열을 반환한다', () => {
+    const result = getRepeatDates('2024-01-04', 'daily', 0, '2024-01-03');
+
+    expect(result).toEqual([]);
+  });
+
+  it('startDate가 endDate보다 클 때 빈 배열을 반환한다', () => {
+    const result = getRepeatDates('2024-01-10', 'weekly', 1, '2024-01-01');
+
+    expect(result).toEqual([]);
+  });
+
+  it('다음 날짜가 변하지 않는 경우(모킹된 케이스) 무한 루프 경고를 반환한다', () => {
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const result = getRepeatDates('2024-01-01', 'invalidType' as RepeatType, 1, '2024-01-10');
+
+    expect(result.length).toBeGreaterThanOrEqual(1);
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Infinite loop detected'));
+    consoleSpy.mockRestore();
+  });
+
+  it('endDate가 undefined일 때 MAX_ITERATIONS 이전 날짜까지 반복 날짜를 반환한다', () => {
+    const result = getRepeatDates('2024-01-01', 'daily', 1);
+
+    expect(result.length).toBe(1000);
+    expect(result[0]).toBe('2024-01-01');
+    expect(result[result.length - 1]).toBe('2026-09-26');
   });
 });
