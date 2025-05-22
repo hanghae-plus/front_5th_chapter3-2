@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -40,6 +41,7 @@ import {
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
 
+import { useProcessedEvents } from './hooks/use-processed-events.ts';
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
@@ -91,6 +93,10 @@ function App() {
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatCount,
+    setRepeatCount,
+    repeatEndCondition,
+    setRepeatEndCondition,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -103,12 +109,17 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
-  );
-
-  const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
+
+  const {
+    events: rawEvents,
+    saveEvent,
+    deleteEvent,
+    deleteRepeatedEvent,
+  } = useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
+
+  const events = useProcessedEvents(rawEvents, currentDate, view);
+  const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
   const { searchTerm, filteredEvents, setSearchTerm } = useSearch(events, currentDate, view);
 
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
@@ -151,6 +162,9 @@ function App() {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
         endDate: repeatEndDate || undefined,
+        id: editingEvent ? editingEvent.id : undefined,
+        exceptions: editingEvent ? editingEvent.repeat.exceptions : [],
+        count: repeatCount,
       },
       notificationTime,
     };
@@ -160,7 +174,7 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      await saveEvent(eventData, editingEvent);
       resetForm();
     }
   };
@@ -189,6 +203,8 @@ function App() {
                     .filter((event) => new Date(event.date).toDateString() === date.toDateString())
                     .map((event) => {
                       const isNotified = notifiedEvents.includes(event.id);
+                      const isRecurring = event.repeat.type !== 'none';
+
                       return (
                         <Box
                           key={event.id}
@@ -197,10 +213,11 @@ function App() {
                           bg={isNotified ? 'red.100' : 'gray.100'}
                           borderRadius="md"
                           fontWeight={isNotified ? 'bold' : 'normal'}
-                          color={isNotified ? 'red.500' : 'inherit'}
+                          color={isNotified ? 'red.500' : isRecurring ? 'blue.500' : 'inherit'}
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {isRecurring && <RepeatIcon />}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -258,6 +275,8 @@ function App() {
                           )}
                           {getEventsForDay(filteredEvents, day).map((event) => {
                             const isNotified = notifiedEvents.includes(event.id);
+                            const isRecurring = event.repeat.type !== 'none';
+
                             return (
                               <Box
                                 key={event.id}
@@ -266,10 +285,13 @@ function App() {
                                 bg={isNotified ? 'red.100' : 'gray.100'}
                                 borderRadius="md"
                                 fontWeight={isNotified ? 'bold' : 'normal'}
-                                color={isNotified ? 'red.500' : 'inherit'}
+                                color={
+                                  isNotified ? 'red.500' : isRecurring ? 'blue.500' : 'inherit'
+                                }
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {isRecurring && <RepeatIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -390,6 +412,18 @@ function App() {
                   <option value="yearly">매년</option>
                 </Select>
               </FormControl>
+
+              <FormControl>
+                <FormLabel>반복 종료 조건</FormLabel>
+                <Select
+                  value={repeatEndCondition}
+                  onChange={(e) => setRepeatEndCondition(e.target.value as 'until' | 'count')}
+                >
+                  <option value="until">종료일</option>
+                  <option value="count">반복 횟수</option>
+                </Select>
+              </FormControl>
+
               <HStack width="100%">
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
@@ -400,14 +434,27 @@ function App() {
                     min={1}
                   />
                 </FormControl>
-                <FormControl>
-                  <FormLabel>반복 종료일</FormLabel>
-                  <Input
-                    type="date"
-                    value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
-                  />
-                </FormControl>
+                {repeatEndCondition !== 'count' && (
+                  <FormControl>
+                    <FormLabel>반복 종료일</FormLabel>
+                    <Input
+                      type="date"
+                      value={repeatEndDate}
+                      onChange={(e) => setRepeatEndDate(e.target.value)}
+                    />
+                  </FormControl>
+                )}
+                {repeatEndCondition === 'count' && (
+                  <FormControl>
+                    <FormLabel>반복 횟수</FormLabel>
+                    <Input
+                      type="number"
+                      value={repeatCount}
+                      onChange={(e) => setRepeatCount(Number(e.target.value))}
+                      min={1}
+                    />
+                  </FormControl>
+                )}
               </HStack>
             </VStack>
           )}
@@ -507,7 +554,13 @@ function App() {
                     <IconButton
                       aria-label="Delete event"
                       icon={<DeleteIcon />}
-                      onClick={() => deleteEvent(event.id)}
+                      onClick={() => {
+                        if (event.repeat.type !== 'none') {
+                          deleteRepeatedEvent(event);
+                        } else {
+                          deleteEvent(event.id);
+                        }
+                      }}
                     />
                   </HStack>
                 </HStack>
@@ -546,22 +599,25 @@ function App() {
                 colorScheme="red"
                 onClick={() => {
                   setIsOverlapDialogOpen(false);
-                  saveEvent({
-                    id: editingEvent ? editingEvent.id : undefined,
-                    title,
-                    date,
-                    startTime,
-                    endTime,
-                    description,
-                    location,
-                    category,
-                    repeat: {
-                      type: isRepeating ? repeatType : 'none',
-                      interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
+                  saveEvent(
+                    {
+                      id: editingEvent ? editingEvent.id : undefined,
+                      title,
+                      date,
+                      startTime,
+                      endTime,
+                      description,
+                      location,
+                      category,
+                      repeat: {
+                        type: isRepeating ? repeatType : 'none',
+                        interval: repeatInterval,
+                        endDate: repeatEndDate || undefined,
+                      },
+                      notificationTime,
                     },
-                    notificationTime,
-                  });
+                    editingEvent
+                  );
                 }}
                 ml={3}
               >

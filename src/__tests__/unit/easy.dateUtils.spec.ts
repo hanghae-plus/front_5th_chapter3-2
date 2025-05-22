@@ -9,6 +9,9 @@ import {
   getWeekDates,
   getWeeksAtMonth,
   isDateInRange,
+  createDate,
+  getLastDateStringOfMonth,
+  getDateRange,
 } from '../../utils/dateUtils';
 
 describe('getDaysInMonth', () => {
@@ -296,5 +299,406 @@ describe('formatDate', () => {
   it('일이 한 자리 수일 때 앞에 0을 붙여 포맷팅한다', () => {
     const testDate = new Date('2023-12-05');
     expect(formatDate(testDate)).toBe('2023-12-05');
+  });
+});
+
+describe('createDate', () => {
+  test('날짜 문자열을 Date 객체로 변환 (하루 시작)', () => {
+    const result = createDate('2025-05-22');
+
+    // 날짜가 정확히 2025-05-22 00:00:00이어야 함
+    expect(result.getFullYear()).toBe(2025);
+    expect(result.getMonth()).toBe(4); // 5월은 인덱스 4
+    expect(result.getDate()).toBe(22);
+    expect(result.getHours()).toBe(0);
+    expect(result.getMinutes()).toBe(0);
+    expect(result.getSeconds()).toBe(0);
+    expect(result.getMilliseconds()).toBe(0);
+  });
+
+  test('날짜 문자열을 Date 객체로 변환 (하루 끝)', () => {
+    const result = createDate('2025-05-22', true);
+
+    // 날짜가 정확히 2025-05-22 23:59:59.999여야 함
+    expect(result.getFullYear()).toBe(2025);
+    expect(result.getMonth()).toBe(4); // 5월은 인덱스 4
+    expect(result.getDate()).toBe(22);
+    expect(result.getHours()).toBe(23);
+    expect(result.getMinutes()).toBe(59);
+    expect(result.getSeconds()).toBe(59);
+    expect(result.getMilliseconds()).toBe(999);
+  });
+
+  test('각 월의 첫날 테스트', () => {
+    // 각 월의 첫날 테스트
+    const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+
+    months.forEach((month, index) => {
+      const result = createDate(`2025-${month}-01`);
+      expect(result.getFullYear()).toBe(2025);
+      expect(result.getMonth()).toBe(index); // 0-based index
+      expect(result.getDate()).toBe(1);
+    });
+  });
+
+  test('윤년 테스트 (2월 29일)', () => {
+    // 2024년은 윤년
+    const result = createDate('2024-02-29');
+
+    expect(result.getFullYear()).toBe(2024);
+    expect(result.getMonth()).toBe(1); // 2월은 인덱스 1
+    expect(result.getDate()).toBe(29);
+  });
+
+  test('월말 테스트', () => {
+    const dates = [
+      { input: '2025-01-31', month: 0, day: 31 },
+      { input: '2025-02-28', month: 1, day: 28 },
+      { input: '2024-02-29', month: 1, day: 29 }, // 윤년
+      { input: '2025-04-30', month: 3, day: 30 },
+      { input: '2025-05-31', month: 4, day: 31 },
+    ];
+
+    dates.forEach(({ input, month, day }) => {
+      const result = createDate(input);
+      expect(result.getMonth()).toBe(month);
+      expect(result.getDate()).toBe(day);
+    });
+  });
+});
+
+describe('getLastDateStringOfMonth', () => {
+  test('각 월의 마지막 날짜를 문자열로 반환', () => {
+    const testCases = [
+      { date: new Date(2025, 0, 15), expected: '2025-01-31' }, // 1월
+      { date: new Date(2025, 1, 15), expected: '2025-02-28' }, // 2월 (평년)
+      { date: new Date(2024, 1, 15), expected: '2024-02-29' }, // 2월 (윤년)
+      { date: new Date(2025, 2, 15), expected: '2025-03-31' }, // 3월
+      { date: new Date(2025, 3, 15), expected: '2025-04-30' }, // 4월
+      { date: new Date(2025, 4, 15), expected: '2025-05-31' }, // 5월
+      { date: new Date(2025, 5, 15), expected: '2025-06-30' }, // 6월
+      { date: new Date(2025, 6, 15), expected: '2025-07-31' }, // 7월
+      { date: new Date(2025, 7, 15), expected: '2025-08-31' }, // 8월
+      { date: new Date(2025, 8, 15), expected: '2025-09-30' }, // 9월
+      { date: new Date(2025, 9, 15), expected: '2025-10-31' }, // 10월
+      { date: new Date(2025, 10, 15), expected: '2025-11-30' }, // 11월
+      { date: new Date(2025, 11, 15), expected: '2025-12-31' }, // 12월
+    ];
+
+    testCases.forEach(({ date, expected }) => {
+      const result = getLastDateStringOfMonth(date);
+      expect(result).toBe(expected);
+    });
+  });
+
+  test('월의 첫날과 마지막날에 대해서도 동일하게 동작', () => {
+    // 월의 첫날
+    expect(getLastDateStringOfMonth(new Date(2025, 4, 1))).toBe('2025-05-31');
+
+    // 월의 마지막날
+    expect(getLastDateStringOfMonth(new Date(2025, 4, 31))).toBe('2025-05-31');
+  });
+
+  test('윤년과 평년의 2월 처리', () => {
+    // 평년 (2025년)
+    expect(getLastDateStringOfMonth(new Date(2025, 1, 15))).toBe('2025-02-28');
+
+    // 윤년 (2024년)
+    expect(getLastDateStringOfMonth(new Date(2024, 1, 15))).toBe('2024-02-29');
+  });
+
+  test('다양한 날짜 입력에 대한 일관성 테스트', () => {
+    // 같은 월의 다른 날짜들에 대해 동일한 결과 반환 확인
+    const dates = [1, 5, 10, 15, 20, 25, 28];
+    const expected = '2025-05-31';
+
+    dates.forEach((day) => {
+      const date = new Date(2025, 4, day); // 2025년 5월
+      expect(getLastDateStringOfMonth(date)).toBe(expected);
+    });
+  });
+
+  test('연도가 바뀌는 경계값 테스트', () => {
+    // 12월의 마지막 날짜
+    expect(getLastDateStringOfMonth(new Date(2025, 11, 15))).toBe('2025-12-31');
+
+    // 1월의 마지막 날짜
+    expect(getLastDateStringOfMonth(new Date(2026, 0, 15))).toBe('2026-01-31');
+  });
+});
+
+describe('getDateRange', () => {
+  describe('Week view 테스트', () => {
+    test('주 중간 날짜로 week 범위 계산', () => {
+      // 2025-01-15 (수요일)
+      const inputDate = new Date(2025, 0, 15, 14, 30, 45);
+      const result = getDateRange(inputDate, 'week');
+
+      // 해당 주의 일요일부터 토요일까지
+      expect(result.startDate).toEqual(new Date(2025, 0, 12, 0, 0, 0, 0)); // 일요일 00:00:00
+      expect(result.endDate).toEqual(new Date(2025, 0, 18, 23, 59, 59, 999)); // 토요일 23:59:59
+    });
+
+    test('일요일로 week 범위 계산', () => {
+      // 2025-01-12 (일요일)
+      const inputDate = new Date(2025, 0, 12, 10, 20, 30);
+      const result = getDateRange(inputDate, 'week');
+
+      // 같은 주 일요일부터 토요일까지
+      expect(result.startDate).toEqual(new Date(2025, 0, 12, 0, 0, 0, 0)); // 일요일 00:00:00
+      expect(result.endDate).toEqual(new Date(2025, 0, 18, 23, 59, 59, 999)); // 토요일 23:59:59
+    });
+
+    test('토요일로 week 범위 계산', () => {
+      // 2025-01-18 (토요일)
+      const inputDate = new Date(2025, 0, 18, 22, 45, 15);
+      const result = getDateRange(inputDate, 'week');
+
+      // 같은 주 일요일부터 토요일까지
+      expect(result.startDate).toEqual(new Date(2025, 0, 12, 0, 0, 0, 0)); // 일요일 00:00:00
+      expect(result.endDate).toEqual(new Date(2025, 0, 18, 23, 59, 59, 999)); // 토요일 23:59:59
+    });
+
+    test('월말 주차로 week 범위 계산', () => {
+      // 2025-01-29 (수요일, 1월 마지막 주)
+      const inputDate = new Date(2025, 0, 29, 9, 15, 30);
+      const result = getDateRange(inputDate, 'week');
+
+      // 해당 주 일요일(1월)부터 토요일(2월)까지
+      expect(result.startDate).toEqual(new Date(2025, 0, 26, 0, 0, 0, 0)); // 1월 26일 일요일
+      expect(result.endDate).toEqual(new Date(2025, 1, 1, 23, 59, 59, 999)); // 2월 1일 토요일
+    });
+
+    test('연말 주차로 week 범위 계산', () => {
+      // 2024-12-31 (화요일, 연말)
+      const inputDate = new Date(2024, 11, 31, 16, 45, 0);
+      const result = getDateRange(inputDate, 'week');
+
+      // 해당 주 일요일(12월)부터 토요일(1월)까지
+      expect(result.startDate).toEqual(new Date(2024, 11, 29, 0, 0, 0, 0)); // 12월 29일 일요일
+      expect(result.endDate).toEqual(new Date(2025, 0, 4, 23, 59, 59, 999)); // 1월 4일 토요일
+    });
+
+    test('윤년 2월 마지막 주로 week 범위 계산', () => {
+      // 2024-02-29 (목요일, 윤년 2월 마지막 날)
+      const inputDate = new Date(2024, 1, 29, 12, 0, 0);
+      const result = getDateRange(inputDate, 'week');
+
+      expect(result.startDate).toEqual(new Date(2024, 1, 25, 0, 0, 0, 0)); // 2월 25일 일요일
+      expect(result.endDate).toEqual(new Date(2024, 2, 2, 23, 59, 59, 999)); // 3월 2일 토요일
+    });
+  });
+
+  describe('Month view 테스트', () => {
+    test('월 중간 날짜로 month 범위 계산', () => {
+      // 2025-01-15 (1월 중간)
+      const inputDate = new Date(2025, 0, 15, 14, 30, 45);
+      const result = getDateRange(inputDate, 'month');
+
+      // 1월 1일부터 1월 31일까지
+      expect(result.startDate).toEqual(new Date(2025, 0, 1, 0, 0, 0, 0)); // 1월 1일 00:00:00
+      expect(result.endDate).toEqual(new Date(2025, 0, 31, 23, 59, 59, 999)); // 1월 31일 23:59:59
+    });
+
+    test('월 첫날로 month 범위 계산', () => {
+      // 2025-01-01 (1월 첫날)
+      const inputDate = new Date(2025, 0, 1, 9, 15, 30);
+      const result = getDateRange(inputDate, 'month');
+
+      expect(result.startDate).toEqual(new Date(2025, 0, 1, 0, 0, 0, 0)); // 1월 1일 00:00:00
+      expect(result.endDate).toEqual(new Date(2025, 0, 31, 23, 59, 59, 999)); // 1월 31일 23:59:59
+    });
+
+    test('월 마지막날로 month 범위 계산', () => {
+      // 2025-01-31 (1월 마지막날)
+      const inputDate = new Date(2025, 0, 31, 23, 45, 15);
+      const result = getDateRange(inputDate, 'month');
+
+      expect(result.startDate).toEqual(new Date(2025, 0, 1, 0, 0, 0, 0)); // 1월 1일 00:00:00
+      expect(result.endDate).toEqual(new Date(2025, 0, 31, 23, 59, 59, 999)); // 1월 31일 23:59:59
+    });
+
+    test('2월 (평년)로 month 범위 계산', () => {
+      // 2025-02-15 (평년 2월)
+      const inputDate = new Date(2025, 1, 15, 12, 0, 0);
+      const result = getDateRange(inputDate, 'month');
+
+      expect(result.startDate).toEqual(new Date(2025, 1, 1, 0, 0, 0, 0)); // 2월 1일 00:00:00
+      expect(result.endDate).toEqual(new Date(2025, 1, 28, 23, 59, 59, 999)); // 2월 28일 23:59:59 (평년)
+    });
+
+    test('2월 (윤년)로 month 범위 계산', () => {
+      // 2024-02-15 (윤년 2월)
+      const inputDate = new Date(2024, 1, 15, 18, 30, 45);
+      const result = getDateRange(inputDate, 'month');
+
+      expect(result.startDate).toEqual(new Date(2024, 1, 1, 0, 0, 0, 0)); // 2월 1일 00:00:00
+      expect(result.endDate).toEqual(new Date(2024, 1, 29, 23, 59, 59, 999)); // 2월 29일 23:59:59 (윤년)
+    });
+
+    test('4월 (30일까지)로 month 범위 계산', () => {
+      // 2025-04-20 (4월, 30일까지 있는 달)
+      const inputDate = new Date(2025, 3, 20, 8, 45, 0);
+      const result = getDateRange(inputDate, 'month');
+
+      expect(result.startDate).toEqual(new Date(2025, 3, 1, 0, 0, 0, 0)); // 4월 1일 00:00:00
+      expect(result.endDate).toEqual(new Date(2025, 3, 30, 23, 59, 59, 999)); // 4월 30일 23:59:59
+    });
+
+    test('12월로 month 범위 계산', () => {
+      // 2025-12-25 (연말 12월)
+      const inputDate = new Date(2025, 11, 25, 20, 15, 30);
+      const result = getDateRange(inputDate, 'month');
+
+      expect(result.startDate).toEqual(new Date(2025, 11, 1, 0, 0, 0, 0)); // 12월 1일 00:00:00
+      expect(result.endDate).toEqual(new Date(2025, 11, 31, 23, 59, 59, 999)); // 12월 31일 23:59:59
+    });
+  });
+
+  describe('시간 정보 처리 테스트', () => {
+    test('입력 날짜의 시간 정보가 결과에 영향을 주지 않음 (week)', () => {
+      const dates = [
+        new Date(2025, 0, 15, 0, 0, 0, 0), // 00:00:00
+        new Date(2025, 0, 15, 12, 30, 45, 123), // 12:30:45.123
+        new Date(2025, 0, 15, 23, 59, 59, 999), // 23:59:59.999
+      ];
+
+      dates.forEach((date) => {
+        const result = getDateRange(date, 'week');
+        expect(result.startDate).toEqual(new Date(2025, 0, 12, 0, 0, 0, 0));
+        expect(result.endDate).toEqual(new Date(2025, 0, 18, 23, 59, 59, 999));
+      });
+    });
+
+    test('입력 날짜의 시간 정보가 결과에 영향을 주지 않음 (month)', () => {
+      const dates = [
+        new Date(2025, 0, 15, 0, 0, 0, 0), // 00:00:00
+        new Date(2025, 0, 15, 12, 30, 45, 123), // 12:30:45.123
+        new Date(2025, 0, 15, 23, 59, 59, 999), // 23:59:59.999
+      ];
+
+      dates.forEach((date) => {
+        const result = getDateRange(date, 'month');
+        expect(result.startDate).toEqual(new Date(2025, 0, 1, 0, 0, 0, 0));
+        expect(result.endDate).toEqual(new Date(2025, 0, 31, 23, 59, 59, 999));
+      });
+    });
+
+    test('startDate는 항상 00:00:00.000으로 설정됨', () => {
+      const testCases = [
+        { date: new Date(2025, 0, 15), view: 'week' as const },
+        { date: new Date(2025, 0, 15), view: 'month' as const },
+        { date: new Date(2024, 1, 29), view: 'week' as const },
+        { date: new Date(2024, 1, 15), view: 'month' as const },
+      ];
+
+      testCases.forEach(({ date, view }) => {
+        const result = getDateRange(date, view);
+        expect(result.startDate.getHours()).toBe(0);
+        expect(result.startDate.getMinutes()).toBe(0);
+        expect(result.startDate.getSeconds()).toBe(0);
+        expect(result.startDate.getMilliseconds()).toBe(0);
+      });
+    });
+
+    test('endDate는 항상 23:59:59.999로 설정됨', () => {
+      const testCases = [
+        { date: new Date(2025, 0, 15), view: 'week' as const },
+        { date: new Date(2025, 0, 15), view: 'month' as const },
+        { date: new Date(2024, 1, 29), view: 'week' as const },
+        { date: new Date(2024, 1, 15), view: 'month' as const },
+      ];
+
+      testCases.forEach(({ date, view }) => {
+        const result = getDateRange(date, view);
+        expect(result.endDate.getHours()).toBe(23);
+        expect(result.endDate.getMinutes()).toBe(59);
+        expect(result.endDate.getSeconds()).toBe(59);
+        expect(result.endDate.getMilliseconds()).toBe(999);
+      });
+    });
+  });
+
+  describe('경계값 테스트', () => {
+    test('연도 경계를 넘나드는 week 범위', () => {
+      // 2024-12-31 (화요일)
+      const inputDate = new Date(2024, 11, 31);
+      const result = getDateRange(inputDate, 'week');
+
+      // 2024년 12월 29일부터 2025년 1월 4일까지
+      expect(result.startDate.getFullYear()).toBe(2024);
+      expect(result.startDate.getMonth()).toBe(11); // 12월
+      expect(result.startDate.getDate()).toBe(29);
+
+      expect(result.endDate.getFullYear()).toBe(2025);
+      expect(result.endDate.getMonth()).toBe(0); // 1월
+      expect(result.endDate.getDate()).toBe(4);
+    });
+
+    test('월 경계를 넘나드는 week 범위', () => {
+      // 2025-01-31 (금요일)
+      const inputDate = new Date(2025, 0, 31);
+      const result = getDateRange(inputDate, 'week');
+
+      // 1월 26일부터 2월 1일까지
+      expect(result.startDate.getMonth()).toBe(0); // 1월
+      expect(result.startDate.getDate()).toBe(26);
+
+      expect(result.endDate.getMonth()).toBe(1); // 2월
+      expect(result.endDate.getDate()).toBe(1);
+    });
+
+    test('윤년과 평년의 2월 month 범위 차이', () => {
+      // 윤년 2월
+      const leapYearResult = getDateRange(new Date(2024, 1, 15), 'month');
+      expect(leapYearResult.endDate.getDate()).toBe(29); // 2월 29일
+
+      // 평년 2월
+      const normalYearResult = getDateRange(new Date(2025, 1, 15), 'month');
+      expect(normalYearResult.endDate.getDate()).toBe(28); // 2월 28일
+    });
+  });
+
+  describe('반환 객체 구조 테스트', () => {
+    test('반환 객체가 올바른 구조를 가짐', () => {
+      const result = getDateRange(new Date(2025, 0, 15), 'week');
+
+      expect(result).toHaveProperty('startDate');
+      expect(result).toHaveProperty('endDate');
+      expect(result.startDate).toBeInstanceOf(Date);
+      expect(result.endDate).toBeInstanceOf(Date);
+      expect(Object.keys(result)).toHaveLength(2);
+    });
+
+    test('startDate가 endDate보다 항상 이전임', () => {
+      const testCases = [
+        { date: new Date(2025, 0, 1), view: 'week' as const },
+        { date: new Date(2025, 0, 15), view: 'week' as const },
+        { date: new Date(2025, 0, 31), view: 'week' as const },
+        { date: new Date(2025, 0, 1), view: 'month' as const },
+        { date: new Date(2025, 0, 15), view: 'month' as const },
+        { date: new Date(2025, 0, 31), view: 'month' as const },
+      ];
+
+      testCases.forEach(({ date, view }) => {
+        const result = getDateRange(date, view);
+        expect(result.startDate.getTime()).toBeLessThan(result.endDate.getTime());
+      });
+    });
+  });
+
+  describe('다양한 연도 테스트', () => {
+    test('과거 연도 처리', () => {
+      const result = getDateRange(new Date(2020, 5, 15), 'month'); // 2020년 6월
+      expect(result.startDate).toEqual(new Date(2020, 5, 1, 0, 0, 0, 0));
+      expect(result.endDate).toEqual(new Date(2020, 5, 30, 23, 59, 59, 999)); // 6월은 30일까지
+    });
+
+    test('미래 연도 처리', () => {
+      const result = getDateRange(new Date(2030, 2, 10), 'week'); // 2030년 3월
+      // 2030-03-10은 일요일
+      expect(result.startDate).toEqual(new Date(2030, 2, 10, 0, 0, 0, 0));
+      expect(result.endDate).toEqual(new Date(2030, 2, 16, 23, 59, 59, 999));
+    });
   });
 });
