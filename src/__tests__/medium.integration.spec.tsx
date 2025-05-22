@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act } from '@testing-library/react';
+import { render, screen, within, act, waitFor } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
@@ -29,6 +29,12 @@ const saveSchedule = async (
 
   await user.click(screen.getAllByText('일정 추가')[0]);
 
+  const repeatCheckbox = screen.getByLabelText('반복 일정') as HTMLInputElement;
+
+  if (repeatCheckbox.checked) {
+    await user.click(repeatCheckbox);
+  }
+
   await user.type(screen.getByLabelText('제목'), title);
   await user.type(screen.getByLabelText('날짜'), date);
   await user.type(screen.getByLabelText('시작 시간'), startTime);
@@ -57,6 +63,7 @@ describe('일정 CRUD 및 기본 기능', () => {
     });
 
     const eventList = within(screen.getByTestId('event-list'));
+
     expect(eventList.getByText('새 회의')).toBeInTheDocument();
     expect(eventList.getByText('2025-10-15')).toBeInTheDocument();
     expect(eventList.getByText('14:00 - 15:00')).toBeInTheDocument();
