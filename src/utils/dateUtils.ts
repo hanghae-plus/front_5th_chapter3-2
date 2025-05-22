@@ -108,3 +108,13 @@ export function formatDate(currentDate: Date, day?: number) {
     fillZero(day ?? currentDate.getDate()),
   ].join('-');
 }
+
+// 윤년 확인 함수
+export const isLeapYear = (year: number): boolean => {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+};
+
+// 해당 월의 마지막 일자 계산 함수
+export const getLastDayOfMonth = (year: number, month: number): number => {
+  return new Date(year, month + 1, 0).getDate();
+};
