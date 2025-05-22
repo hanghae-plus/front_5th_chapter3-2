@@ -1,6 +1,7 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 import { getFilteredEvents } from '../../utils/eventUtils';
+import { getEventCardByTitle, proceedWarningDialog } from '../../utils/testUtils';
 
 test.describe('일정 관리 App CRUD 테스트', () => {
   test.beforeEach(async ({ page }) => {
@@ -122,15 +123,8 @@ test.describe('일정 관리 App CRUD 테스트', () => {
     await expect(toast2).toBeVisible();
   });
 
-  describe('4. 반복 일정을 생성, 수정 및 삭제하는 시나리오를 테스트한다.', () => {
+  test.describe('4. 반복 일정을 생성, 수정 및 삭제하는 시나리오를 테스트한다.', () => {
     const REPEAT_DURATION = 30 * 24 * 60 * 60 * 1000; // 30일을 반복 주기로 설정
-
-    const proceedWarningDialog = async (page: Page) => {
-      const warningDialog = page.getByText('일정 겹침 경고');
-      if (await warningDialog.isVisible()) {
-        await page.getByRole('button', { name: '계속 진행' }).click();
-      }
-    };
 
     test('4.1 반복 일정 생성 후 수정', async ({ page }) => {
       const startDate = new Date();
@@ -163,17 +157,8 @@ test.describe('일정 관리 App CRUD 테스트', () => {
       await expect(toast).toBeVisible();
 
       // 2. 이벤트 리스트에 반복 일정 있는지 확인
-      const eventListView = page.getByTestId('event-list');
-
-      const eventCard = eventListView
-        .locator('div')
-        .filter({ hasText: '수정 테스트 반복 이벤트' })
-        .first();
-      await expect(eventCard).toBeVisible();
-
-      // 수정 버튼 클릭
-      const editBtn = eventCard.getByRole('button', { name: 'Edit event' });
-      await editBtn.click();
+      const eventCard = await getEventCardByTitle(page, '수정 테스트 반복 이벤트');
+      await eventCard.getByRole('button', { name: 'Edit event' }).click();
 
       // 반복 일정이 체크되어 있는지 확인
       const repeatCheckbox = page.getByLabel('반복 일정');
@@ -186,18 +171,14 @@ test.describe('일정 관리 App CRUD 테스트', () => {
       // 수정 저장
       await page.getByTestId('event-submit-button').click();
 
+      await proceedWarningDialog(page);
+
       // 수정 성공 토스트 메시지 확인
       const updateToast = page.getByText('일정이 수정되었습니다.').first();
       await expect(updateToast).toBeVisible();
 
-      await proceedWarningDialog(page);
-
       // 3. 수정된 내용 확인
-      const updatedEventCard = eventListView
-        .locator('div')
-        .filter({ hasText: '수정 테스트 반복 이벤트' })
-        .first();
-      await updatedEventCard.getByRole('button', { name: 'Edit event' }).click();
+      const updatedEventCard = await getEventCardByTitle(page, '수정 테스트 반복 이벤트');
 
       // 수정 후 반복 일정이 체크 해제되어 단일 일정이 되었는지 확인
       const updatedRepeatCheckbox = page.getByLabel('반복 일정');
@@ -239,12 +220,7 @@ test.describe('일정 관리 App CRUD 테스트', () => {
       await expect(createToast).toBeVisible();
 
       // 2. 생성된 반복 일정 중 단일 일정을 삭제
-      const eventListView = page.getByTestId('event-list');
-
-      const eventCard = eventListView
-        .locator('div')
-        .filter({ hasText: '수정 테스트 반복 이벤트' })
-        .first();
+      const eventCard = await getEventCardByTitle(page, '수정 테스트 반복 이벤트');
 
       const deleteBtn = eventCard.getByRole('button', { name: 'Delete event' });
       await deleteBtn.click();
@@ -253,11 +229,8 @@ test.describe('일정 관리 App CRUD 테스트', () => {
       const deleteToast = page.getByText('일정이 삭제되었습니다.').first();
       await expect(deleteToast).toBeVisible();
 
-      // 삭제된 일정 제외 나머지 일정이 단일 일정으로 변경되었는지 확인
-      const remainingEventCard = eventListView
-        .locator('div')
-        .filter({ hasText: '수정 테스트 반복 이벤트' })
-        .first();
+      // 삭제된 일정 제외 나머지 일정이 존재하는지 확인
+      const remainingEventCard = await getEventCardByTitle(page, '수정 테스트 반복 이벤트');
       await expect(remainingEventCard).toBeVisible();
     });
   });
