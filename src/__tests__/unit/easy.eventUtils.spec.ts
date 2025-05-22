@@ -279,4 +279,27 @@ describe('getRepeatEvents', () => {
     expect(result).toHaveLength(5);
     expect(result[result.length - 1].date).toBe('2033-05-23');
   });
+
+  it('윤년 처리(2월 29일) 테스트', () => {
+    const event: EventForm = {
+      title: '이벤트 1',
+      date: '2024-02-29',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: { type: 'yearly', interval: 1, endDate: '2029-04-30' },
+      notificationTime: 0,
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(6);
+    expect(result[0].date).toBe('2024-02-29');
+    expect(result[1].date).toBe('2025-02-28');
+    expect(result[2].date).toBe('2026-02-28');
+    expect(result[3].date).toBe('2027-02-28');
+    expect(result[4].date).toBe('2028-02-29');
+    expect(result[5].date).toBe('2029-02-28');
+  });
 });
