@@ -1,5 +1,4 @@
-import { renderHook } from '@testing-library/react';
-import { act } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 
 import { setupMockHandlerCreation } from '../../__mocks__/handlersUtils';
 import { useEventOperations } from '../../hooks/useEventOperations';
@@ -435,14 +434,15 @@ describe('반복 일정 표시', () => {
       expect(lastSavedEvent.repeat.interval).toBe(testCase.interval);
 
       // 반복 표시 텍스트가 올바른지 확인
+      const typeToSuffix: Record<RepeatType, string> = {
+        daily: '일',
+        weekly: '주',
+        monthly: '월',
+        yearly: '년',
+        none: '',
+      };
       const repeatText = `반복: ${lastSavedEvent.repeat.interval}${
-        lastSavedEvent.repeat.type === 'daily'
-          ? '일'
-          : lastSavedEvent.repeat.type === 'weekly'
-          ? '주'
-          : lastSavedEvent.repeat.type === 'monthly'
-          ? '월'
-          : '년'
+        typeToSuffix[lastSavedEvent.repeat.type]
       }`;
       expect(repeatText).toBe(testCase.expectedText);
     }
