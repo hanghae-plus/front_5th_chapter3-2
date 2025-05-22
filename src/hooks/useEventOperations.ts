@@ -68,13 +68,13 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
   const deleteEvent = async (id: string) => {
     try {
-      const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/events/${id}`, { method: 'DELETE' }); // API 호출
 
       if (!response.ok) {
         throw new Error('Failed to delete event');
       }
 
-      await fetchEvents();
+      await fetchEvents(); // 목록 새로고침
       toast({
         title: '일정이 삭제되었습니다.',
         status: 'info',
