@@ -12,9 +12,11 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report",
     "codegen": "playwright codegen http://localhost:3000",
-    "test:e2e:headed": "playwright test --headed --debug",
     "test:e2e:ui": "playwright show-report",
+    "install:playwright": "playwright install",
     "build": "tsc -b && vite build",
     "lint": "eslint . --ext ts,tsx,js --report-unused-disable-directives --max-warnings 0"
   },
