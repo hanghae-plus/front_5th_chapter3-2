@@ -16,6 +16,36 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
       newEvent.id = String(mockEvents.length + 1); // 간단한 ID 생성
       mockEvents.push(newEvent);
       return HttpResponse.json(newEvent, { status: 201 });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      console.log('api/events-list 호출됨');
+
+      const newEvents = (await request.json()) as { events: Event[] };
+      console.log('0000000000: ', newEvents);
+
+      newEvents.events.forEach((event) => {
+        event.id = String(mockEvents.length + 1); // 간단한 ID 생성
+        mockEvents.push(event);
+      });
+      console.log('bbbbbbbbbb');
+
+      console.log('newEvents: ', newEvents);
+      return HttpResponse.json(newEvents, { status: 201 });
+    }),
+    http.delete('/api/events/:id', ({ params }) => {
+      const { id } = params;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      mockEvents.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.put('/api/events/:id', async ({ params, request }) => {
+      const { id } = params;
+      const updatedEvent = (await request.json()) as Event;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
+      return HttpResponse.json(mockEvents[index]);
     })
   );
 };
