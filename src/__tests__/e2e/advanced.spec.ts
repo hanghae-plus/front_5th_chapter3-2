@@ -117,3 +117,31 @@ test('생성된 반복 일정 수정 시 해당 항목만 수정되며 단일 �
   await expect(eventList.getByText('수정된 반복 일정 설명입니다.', { exact: true })).toHaveCount(1);
   await expect(eventList.getByText('반복: ')).toHaveCount(repeatedCount - 1);
 });
+
+test('생성된 반복 일정을 삭제하면 해당 일정만 제거되고 더 이상 표기되지 않는다.', async ({
+  page,
+}) => {
+  await page.goto('http://localhost:5173/');
+  await saveScheduleForm(page, {
+    title: '삭제될 반복 일정',
+    date: '2025-05-01',
+    startTime: '01:00',
+    endTime: '03:00',
+    description: '팀 회의가 진행될 예정입니다',
+    location: '11층 회의실',
+    category: '업무',
+    repeat: { type: 'weekly', interval: 1, endDate: '2025-05-30' },
+  });
+
+  const eventList = page.getByTestId('event-list');
+  await expect(eventList.getByText('삭제될 반복 일정', { exact: true })).toHaveCount(5);
+
+  const deleteButton = eventList
+    .locator('div')
+    .filter({ hasText: '삭제될 반복 일정' })
+    .first()
+    .getByLabel('Delete event');
+  await deleteButton.click();
+
+  await expect(eventList.getByText('삭제될 반복 일정', { exact: true })).toHaveCount(4);
+});
