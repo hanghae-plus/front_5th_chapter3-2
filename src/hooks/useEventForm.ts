@@ -19,6 +19,11 @@ export const useEventForm = (initialEvent?: Event) => {
   const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
 
+  const [repeatEndOption, setRepeatEndOption] = useState<'never' | 'until' | 'count'>(
+    initialEvent?.repeat.endDate ? 'until' : initialEvent?.repeat.count ? 'count' : 'never'
+  );
+  const [repeatCount, setRepeatCount] = useState<number>(initialEvent?.repeat.count || 1);
+
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
   const [{ startTimeError, endTimeError }, setTimeError] = useState<TimeErrorRecord>({
@@ -51,9 +56,14 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatInterval(1);
     setRepeatEndDate('');
     setNotificationTime(10);
+
+    setRepeatEndOption('never');
+    setRepeatCount(1);
   };
 
   const editEvent = (event: Event) => {
+    const isRepeatingEvent = event.repeat?.type !== 'none';
+
     setEditingEvent(event);
     setTitle(event.title);
     setDate(event.date);
@@ -62,10 +72,24 @@ export const useEventForm = (initialEvent?: Event) => {
     setDescription(event.description);
     setLocation(event.location);
     setCategory(event.category);
-    setIsRepeating(event.repeat.type !== 'none');
-    setRepeatType(event.repeat.type);
-    setRepeatInterval(event.repeat.interval);
-    setRepeatEndDate(event.repeat.endDate || '');
+
+    if (isRepeatingEvent) {
+      // 개별 일정으로 전환: type만 none으로 설정
+      setIsRepeating(false);
+      setRepeatType('none');
+      setRepeatInterval(1);
+      setRepeatEndDate('');
+      setRepeatCount(1);
+      setRepeatEndOption('never');
+    } else {
+      setIsRepeating(false);
+      setRepeatType('none');
+      setRepeatInterval(event.repeat.interval || 1);
+      setRepeatEndDate(event.repeat.endDate || '');
+      setRepeatCount(event.repeat.count || 1);
+      setRepeatEndOption(event.repeat.endDate ? 'until' : event.repeat.count ? 'count' : 'never');
+    }
+
     setNotificationTime(event.notificationTime);
   };
 
@@ -102,5 +126,10 @@ export const useEventForm = (initialEvent?: Event) => {
     handleEndTimeChange,
     resetForm,
     editEvent,
+
+    repeatEndOption,
+    setRepeatEndOption,
+    repeatCount,
+    setRepeatCount,
   };
 };
