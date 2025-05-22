@@ -11,13 +11,11 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const fetchEvents = async () => {
     try {
       const response = await fetch('/api/events');
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
-      }
+      if (!response.ok) throw new Error();
+
       const { events } = await response.json();
       setEvents(events);
-    } catch (error) {
-      console.error('Error fetching events:', error);
+    } catch {
       toast({
         title: '이벤트 로딩 실패',
         status: 'error',
@@ -27,11 +25,40 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  // TODO - 반복 일정 로직 처리
+  const getRepeatEvents = (eventData: Event | EventForm): EventForm[] => {
+    const { type, endDate, interval } = eventData.repeat;
+    const repeatType = type;
+    if (repeatType === 'none' || !endDate) return [eventData];
+
+    const newEvents: EventForm[] = [{ ...eventData }];
+    let currentDate = new Date(eventData.date);
+    const end = new Date(endDate);
+
+    while (currentDate < end) {
+      switch (repeatType) {
+        case 'daily':
+          currentDate.setDate(currentDate.getDate() + interval);
+          break;
+        case 'weekly':
+          currentDate.setDate(currentDate.getDate() + 7 * interval);
+          break;
+        case 'monthly':
+          currentDate.setMonth(currentDate.getMonth() + interval);
+          break;
+        case 'yearly':
+          currentDate.setFullYear(currentDate.getFullYear() + interval);
+          break;
+      }
+      newEvents.push({ ...eventData, date: formatDate(currentDate) });
+    }
+
+    return newEvents;
+  };
+
   const saveEvent = async (eventData: Event | EventForm) => {
-    console.log('타입', eventData.repeat.type);
     try {
-      let response;
+      let response: Response;
+
       if (editing) {
         response = await fetch(`/api/events/${(eventData as Event).id}`, {
           method: 'PUT',
@@ -39,40 +66,14 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           body: JSON.stringify(eventData),
         });
       } else {
-        if (eventData.repeat.type !== 'none' && eventData.repeat.endDate) {
-          //repeat data
-          const repeatType = eventData.repeat.type;
+        const isRepeat = eventData.repeat.type !== 'none' && eventData.repeat.endDate;
 
-          let currentDate = new Date(eventData.date);
-          const endDate = new Date(eventData.repeat.endDate);
-          const repeatInterval = eventData.repeat.interval;
-          const newEvents: EventForm[] = [];
-          newEvents.push({ ...eventData });
-
-          while (currentDate < endDate) {
-            if (repeatType === 'daily') {
-              currentDate.setDate(currentDate.getDate() + 1 * repeatInterval);
-            }
-            if (repeatType === 'weekly') {
-              currentDate.setDate(currentDate.getDate() + 7 * repeatInterval);
-            }
-            if (repeatType === 'monthly') {
-              currentDate.setMonth(currentDate.getMonth() + 1 * repeatInterval);
-            }
-            if (repeatType === 'yearly') {
-              currentDate.setFullYear(currentDate.getFullYear() + 1 * repeatInterval);
-            }
-
-            newEvents.push({ ...eventData, date: formatDate(currentDate) });
-          }
-
-          //반복 일정 포함된 데이터
-
-          //post
+        if (isRepeat) {
+          const repeatedEvents = getRepeatEvents(eventData as EventForm);
           response = await fetch('/api/events-list', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ events: newEvents }),
+            body: JSON.stringify({ events: repeatedEvents }),
           });
         } else {
           response = await fetch('/api/events', {
@@ -83,20 +84,18 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         }
       }
 
-      if (!response.ok) {
-        throw new Error('Failed to save event');
-      }
+      if (!response.ok) throw new Error();
 
       await fetchEvents();
       onSave?.();
+
       toast({
         title: editing ? '일정이 수정되었습니다.' : '일정이 추가되었습니다.',
         status: 'success',
         duration: 3000,
         isClosable: true,
       });
-    } catch (error) {
-      console.error('Error saving event:', error);
+    } catch {
       toast({
         title: '일정 저장 실패',
         status: 'error',
@@ -109,10 +108,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const deleteEvent = async (id: string) => {
     try {
       const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete event');
-      }
+      if (!response.ok) throw new Error();
 
       await fetchEvents();
       toast({
@@ -121,8 +117,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         duration: 3000,
         isClosable: true,
       });
-    } catch (error) {
-      console.error('Error deleting event:', error);
+    } catch {
       toast({
         title: '일정 삭제 실패',
         status: 'error',
@@ -132,17 +127,14 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  async function init() {
-    await fetchEvents();
-    toast({
-      title: '일정 로딩 완료!',
-      status: 'info',
-      duration: 1000,
-    });
-  }
-
   useEffect(() => {
-    init();
+    fetchEvents().then(() =>
+      toast({
+        title: '일정 로딩 완료!',
+        status: 'info',
+        duration: 1000,
+      })
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

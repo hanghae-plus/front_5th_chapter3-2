@@ -1,1 +1,64 @@
-{"events":[{"id":"2b7545a6-ebee-426c-b906-2329bc8d62bd","title":"팀 회의","date":"2025-05-20","startTime":"10:00","endTime":"11:00","description":"주간 팀 미팅","location":"회의실 A","category":"업무","repeat":{"type":"none","interval":0},"notificationTime":1},{"id":"09702fb3-a478-40b3-905e-9ab3c8849dcd","title":"점심 약속","date":"2025-05-21","startTime":"12:30","endTime":"13:30","description":"동료와 점심 식사","location":"회사 근처 식당","category":"개인","repeat":{"type":"none","interval":0},"notificationTime":1},{"id":"da3ca408-836a-4d98-b67a-ca389d07552b","title":"프로젝트 마감","date":"2025-05-25","startTime":"09:00","endTime":"18:00","description":"분기별 프로젝트 마감","location":"사무실","category":"업무","repeat":{"type":"none","interval":0},"notificationTime":1},{"id":"dac62941-69e5-4ec0-98cc-24c2a79a7f81","title":"생일 파티","date":"2025-05-28","startTime":"19:00","endTime":"22:00","description":"친구 생일 축하","location":"친구 집","category":"개인","repeat":{"type":"none","interval":0},"notificationTime":1},{"id":"80d85368-b4a4-47b3-b959-25171d49371f","title":"운동","date":"2025-05-22","startTime":"18:00","endTime":"19:00","description":"주간 운동","location":"헬스장","category":"개인","repeat":{"type":"none","interval":0},"notificationTime":1},{"id":"714d6785-c6a9-40ef-881f-56795b91f691","title":"1","date":"2025-05-01","startTime":"13:30","endTime":"16:30","description":"1","location":"1","category":"업무","repeat":{"type":"daily","interval":1,"endDate":"2025-05-03","id":"3553f0ae-4ac4-424f-b7f7-fea0b43afcb9"},"notificationTime":10},{"id":"f576c30b-17dc-4fae-8ce0-cc3c204b9c61","title":"1","date":"2025-05-02","startTime":"13:30","endTime":"16:30","description":"1","location":"1","category":"업무","repeat":{"type":"daily","interval":1,"endDate":"2025-05-03","id":"3553f0ae-4ac4-424f-b7f7-fea0b43afcb9"},"notificationTime":10},{"id":"e57d2fcd-58fa-43e9-ba7d-57e90aa61d63","title":"1","date":"2025-05-03","startTime":"13:30","endTime":"16:30","description":"1","location":"1","category":"업무","repeat":{"type":"daily","interval":1,"endDate":"2025-05-03","id":"3553f0ae-4ac4-424f-b7f7-fea0b43afcb9"},"notificationTime":10},{"id":"059d794a-1494-4613-aaf5-4b8ae654b626","title":"1","date":"2025-05-04","startTime":"13:30","endTime":"16:30","description":"1","location":"1","category":"업무","repeat":{"type":"daily","interval":1,"endDate":"2025-05-03","id":"3553f0ae-4ac4-424f-b7f7-fea0b43afcb9"},"notificationTime":10},{"id":"02fe2c78-7db8-4bf0-8c60-80f5d9f34c01","title":"🔥","date":"2025-05-01","startTime":"13:31","endTime":"13:37","description":"1","location":"1","category":"업무","repeat":{"type":"daily","interval":1,"endDate":"2025-05-03","id":"523f3dc5-0a46-49a4-be1e-905c6abedfd6"},"notificationTime":10},{"id":"eb4eed97-48c8-4a83-bad0-c8abd6504d2f","title":"🔥","date":"2025-05-02","startTime":"13:31","endTime":"13:37","description":"1","location":"1","category":"업무","repeat":{"type":"daily","interval":1,"endDate":"2025-05-03","id":"523f3dc5-0a46-49a4-be1e-905c6abedfd6"},"notificationTime":10},{"id":"ed3e0623-6cc2-49cc-8a4d-afb956072372","title":"🔥","date":"2025-05-03","startTime":"13:31","endTime":"13:37","description":"1","location":"1","category":"업무","repeat":{"type":"daily","interval":1,"endDate":"2025-05-03","id":"523f3dc5-0a46-49a4-be1e-905c6abedfd6"},"notificationTime":10}]}
+{
+  "events": [
+    {
+      "id": "2b7545a6-ebee-426c-b906-2329bc8d62bd",
+      "title": "팀 회의",
+      "date": "2025-05-20",
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "description": "주간 팀 미팅",
+      "location": "회의실 A",
+      "category": "업무",
+      "repeat": { "type": "none", "interval": 0 },
+      "notificationTime": 1
+    },
+    {
+      "id": "09702fb3-a478-40b3-905e-9ab3c8849dcd",
+      "title": "점심 약속",
+      "date": "2025-05-21",
+      "startTime": "12:30",
+      "endTime": "13:30",
+      "description": "동료와 점심 식사",
+      "location": "회사 근처 식당",
+      "category": "개인",
+      "repeat": { "type": "none", "interval": 0 },
+      "notificationTime": 1
+    },
+    {
+      "id": "da3ca408-836a-4d98-b67a-ca389d07552b",
+      "title": "프로젝트 마감",
+      "date": "2025-05-25",
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "description": "분기별 프로젝트 마감",
+      "location": "사무실",
+      "category": "업무",
+      "repeat": { "type": "none", "interval": 0 },
+      "notificationTime": 1
+    },
+    {
+      "id": "dac62941-69e5-4ec0-98cc-24c2a79a7f81",
+      "title": "생일 파티",
+      "date": "2025-05-28",
+      "startTime": "19:00",
+      "endTime": "22:00",
+      "description": "친구 생일 축하",
+      "location": "친구 집",
+      "category": "개인",
+      "repeat": { "type": "none", "interval": 0 },
+      "notificationTime": 1
+    },
+    {
+      "id": "80d85368-b4a4-47b3-b959-25171d49371f",
+      "title": "운동",
+      "date": "2025-05-22",
+      "startTime": "18:00",
+      "endTime": "19:00",
+      "description": "주간 운동",
+      "location": "헬스장",
+      "category": "개인",
+      "repeat": { "type": "none", "interval": 0 },
+      "notificationTime": 1
+    }
+  ]
+}
