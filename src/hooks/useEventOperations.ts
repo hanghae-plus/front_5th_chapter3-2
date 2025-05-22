@@ -3,34 +3,71 @@ import { useToast } from '@chakra-ui/react';
 import { useEvents } from '../contexts/EventContext';
 import { useEventFormContext } from '../contexts/EventFormContext';
 import { Event, EventForm } from '../types';
+import {
+  checkEventIsRecurring,
+  createRecurringEvents,
+  getRecurringEventIdsForDelete,
+  updateRecurringEvents,
+} from '../utils/recurringEventUtils';
+
+const BASE_URL = (isRepeating: boolean) => (isRepeating ? '/api/events-list' : '/api/events');
 
 export const useEventOperations = (isEditing?: boolean) => {
-  const { editingEvent, setEditingEvent } = useEventFormContext();
-  const { revalidateEvents } = useEvents();
+  const { editingEvent, setEditingEvent, isRepeating } = useEventFormContext();
+  const { events, revalidateEvents } = useEvents();
+
   const toast = useToast();
 
   const editing = Boolean(editingEvent) || isEditing;
 
+  const saveNonRecurringEvent = async (eventData: Event | EventForm) => {
+    let response;
+
+    if (editing) {
+      response = await fetch(`${BASE_URL(isRepeating)}/${(eventData as Event).id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
+    } else {
+      response = await fetch(BASE_URL(isRepeating), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
+    }
+
+    if (!response.ok) throw new Error('Failed to save non-recurring event');
+  };
+
+  const saveRecurringEvents = async (eventData: Event | EventForm) => {
+    let response;
+
+    if (editing) {
+      const newRecurringEvents = createRecurringEvents(eventData as Event);
+      const updatedRecurringEvents = updateRecurringEvents(events, newRecurringEvents as Event[]);
+
+      response = await fetch(BASE_URL(isRepeating), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: updatedRecurringEvents }),
+      });
+    } else {
+      const newRecurringEvents = createRecurringEvents(eventData as Event);
+
+      response = await fetch(BASE_URL(isRepeating), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: newRecurringEvents }),
+      });
+    }
+
+    if (!response.ok) throw new Error('Failed to save recurring event');
+  };
+
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
-      let response;
-      if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
-      } else {
-        response = await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
-      }
-
-      if (!response.ok) {
-        throw new Error('Failed to save event');
-      }
+      isRepeating ? await saveRecurringEvents(eventData) : await saveNonRecurringEvent(eventData);
 
       await revalidateEvents();
       setEditingEvent(null);
