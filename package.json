@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "server": "node server.js",
-    "server:watch": "node --watch server.js",
+    "server:watch": "node --watch e2eServer.js",
     "start": "vite",
     "dev": "concurrently \"pnpm run server:watch\" \"pnpm run start\"",
     "test": "vitest",
@@ -13,7 +13,8 @@
     "test:coverage": "vitest run --coverage",
     "build": "tsc -b && vite build",
     "lint": "eslint . --ext ts,tsx,js --report-unused-disable-directives --max-warnings 0",
-    "playwright:ui": "playwright test --ui"
+    "playwright:ui": "playwright test --ui",
+    "playwright:test": "playwright test"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
