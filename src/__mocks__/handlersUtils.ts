@@ -6,7 +6,6 @@ import { Event } from '../types';
 export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
   const mockEvents: Event[] = [...initEvents];
 
-  //TODO - 반복 일정 로직 추가
   server.use(
     http.get('/api/events', () => {
       return HttpResponse.json({ events: mockEvents });
@@ -92,3 +91,27 @@ export const setupMockHandlerDeletion = () => {
     })
   );
 };
+
+// 반복 일정 헨들러
+export const setupMockRepeatHandlerCreateion = (initEvents = [] as Event[]) => {
+  const mockEvents: Event[] = [...initEvents];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const { events: newEvents } = (await request.json()) as { events: Event[] };
+      const repeatedEvents = newEvents.map((event, index) => ({
+        ...event,
+        id: `${mockEvents.length + index + 1}`,
+      }));
+      mockEvents.push(...repeatedEvents);
+      return HttpResponse.json(repeatedEvents, { status: 201 });
+    })
+  );
+};
+
+export const setupMockRepeatHandlerUpdation = () => {};
+
+export const setupMockRepeatHandlerDeletion = () => {};

@@ -5,6 +5,7 @@ import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
+  setupMockRepeatHandlerCreateion,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
 import { server } from '../../setupTests.ts';
@@ -193,7 +194,7 @@ describe('에러 처리', () => {
 describe('반복 일정', () => {
   describe('반복 유형 선택', () => {
     it('일정 생성에서 반복 일정을 선택하면 일정에 반영된다.', async () => {
-      setupMockHandlerCreation();
+      setupMockRepeatHandlerCreateion();
 
       const { result } = renderHook(() => useEventOperations(false));
 
@@ -218,7 +219,7 @@ describe('반복 일정', () => {
       console.log(result.current.events);
       expect(result.current.events).toHaveLength(3);
       expect(result.current.events[0].date).toBe('2025-10-16');
-      expect(result.current.events[-1].date).toBe('2025-10-18');
+      expect(result.current.events[2].date).toBe('2025-10-18');
     });
 
     it('일정 수정에서 반복 일정을 선택하면 일정에 반영된다.', async () => {

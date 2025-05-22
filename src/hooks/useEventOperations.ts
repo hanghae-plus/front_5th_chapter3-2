@@ -49,7 +49,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           const newEvents: EventForm[] = [];
           newEvents.push({ ...eventData });
 
-          while (currentDate <= endDate) {
+          while (currentDate < endDate) {
             if (repeatType === 'daily') {
               currentDate.setDate(currentDate.getDate() + 1 * repeatInterval);
             }
