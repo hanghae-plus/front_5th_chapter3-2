@@ -184,3 +184,180 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 
   expect(result.current.events).toHaveLength(1);
 });
+
+it('반복 일정 추가시 해당 조건 만큼 반복되는 일정이 생성되어야 한다.', async () => {
+  setupMockHandlerCreation(); // ? Med: 이걸 왜 써야하는지 물어보자
+
+  const { result } = renderHook(() => useEventOperations(false));
+
+  await act(() => Promise.resolve(null));
+
+  const newEvent: Event = {
+    id: '1',
+    title: '새 회의',
+    date: '2025-05-01',
+    startTime: '11:00',
+    endTime: '12:00',
+    description: '새로운 팀 미팅',
+    location: '회의실 A',
+    category: '업무',
+    repeat: { type: 'daily', interval: 5, count: 5 },
+    notificationTime: 5,
+  };
+  const repeatEvent: Event[] = [
+    {
+      id: '1',
+      title: '새 회의',
+      date: '2025-05-01',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5, count: 5 },
+      notificationTime: 5,
+    },
+    {
+      id: '2',
+      title: '새 회의',
+      date: '2025-05-02',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5, count: 5 },
+      notificationTime: 5,
+    },
+    {
+      id: '3',
+      title: '새 회의',
+      date: '2025-05-03',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5, count: 5 },
+      notificationTime: 5,
+    },
+    {
+      id: '4',
+      title: '새 회의',
+      date: '2025-05-04',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5, count: 5 },
+      notificationTime: 5,
+    },
+    {
+      id: '5',
+      title: '새 회의',
+      date: '2025-05-05',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5, count: 5 },
+      notificationTime: 5,
+    },
+  ];
+
+  await act(async () => {
+    await result.current.saveEvent(newEvent);
+  });
+
+  expect(result.current.events).toEqual(repeatEvent);
+});
+
+it('반복 일정 수정 시, 일정을 해제?할 경우 단일 일정으로 변경된다.', async () => {
+  const repeatEvent: Event[] = [
+    {
+      id: '1',
+      title: '새 회의',
+      date: '2025-05-01',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5, count: 5 },
+      notificationTime: 5,
+    },
+    {
+      id: '2',
+      title: '새 회의',
+      date: '2025-05-02',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5, count: 5 },
+      notificationTime: 5,
+    },
+    {
+      id: '3',
+      title: '새 회의',
+      date: '2025-05-03',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5, count: 5 },
+      notificationTime: 5,
+    },
+    {
+      id: '4',
+      title: '새 회의',
+      date: '2025-05-04',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5, count: 5 },
+      notificationTime: 5,
+    },
+    {
+      id: '5',
+      title: '새 회의',
+      date: '2025-05-05',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 5, count: 5 },
+      notificationTime: 5,
+    },
+  ];
+  setupMockHandlerUpdating(repeatEvent);
+  const { result } = renderHook(() => useEventOperations(false));
+
+  await act(() => Promise.resolve(null));
+
+  const updateEvent: Event = {
+    id: '1',
+    title: '새 회의',
+    date: '2025-05-01',
+    startTime: '11:00',
+    endTime: '12:00',
+    description: '새로운 팀 미팅',
+    location: '회의실 A',
+    category: '업무',
+    repeat: { type: 'daily', interval: 5, count: 5 },
+    notificationTime: 5,
+  };
+
+  await act(async () => {
+    await result.current.saveEvent(updateEvent);
+  });
+
+  expect(result.current.events).toEqual(updateEvent);
+});
