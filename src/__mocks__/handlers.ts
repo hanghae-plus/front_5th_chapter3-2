@@ -36,4 +36,45 @@ export const handlers = [
 
     return new HttpResponse(null, { status: 404 });
   }),
+
+  // server.js에 추가된 API에 대한 핸들러
+  http.post('/api/events-list', async ({ request }) => {
+    const { events: newEvents } = (await request.json()) as { events: Event[] };
+
+    const generatedEvents = newEvents.map((event, index) => {
+      return {
+        ...event,
+        id: String(events.length + index + 1),
+      };
+    });
+
+    events.push(...generatedEvents);
+    return HttpResponse.json(generatedEvents, { status: 201 });
+  }),
+
+  http.put('/api/events-list', async ({ request }) => {
+    const { events: updatedEvents } = (await request.json()) as { events: Event[] };
+
+    updatedEvents.forEach((updated) => {
+      const index = events.findIndex((event) => event.id === updated.id);
+      if (index !== -1) {
+        events[index] = { ...events[index], ...updated };
+      }
+    });
+
+    return HttpResponse.json({ events });
+  }),
+
+  http.delete('/api/events-list', async ({ request }) => {
+    const { eventIds } = (await request.json()) as { eventIds: string[] };
+
+    eventIds.forEach((id) => {
+      const index = events.findIndex((event) => event.id === id);
+      if (index !== -1) {
+        events.splice(index, 1);
+      }
+    });
+
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];
