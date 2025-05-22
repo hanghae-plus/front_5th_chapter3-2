@@ -1,5 +1,5 @@
 import { Event, EventForm } from '../types';
-import { addDays, addWeeks, format, getDaysInMonth } from 'date-fns';
+import { addDays, addWeeks, addMonths, addYears, getDaysInMonth, format } from 'date-fns';
 import { getWeekDates, isDateInRange } from './dateUtils';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
@@ -54,14 +54,16 @@ export const isLeapYear = (year: number) => {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 };
 
-export const generateRepeatEvents = (event: Event | EventForm) => {
+export const generateRepeatEvents = (event: Event | EventForm): Event[] => {
   const { repeat, date } = event;
   const { type, interval, endDate } = repeat;
 
-  let currentDate = new Date(date);
-  // endDate가 없으면 2025-09-30으로 설정
+  const initialDate = new Date(date);
   const repeatEndDate = endDate ? new Date(endDate) : new Date('2025-09-30');
   const repeatEvents: Event[] = [];
+
+  let currentDate = new Date(initialDate);
+  const originalDay = currentDate.getDate();
 
   while (currentDate <= repeatEndDate) {
     repeatEvents.push({
@@ -70,40 +72,38 @@ export const generateRepeatEvents = (event: Event | EventForm) => {
     });
 
     switch (type) {
-      case 'daily':
+      case 'daily': {
         currentDate = addDays(currentDate, interval);
         break;
-      case 'weekly':
+      }
+
+      case 'weekly': {
         currentDate = addWeeks(currentDate, interval);
         break;
+      }
+
       case 'monthly': {
-        const nextMonth = currentDate.getMonth() + interval;
-        const nextYear = currentDate.getFullYear() + Math.floor(nextMonth / 12);
-        const adjustedMonth = nextMonth % 12;
-        const currentDay = currentDate.getDate();
-
-        // 말일(31일) 처리
-        if (currentDay === 31) {
-          const daysInNextMonth = getDaysInMonth(new Date(nextYear, adjustedMonth + 1, 1));
-          currentDate = new Date(nextYear, adjustedMonth, daysInNextMonth);
-        } else {
-          currentDate = new Date(nextYear, adjustedMonth, currentDay);
-        }
+        const nextDate = addMonths(currentDate, interval);
+        const daysInTargetMonth = getDaysInMonth(nextDate);
+        const adjustedDay = Math.min(originalDay, daysInTargetMonth);
+        currentDate = new Date(nextDate.getFullYear(), nextDate.getMonth(), adjustedDay);
         break;
       }
+
       case 'yearly': {
-        const nextYear = currentDate.getFullYear() + interval;
-        const nextMonth = currentDate.getMonth();
-        const nextDay = currentDate.getDate();
+        const nextDate = addYears(currentDate, interval);
+        const month = initialDate.getMonth();
+        const isFeb = month === 1;
+        const targetDay = isFeb
+          ? isLeapYear(nextDate.getFullYear())
+            ? 29
+            : 28
+          : Math.min(originalDay, getDaysInMonth(new Date(nextDate.getFullYear(), month)));
 
-        // 2월 29일 처리
-        if (nextMonth === 1 && nextDay === 29) {
-          currentDate = new Date(nextYear, nextMonth, isLeapYear(nextYear) ? 29 : 28);
-        } else {
-          currentDate = new Date(nextYear, nextMonth, nextDay);
-        }
+        currentDate = new Date(nextDate.getFullYear(), month, targetDay);
         break;
       }
+
       default:
         return repeatEvents;
     }
