@@ -56,6 +56,7 @@ import {
 } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
 import { getTimeErrorMessage } from './utils/timeValidation';
+import { isNumberInRange, validateRepeatEndDate } from './utils/validate';
 
 const categories = ['업무', '개인', '가족', '기타'];
 
@@ -138,6 +139,19 @@ function App() {
       return;
     }
 
+    if (isRepeating && repeatEndType === 'endDate') {
+      const endDateError = validateRepeatEndDate({ date, repeat: { endDate: repeatEndDate } });
+      if (endDateError) {
+        toast({
+          title: endDateError,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+    }
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -162,6 +176,16 @@ function App() {
     } else {
       await saveEvent(eventData);
       resetForm();
+    }
+
+    if (!isNumberInRange({ value: repeatInterval, min: 1, max: 12 }) && isRepeating) {
+      toast({
+        title: '반복 간격은 1에서 12 사이의 숫자여야 합니다.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
     }
   };
 
@@ -200,7 +224,7 @@ function App() {
                           color={isNotified ? 'red.500' : 'inherit'}
                         >
                           <HStack spacing={1}>
-                            {isNotified && <BellIcon />}
+                            {isNotified && <BellIcon data-testid="bell-icon" />}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.repeat.type !== 'none' ? '🍎 ' : ''}
                               {event.title}
@@ -270,7 +294,7 @@ function App() {
                                 color={isNotified ? 'red.500' : 'inherit'}
                               >
                                 <HStack spacing={1}>
-                                  {isNotified && <BellIcon />}
+                                  {isNotified && <BellIcon data-testid="bell-icon" />}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.repeat.type !== 'none' ? '🍎 ' : ''}
                                     {event.title}
@@ -396,9 +420,11 @@ function App() {
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
                   <Input
+                    aria-label="repeat-interval"
                     type="number"
                     value={repeatInterval}
                     onChange={(e) => setRepeatInterval(Number(e.target.value))}
+                    max={12}
                     min={1}
                   />
                 </FormControl>
@@ -504,6 +530,7 @@ function App() {
                     <IconButton
                       aria-label="Edit event"
                       icon={<EditIcon />}
+                      data-testid="event-edit-button"
                       onClick={() => editEvent(event)}
                     />
                     <IconButton

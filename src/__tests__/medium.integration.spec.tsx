@@ -14,6 +14,7 @@ import App from '../App';
 import { useEventOperations } from '../hooks/useEventOperations';
 import { server } from '../setupTests';
 import { Event } from '../types';
+import { validateRepeatEndDate } from '../../utils/validate';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
@@ -829,6 +830,25 @@ describe('반복 일정 단일 삭제', () => {
 /* 심화 과제 - Team */
 
 describe('일정 알림 기능', () => {
+  it('사용자가 알림 시간을 선택할 수 있다 (1분, 10분, 1시간, 1일 전)', async () => {
+    setup(<App />);
+
+    const notificationSelect = screen.getByLabelText('알림 설정') as HTMLSelectElement;
+
+    // 각 옵션을 선택하면 -> 선택값이 noti어쩌고에 반영돼야 함
+    const testCases = [
+      { label: '1분 전', value: '1' },
+      { label: '10분 전', value: '10' },
+      { label: '1시간 전', value: '60' },
+      { label: '1일 전', value: '1440' },
+    ];
+
+    for (const { label, value } of testCases) {
+      await userEvent.selectOptions(notificationSelect, value);
+      expect(notificationSelect.value).toBe(value);
+    }
+  });
+
   it('알림 시간에 도달하면 캘린더에 아이콘이 추가되고 색상이 변경되어 표시된다.', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-05-05T13:22:00'));
@@ -864,5 +884,146 @@ describe('일정 알림 기능', () => {
 
     // 이벤트 텍스트도 확인
     expect(within(cell!).getByText(/어린이날 대운동회/)).toBeInTheDocument();
+  });
+});
+
+describe('반복 간격', () => {
+  it('반복 간격을 설정하지 않으면 기본값으로 1이 설정되어야 한다.', () => {
+    setup(<App />);
+
+    const repeatInterval = screen.getByLabelText('repeat-interval');
+    expect(repeatInterval).toHaveValue(1);
+  });
+
+  it('반복 간격이 1 미만이라면, 경고 메시지가 표시되어야 한다. (복사 붙여넣기 동작)', async () => {
+    const { user } = setup(<App />);
+    const repeatInterval = screen.getByLabelText('repeat-interval');
+
+    await user.clear(repeatInterval);
+    await user.type(repeatInterval, '0');
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-15',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+    });
+
+    expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
+  });
+
+  it('반복 간격이 12 초과라면 경고 메시지가 표시되어야 한다. (복사 붙여넣기 동작)', async () => {
+    const { user } = setup(<App />);
+    const repeatInterval = screen.getByLabelText('repeat-interval');
+
+    await user.clear(repeatInterval);
+    await user.type(repeatInterval, '13');
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-15',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+    });
+
+    expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
+  });
+
+  it('반복 간격이 유효한 숫자가 아니라면 경고 메시지가 표시되어야 한다.', async () => {
+    const { user } = setup(<App />);
+    const repeatInterval = screen.getByLabelText('repeat-interval');
+
+    await user.clear(repeatInterval);
+    await user.type(repeatInterval, '0');
+    await user.type(repeatInterval, '222');
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-15',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+    });
+
+    expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
+  });
+});
+
+describe('반복 종료일 유효성 검사', () => {
+  it('종료일이 시작일보다 빠르면 에러 메시지를 반환한다', () => {
+    const event: Event = {
+      id: '1',
+      title: '테스트 이벤트',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '테스트 설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-14' },
+      notificationTime: 10,
+    };
+
+    const result = validateRepeatEndDate(event);
+    expect(result).toBe('종료일은 시작일보다 늦어야 합니다.');
+  });
+
+  it('종료일이 시작일과 같으면 에러 메시지를 반환한다', () => {
+    const event: Event = {
+      id: '1',
+      title: '테스트 이벤트',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '테스트 설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-15' },
+      notificationTime: 10,
+    };
+
+    const result = validateRepeatEndDate(event);
+    expect(result).toBe('종료일은 시작일보다 늦어야 합니다.');
+  });
+
+  it('종료일이 시작일보다 늦으면 null을 반환한다', () => {
+    const event: Event = {
+      id: '1',
+      title: '테스트 이벤트',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '테스트 설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-16' },
+      notificationTime: 10,
+    };
+
+    const result = validateRepeatEndDate(event);
+    expect(result).toBeNull();
+  });
+
+  it('종료일이 없으면 null을 반환한다', () => {
+    const event: Event = {
+      id: '1',
+      title: '테스트 이벤트',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '테스트 설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+      notificationTime: 10,
+    };
+
+    const result = validateRepeatEndDate(event);
+    expect(result).toBeNull();
   });
 });
