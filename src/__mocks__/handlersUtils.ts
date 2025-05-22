@@ -92,3 +92,89 @@ export const setupMockHandlerDeletion = () => {
     })
   );
 };
+
+export const setupMockHandlerRepeatEventCreation = (initEvents = [] as Event[]) => {
+  const mockEvents: Event[] = [...initEvents];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const newEvent = (await request.json()) as Event;
+      newEvent.id = String(mockEvents.length + 1);
+
+      const isRepeatEvent = newEvent.repeat.type !== 'none';
+      const newRepeatEvent = {
+        ...newEvent,
+        repeat: {
+          ...newEvent.repeat,
+          id: isRepeatEvent ? String(Math.random()) : undefined,
+        },
+      };
+      mockEvents.push(newRepeatEvent);
+      return HttpResponse.json(newRepeatEvent, { status: 201 });
+    })
+  );
+};
+
+export const setupMockHandlerRepeatEventUpdating = () => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '수정할 반복 이벤트',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '수정할 반복 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-11-15', id: 'repeat-id' },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.put('/api/events-list/:id', async ({ params, request }) => {
+      const { id } = params;
+      const updatedEvent = (await request.json()) as Event;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
+      return HttpResponse.json(mockEvents[index]);
+    })
+  );
+};
+
+export const setupMockHandlerRepeatEventDeletion = () => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '삭제할 반복 이벤트',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '삭제할 반복 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-11-15', id: 'repeat-id' },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.delete('/api/events-list/:id', ({ params }) => {
+      const { id } = params;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      mockEvents.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
+    })
+  );
+};
