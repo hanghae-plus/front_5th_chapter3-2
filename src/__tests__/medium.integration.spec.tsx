@@ -278,6 +278,37 @@ describe('일정 뷰', () => {
     const repeatIcon = weekView.getByTestId('repeat-icon');
     expect(repeatIcon).toBeInTheDocument();
   });
+
+  it('뷰 전환 시 일정이 유지되어 렌더링된다.', async () => {
+    setupMockHandlerCreation();
+
+    vi.setSystemTime(new Date('2025-09-15'));
+    const { user } = setup(<App />);
+    await saveSchedule(user, {
+      title: '이번주 팀 회의',
+      date: '2025-09-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '이번주 팀 회의입니다.',
+      location: '회의실 A',
+      category: '업무',
+    });
+
+    // 월별 뷰에서 확인
+    const monthView = within(screen.getByTestId('month-view'));
+    expect(monthView.getByText('이번주 팀 회의')).toBeInTheDocument();
+
+    // 주별 뷰에서 확인
+    await user.selectOptions(screen.getByLabelText('view'), 'week');
+
+    const weekView = within(screen.getByTestId('week-view'));
+    expect(weekView.getByText('이번주 팀 회의')).toBeInTheDocument();
+
+    // 다시 월별 뷰에서 확인
+    await user.selectOptions(screen.getByLabelText('view'), 'month');
+    const monthView_ = within(screen.getByTestId('month-view'));
+    expect(monthView_.getByText('이번주 팀 회의')).toBeInTheDocument();
+  });
 });
 
 describe('검색 기능', () => {
@@ -350,6 +381,95 @@ describe('검색 기능', () => {
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getByText('팀 회의')).toBeInTheDocument();
     expect(eventList.getByText('프로젝트 계획')).toBeInTheDocument();
+  });
+});
+
+describe('반복 일정 포함 검색 기능', () => {
+  beforeEach(() => {
+    server.use(
+      http.get('/api/events', () =>
+        HttpResponse.json({
+          events: [
+            {
+              id: 1,
+              title: '팀 회의',
+              date: '2025-10-15',
+              startTime: '09:00',
+              endTime: '10:00',
+              description: '주간 팀 미팅',
+              location: '회의실 A',
+              category: '업무',
+              repeat: { type: 'none', interval: 0 },
+              notificationTime: 10,
+            },
+            {
+              id: 2,
+              title: '프로젝트 계획',
+              date: '2025-10-16',
+              startTime: '14:00',
+              endTime: '15:00',
+              description: '새 프로젝트 계획 수립',
+              location: '회의실 B',
+              category: '업무',
+              repeat: { type: 'none', interval: 0 },
+              notificationTime: 10,
+            },
+            {
+              id: 3,
+              title: '프로젝트 계획',
+              date: '2025-10-17',
+              startTime: '14:00',
+              endTime: '15:00',
+              description: '프로젝트 진행 상황 논의',
+              location: '회의실 A',
+              category: '업무',
+              repeat: { type: 'daily', interval: 1, endType: 'date', endDate: '2025-10-19' },
+              notificationTime: 10,
+            },
+            {
+              id: 4,
+              title: '프로젝트 계획',
+              date: '2025-10-18',
+              startTime: '14:00',
+              endTime: '15:00',
+              description: '프로젝트 진행 상황 논의',
+              location: '회의실 A',
+              category: '업무',
+              repeat: { type: 'daily', interval: 1, endType: 'date', endDate: '2025-10-19' },
+              notificationTime: 10,
+            },
+            {
+              id: 5,
+              title: '프로젝트 계획',
+              date: '2025-10-19',
+              startTime: '14:00',
+              endTime: '15:00',
+              description: '프로젝트 진행 상황 논의',
+              location: '회의실 A',
+              category: '업무',
+              repeat: { type: 'daily', interval: 1, endType: 'date', endDate: '2025-10-19' },
+              notificationTime: 10,
+            },
+          ],
+        })
+      )
+    );
+  });
+
+  afterEach(() => {
+    server.resetHandlers();
+  });
+
+  it('검색어 필터링 시 반복 일정도 포함되어 필터링된다.', async () => {
+    const { user } = setup(<App />);
+
+    vi.setSystemTime('2025-10-15');
+    const searchInput = screen.getByPlaceholderText('검색어를 입력하세요');
+    await user.type(searchInput, '프로젝트 계획');
+
+    const eventList = within(screen.getByTestId('event-list'));
+    const searchedEventList = eventList.getAllByText('프로젝트 계획');
+    expect(searchedEventList.length).toBe(4);
   });
 });
 
