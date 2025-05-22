@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act } from '@testing-library/react';
+import { render, screen, within, act, renderHook } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
@@ -7,11 +7,13 @@ import { ReactElement } from 'react';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
+  setupMockHandlerEventsListCreation,
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
 import { Event } from '../types';
+import { useEventOperations } from '../hooks/useEventOperations';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
@@ -323,4 +325,247 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('반복 유형 선택', () => {
+  it('월별 반복 일정을 생성하면 월별 반복 일정이 생성된다.', async () => {
+    setupMockHandlerEventsListCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    // renderHook 이후에 비동기 상태 업데이트가 완료될 시간을 주기 위해 호출!
+    await act(() => Promise.resolve(null));
+
+    const newEvent = {
+      id: '1',
+      title: '복싱',
+      date: '2025-10-21',
+      startTime: '21:00',
+      endTime: '22:00',
+      description: '복싱 훈련',
+      location: '복싱장',
+      category: '운동',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-12-31' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newEvent as Event);
+    });
+
+    const expectedEvents = [
+      { ...newEvent, id: '1', date: '2025-10-21' },
+      { ...newEvent, id: '2', date: '2025-11-21' },
+      { ...newEvent, id: '3', date: '2025-12-21' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+
+  it('윤년 29일에 매년 반복일정을 설정한 경우 월의 마지막 날짜에 일정이 생성된다.', async () => {
+    setupMockHandlerEventsListCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent = {
+      id: '1',
+      title: '등산',
+      date: '2024-02-29',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '등산 훈련',
+      location: '산책로',
+      category: '운동',
+      repeat: { type: 'yearly', interval: 1, endDate: '2025-02-28' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newEvent as Event);
+    });
+
+    const expectedEvents = [
+      { ...newEvent, id: '1', date: '2024-02-29' },
+      { ...newEvent, id: '2', date: '2025-02-28' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+});
+
+describe('반복 간격 선택', () => {
+  it('반복 간격을 선택하지 않으면 default로 1로 설정된다.', async () => {
+    setup(<App />);
+
+    const repeatInterval = screen.getByLabelText('repeat-interval');
+    expect(repeatInterval).toHaveValue(1);
+  });
+});
+
+describe('반복 종료 설정', () => {
+  it('종료 날짜를 지정하지 않으면 2025-09-30로 설정된다.', async () => {
+    setupMockHandlerEventsListCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent = {
+      id: '1',
+      title: '등산',
+      date: '2025-05-21',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '등산 훈련',
+      location: '산책로',
+      category: '운동',
+      repeat: { type: 'monthly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newEvent as Event);
+    });
+
+    const expectedEvents = [
+      { ...newEvent, id: '1', date: '2025-05-21' },
+      { ...newEvent, id: '2', date: '2025-06-21' },
+      { ...newEvent, id: '3', date: '2025-07-21' },
+      { ...newEvent, id: '4', date: '2025-08-21' },
+      { ...newEvent, id: '5', date: '2025-09-21' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+});
+
+describe('반복 일정 단일 수정', () => {
+  it('반복 일정을 수정하면 단일 일정으로 변경되고 반복 일정 아이콘도 사라진다.', async () => {
+    const { user } = setup(<App />);
+
+    setupMockHandlerUpdating([
+      {
+        id: '1',
+        title: '새 회의',
+        date: '2025-05-21',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+      {
+        id: '2',
+        title: '새 회의',
+        date: '2025-07-21',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+    ]);
+
+    await user.click(await screen.findByLabelText('Edit event'));
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 회의');
+    await user.clear(screen.getByLabelText('설명'));
+    await user.type(screen.getByLabelText('설명'), '회의 내용 변경');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const eventList = within(screen.getByTestId('event-list'));
+
+    expect(eventList.queryByText('반복')).not.toBeInTheDocument();
+
+    const monthView = within(screen.getByTestId('month-view'));
+    const repeatIcon = monthView.queryByLabelText('repeat-icon');
+
+    expect(repeatIcon).not.toBeInTheDocument();
+  });
+});
+
+describe('반복 일정 단일 삭제', () => {
+  it('반복 일정을 삭제하면 해당 일정만 삭제된다.', async () => {
+    setupMockHandlerEventsListCreation();
+
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-05-21',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 2, endDate: '2025-08-30' },
+      notificationTime: 5,
+    };
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(async () => {
+      await result.current.saveRepeatEvent(newRepeatEvent);
+    });
+
+    await act(() => Promise.resolve(null));
+
+    setupMockHandlerDeletion(result.current.events);
+
+    await act(async () => {
+      await result.current.deleteEvent('1');
+    });
+
+    const expectedEvents = [{ ...newRepeatEvent, id: '2', date: '2025-07-21' }];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+});
+
+describe('반복 일정 표시', () => {
+  it('반복 일정을 추가하면 캘린더 뷰에서 반복 일정에 반복 아이콘이 표시된다.', async () => {
+    setupMockHandlerEventsListCreation([
+      {
+        id: '1',
+        title: '새 회의',
+        date: '2025-10-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+      {
+        id: '2',
+        title: '새 회의',
+        date: '2025-12-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+    ]);
+
+    setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const monthView = within(screen.getByTestId('month-view'));
+
+    const repeatIcon = monthView.getByLabelText('repeat-icon');
+
+    expect(repeatIcon).toBeInTheDocument();
+  });
 });

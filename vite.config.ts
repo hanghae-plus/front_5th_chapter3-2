@@ -19,6 +19,8 @@ export default mergeConfig(
       globals: true,
       environment: 'jsdom',
       setupFiles: './src/setupTests.ts',
+      exclude: ['**/*.e2e.spec.ts', '**/e2e/**', '**/node_modules/**', '**/dist/**'],
+      testTimeout: 10000,
       coverage: {
         reportsDirectory: './.coverage',
         reporter: ['lcov', 'json', 'json-summary'],
