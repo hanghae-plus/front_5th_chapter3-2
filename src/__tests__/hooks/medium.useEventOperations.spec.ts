@@ -211,7 +211,7 @@ describe('반복 일정 기능', () => {
     };
 
     await act(async () => {
-      await result.current.saveEvent(repeatEvent);
+      await result.current.saveRepeatEvent(repeatEvent);
     });
 
     expect(result.current.events).toHaveLength(3);
@@ -245,7 +245,7 @@ describe('반복 일정 기능', () => {
     };
 
     await act(async () => {
-      await result.current.saveEvent(updatedRepeatEvent);
+      await result.current.saveRepeatEvent(updatedRepeatEvent);
     });
 
     expect(result.current.events[0].title).toBe('수정된 반복 회의');
@@ -288,7 +288,7 @@ describe('반복 일정 기능', () => {
     };
 
     await act(async () => {
-      await result.current.saveEvent(invalidRepeatEvent);
+      await result.current.saveRepeatEvent(invalidRepeatEvent);
     });
 
     expect(toastFn).toHaveBeenCalledWith({
@@ -325,7 +325,7 @@ describe('반복 일정 기능', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(dailyEvent);
+        await result.current.saveRepeatEvent(dailyEvent);
       });
 
       expect(result.current.events).toHaveLength(3);
@@ -359,7 +359,7 @@ describe('반복 일정 기능', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(weeklyEvent);
+        await result.current.saveRepeatEvent(weeklyEvent);
       });
 
       expect(result.current.events).toHaveLength(3);
@@ -393,7 +393,7 @@ describe('반복 일정 기능', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(monthlyEvent);
+        await result.current.saveRepeatEvent(monthlyEvent);
       });
 
       expect(result.current.events).toHaveLength(3);
@@ -427,7 +427,7 @@ describe('반복 일정 기능', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(yearlyEvent);
+        await result.current.saveRepeatEvent(yearlyEvent);
       });
 
       expect(result.current.events).toHaveLength(3);
@@ -460,7 +460,7 @@ describe('반복 일정 기능', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(singleEvent);
+        await result.current.saveRepeatEvent(singleEvent);
       });
 
       expect(result.current.events).toHaveLength(1);
@@ -494,7 +494,7 @@ describe('반복 일정 기능', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(dailyEvent);
+        await result.current.saveRepeatEvent(dailyEvent);
       });
 
       expect(result.current.events).toHaveLength(4);
@@ -529,7 +529,7 @@ describe('반복 일정 기능', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(weeklyEvent);
+        await result.current.saveRepeatEvent(weeklyEvent);
       });
 
       expect(result.current.events).toHaveLength(4);
@@ -563,7 +563,7 @@ describe('반복 일정 기능', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(monthlyEvent);
+        await result.current.saveRepeatEvent(monthlyEvent);
       });
 
       expect(result.current.events).toHaveLength(4);
@@ -598,7 +598,7 @@ describe('반복 일정 기능', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(yearlyEvent);
+        await result.current.saveRepeatEvent(yearlyEvent);
       });
 
       expect(result.current.events).toHaveLength(3);
@@ -629,8 +629,9 @@ describe('반복 일정 기능', () => {
         notificationTime: 30,
       };
 
+      // waitFor vs await act
       await act(async () => {
-        await result.current.saveEvent(invalidEvent);
+        await result.current.saveRepeatEvent(invalidEvent);
       });
 
       expect(toastFn).toHaveBeenCalledWith({
