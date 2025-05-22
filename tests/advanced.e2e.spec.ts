@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-import { Event } from '../types';
+import { Event } from '../src/types';
 
 const saveScheduleForm = async (page: Page, form: Omit<Event, 'id' | 'notificationTime'>) => {
   const { title, date, startTime, endTime, location, description, category, repeat } = form;
