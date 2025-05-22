@@ -47,4 +47,42 @@ describe('1팀 심화 e2e 테스트', () => {
         cy.get('[aria-label="Delete event"]').click();
       });
   });
+
+  it('일정 검색 시 일치하는 일정만 보여진다', () => {
+    getInputByLabel('제목').type('검색 테스트');
+    getInputByLabel('날짜').type('2025-05-26');
+    getInputByLabel('시작 시간').type('11:00');
+    getInputByLabel('종료 시간').type('12:00');
+    getInputByLabel('설명').type('검색 설명');
+    getInputByLabel('위치').type('회의실 C');
+    getInputByLabel('카테고리').select('업무');
+    cy.get('[data-testid="event-submit-button"]').click();
+
+    cy.get('[placeholder="검색어를 입력하세요"]').type('검색 테스트');
+    cy.get('[data-testid="event-list"]').should('contain.text', '검색 테스트');
+  });
+
+  it('주간/월간 뷰 전환이 작동한다', () => {
+    cy.get('[aria-label="view"]').select('month');
+    cy.get('[data-testid="month-view"]').should('exist');
+
+    cy.get('[aria-label="view"]').select('week');
+    cy.get('[data-testid="week-view"]').should('exist');
+  });
+
+  it('알림 설정을 "1시간 전"으로 바꿀 수 있다', () => {
+    getInputByLabel('제목').type('알림 일정');
+    getInputByLabel('날짜').type('2025-05-22');
+    getInputByLabel('시작 시간').type('15:00');
+    getInputByLabel('종료 시간').type('16:00');
+    getInputByLabel('설명').type('알림 설명');
+    getInputByLabel('위치').type('회의실 B');
+    getInputByLabel('카테고리').select('업무');
+
+    getInputByLabel('알림 설정').select('1시간 전');
+
+    cy.get('[data-testid="event-submit-button"]').click();
+
+    cy.contains('알림: 1시간 전').should('exist');
+  });
 });
