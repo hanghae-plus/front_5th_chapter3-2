@@ -77,6 +77,7 @@ function expandEvents(events, startDate, endDate) {
     const interval = event.repeat.interval || 1;
     const repeatEnd = event.repeat.endDate ? new Date(event.repeat.endDate) : endDate;
     let current = new Date(event.date);
+
     while (current <= endDate && current <= repeatEnd) {
       const dateStr = current.toISOString().slice(0, 10);
       // 예외 날짜에 포함되어 있으면 skip
@@ -269,7 +270,7 @@ function App() {
         : currentDate;
     // 반복일정까지 포함
     const expandedEvents = expandEvents(filteredEvents, firstDay, lastDay);
-
+  
     return (
       <VStack data-testid="month-view" align="stretch" w="full" spacing={4}>
         <Heading size="md">{formatMonth(currentDate)}</Heading>
@@ -290,7 +291,14 @@ function App() {
                   const dateObj = day
                     ? new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
                     : null;
-                  const dateString = dateObj ? dateObj.toISOString().slice(0, 10) : '';
+  
+                  // Use local date string instead of UTC
+                  const dateString = dateObj
+                    ? `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(
+                        dateObj.getDate()
+                      ).padStart(2, '0')}`
+                    : '';
+  
                   const holiday = holidays[dateString];
                   return (
                     <Td
