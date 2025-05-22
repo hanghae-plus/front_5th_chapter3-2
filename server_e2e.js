@@ -7,8 +7,7 @@ const port = 3000;
 
 app.use(express.json());
 
-// 🧠 메모리 기반 "DB"
-let db = [
+const testEvents = [
   {
     id: '2b7545a6-ebee-426c-b906-2329bc8d62bd',
     title: '팀 회의',
@@ -71,9 +70,12 @@ let db = [
   },
 ];
 
+// 🧠 메모리 기반 "DB"
+let db = [...testEvents];
+
 // 🧪 테스트용: DB 초기화
 app.post('/__reset', (_, res) => {
-  db = [];
+  db = [...testEvents];
   res.status(204).send();
 });
 
