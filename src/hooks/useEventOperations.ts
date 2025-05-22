@@ -2,6 +2,13 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import {
+  addRepeatTitle,
+  convertToSingleEvent,
+  generateRepeatEvents,
+  isGeneratedRepeatEvent,
+  isRepeatEvent,
+} from '../utils/repeatUtils.ts';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -29,18 +36,41 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
       let response;
-      if (editing) {
+
+      // 반복 일정 수정 시 단일 일정으로 변환
+      if (editing && isGeneratedRepeatEvent(eventData as Event)) {
+        // 반복 일정을 수정하면 단일 일정으로 변경
+        eventData = convertToSingleEvent(eventData);
         response = await fetch(`/api/events/${(eventData as Event).id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),
         });
-      } else {
-        response = await fetch('/api/events', {
+      } else if (isRepeatEvent(eventData)) {
+        // 새로운 반복 일정 생성
+        eventData = addRepeatTitle(eventData);
+        const repeatEvents = generateRepeatEvents(eventData);
+
+        response = await fetch('/api/events-list', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
+          body: JSON.stringify({ events: repeatEvents }),
         });
+      } else {
+        // 일반 일정 처리 (기존 로직)
+        if (editing) {
+          response = await fetch(`/api/events/${(eventData as Event).id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        } else {
+          response = await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        }
       }
 
       if (!response.ok) {
