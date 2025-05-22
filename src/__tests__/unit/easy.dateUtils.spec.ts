@@ -100,6 +100,25 @@ describe('getWeeksAtMonth', () => {
       [27, 28, 29, 30, 31, null, null],
     ]);
   });
+
+  it('월의 첫 날이 일요일인 경우 올바른 주 정보를 반환한다', () => {
+    const testDate = new Date('2023-10-01');
+    const weeks = getWeeksAtMonth(testDate);
+    expect(weeks[0][0]).toBe(1);
+  });
+
+  it('월의 마지막 날이 토요일인 경우 올바른 주 정보를 반환한다', () => {
+    const testDate = new Date('2023-09-30');
+    const weeks = getWeeksAtMonth(testDate);
+    const lastWeek = weeks[weeks.length - 1];
+    expect(lastWeek[6]).toBe(30);
+  });
+
+  it('월의 첫 날이 토요일인 경우 올바른 주 정보를 반환한다', () => {
+    const testDate = new Date('2023-07-01');
+    const weeks = getWeeksAtMonth(testDate);
+    expect(weeks[0][6]).toBe(1);
+  });
 });
 
 describe('getEventsForDay', () => {
@@ -163,6 +182,38 @@ describe('getEventsForDay', () => {
     const dayEvents = getEventsForDay(events, 32);
     expect(dayEvents).toHaveLength(0);
   });
+
+  it('이벤트의 날짜가 잘못된 형식일 경우 해당 이벤트를 제외한다', () => {
+    const invalidEvents: Event[] = [
+      {
+        id: '1',
+        title: '잘못된 날짜 이벤트',
+        date: 'invalid-date',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '',
+        location: '',
+        category: '',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 0,
+      },
+      {
+        id: '2',
+        title: '정상 이벤트',
+        date: '2025-07-01',
+        startTime: '14:00',
+        endTime: '15:00',
+        description: '',
+        location: '',
+        category: '',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 0,
+      },
+    ];
+    const dayEvents = getEventsForDay(invalidEvents, 1);
+    expect(dayEvents).toHaveLength(1);
+    expect(dayEvents[0].title).toBe('정상 이벤트');
+  });
 });
 
 describe('formatWeek', () => {
@@ -194,6 +245,16 @@ describe('formatWeek', () => {
   it('평년 2월의 마지막 주에 대해 올바른 주 정보를 반환한다', () => {
     const date = new Date('2023-02-28');
     expect(formatWeek(date)).toBe('2023년 3월 1주');
+  });
+
+  it('월의 첫 주가 목요일로 시작하는 경우 올바른 주 정보를 반환한다', () => {
+    const date = new Date('2023-06-01');
+    expect(formatWeek(date)).toBe('2023년 6월 1주');
+  });
+
+  it('월의 마지막 주가 목요일로 끝나는 경우 올바른 주 정보를 반환한다', () => {
+    const date = new Date('2023-06-29');
+    expect(formatWeek(date)).toBe('2023년 6월 5주');
   });
 });
 
@@ -236,6 +297,20 @@ describe('isDateInRange', () => {
     const invalidRangeEnd = new Date('2025-07-01');
     const testDate = new Date('2025-07-15');
     expect(isDateInRange(testDate, invalidRangeStart, invalidRangeEnd)).toBe(false);
+  });
+
+  it('시간 정보가 있는 날짜를 올바르게 처리한다', () => {
+    const rangeStart = new Date('2025-07-01 00:00:00');
+    const rangeEnd = new Date('2025-07-31 23:59:59');
+    const testDate = new Date('2025-07-15 12:30:45');
+    expect(isDateInRange(testDate, rangeStart, rangeEnd)).toBe(true);
+  });
+
+  it('같은 날짜의 다른 시간을 올바르게 처리한다', () => {
+    const rangeStart = new Date('2025-07-01 00:00:00');
+    const rangeEnd = new Date('2025-07-01 23:59:59');
+    const testDate = new Date('2025-07-01 12:00:00');
+    expect(isDateInRange(testDate, rangeStart, rangeEnd)).toBe(true);
   });
 });
 
