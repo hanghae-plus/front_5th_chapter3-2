@@ -40,6 +40,293 @@ const saveSchedule = async (
   await user.click(screen.getByTestId('event-submit-button'));
 };
 
+describe('반복 일정 기능', () => {
+  describe('반복 유형 선택', () => {
+    it('일정 생성 시 반복 유형을 선택할 수 있어야 한다.', async () => {
+      const { user } = setup(<App />);
+      // 일정 추가 폼 확인
+      const addTitle = screen.getAllByText('일정 추가');
+      expect(addTitle[0]).toBeInTheDocument();
+
+      // 일정 추가 폼에서 반복 설정 체크 박스가 존재하는지 확인
+      const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+      const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+      expect(checkboxInput).toBeInTheDocument();
+
+      // 클릭하기 전 반복 유형 표시되는지 확인
+      expect(screen.queryByTestId('repeat-type-select')).not.toBeInTheDocument();
+      await user.click(checkboxInput);
+
+      // 클릭하고나서 반복 유형 표시되는지 확인
+      const repeatTypeSelect = screen.getByTestId('repeat-type-select');
+      expect(repeatTypeSelect).toBeInTheDocument();
+
+      // 매일, 매주, 매월, 매년 옵션이 모두 표시되는지 확인
+      expect(screen.getByRole('option', { name: '매일' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매주' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매월' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매년' })).toBeInTheDocument();
+
+      // 선택한 옵션과 값이 맞는지 확인
+      await user.selectOptions(repeatTypeSelect, '매일');
+      expect(repeatTypeSelect).toHaveValue('daily');
+      await user.selectOptions(repeatTypeSelect, '매주');
+      expect(repeatTypeSelect).toHaveValue('weekly');
+      await user.selectOptions(repeatTypeSelect, '매월');
+      expect(repeatTypeSelect).toHaveValue('monthly');
+      await user.selectOptions(repeatTypeSelect, '매년');
+      expect(repeatTypeSelect).toHaveValue('yearly');
+    });
+
+    it('일정 수정 시 반복 유형을 선택할 수 있어야 한다.', async () => {
+      const { user } = setup(<App />);
+
+      // 수정 버튼 클릭
+      const eventList = screen.getByTestId('event-list');
+      const editButton = await within(eventList).findAllByLabelText('Edit event');
+      await user.click(editButton[0]);
+
+      // 일정 추가 -> 수정 폼으로 바뀌는지 확인
+      const editTitle = screen.getAllByText('일정 수정');
+      expect(editTitle[0]).toBeInTheDocument();
+
+      // 반복 설정 체크 박스가 존재하는지 확인
+      const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+      const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+      expect(checkboxInput).toBeInTheDocument();
+
+      // 클릭하기 전 반복 유형 표시되는지 확인
+      expect(screen.queryByTestId('repeat-type-select')).not.toBeInTheDocument();
+      await user.click(checkboxInput);
+
+      // 클릭하고나서 반복 유형 표시되는지 확인
+      const repeatTypeSelect = screen.getByTestId('repeat-type-select');
+      expect(repeatTypeSelect).toBeInTheDocument();
+
+      // 매일, 매주, 매월, 매년 옵션이 모두 표시되는지 확인
+      expect(screen.getByRole('option', { name: '매일' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매주' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매월' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '매년' })).toBeInTheDocument();
+
+      // 선택한 옵션과 값이 맞는지 확인
+      await user.selectOptions(repeatTypeSelect, '매일');
+      expect(repeatTypeSelect).toHaveValue('daily');
+      await user.selectOptions(repeatTypeSelect, '매주');
+      expect(repeatTypeSelect).toHaveValue('weekly');
+      await user.selectOptions(repeatTypeSelect, '매월');
+      expect(repeatTypeSelect).toHaveValue('monthly');
+      await user.selectOptions(repeatTypeSelect, '매년');
+      expect(repeatTypeSelect).toHaveValue('yearly');
+    });
+  });
+});
+
+describe('반복 간격 설정', () => {
+  it('매일 반복의 경우 2일 간격을 설정할 수 있어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    // 반복 설정 체크 박스 클릭
+    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+    await user.click(checkboxInput);
+
+    // 반복 유형 선택
+    const repeatTypeSelect = screen.getByTestId('repeat-type-select');
+    expect(repeatTypeSelect).toBeInTheDocument();
+    await user.selectOptions(repeatTypeSelect, '매일');
+    expect(repeatTypeSelect).toHaveValue('daily');
+
+    // 반복 간격 설정
+    const repeatIntervalInput = screen.getByTestId('repeat-interval-input');
+    expect(repeatIntervalInput).toBeInTheDocument();
+    await user.clear(repeatIntervalInput);
+    await user.type(repeatIntervalInput, '2');
+    expect(repeatIntervalInput).toHaveValue(2);
+  });
+
+  it('매주 반복의 경우 3주 간격을 설정할 수 있어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    // 반복 설정 체크 박스 클릭
+    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+    await user.click(checkboxInput);
+
+    // 반복 유형 선택
+    const repeatTypeSelect = screen.getByTestId('repeat-type-select');
+    expect(repeatTypeSelect).toBeInTheDocument();
+    await user.selectOptions(repeatTypeSelect, '매주');
+    expect(repeatTypeSelect).toHaveValue('weekly');
+
+    // 반복 간격 설정
+    const repeatIntervalInput = screen.getByTestId('repeat-interval-input');
+    expect(repeatIntervalInput).toBeInTheDocument();
+    await user.clear(repeatIntervalInput);
+    await user.type(repeatIntervalInput, '3');
+    expect(repeatIntervalInput).toHaveValue(3);
+  });
+
+  it('매월 반복의 경우 2개월 간격을 설정할 수 있어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    // 반복 설정 체크 박스 클릭
+    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+    await user.click(checkboxInput);
+
+    // 반복 유형 선택
+    const repeatTypeSelect = screen.getByTestId('repeat-type-select');
+    expect(repeatTypeSelect).toBeInTheDocument();
+    await user.selectOptions(repeatTypeSelect, '매월');
+    expect(repeatTypeSelect).toHaveValue('monthly');
+
+    // 반복 간격 설정
+    const repeatIntervalInput = screen.getByTestId('repeat-interval-input');
+    expect(repeatIntervalInput).toBeInTheDocument();
+    await user.clear(repeatIntervalInput);
+    await user.type(repeatIntervalInput, '2');
+    expect(repeatIntervalInput).toHaveValue(2);
+  });
+
+  it('매년 반복의 경우 4년 간격을 설정할 수 있어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    // 반복 설정 체크 박스 클릭
+    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+    await user.click(checkboxInput);
+
+    // 반복 유형 선택
+    const repeatTypeSelect = screen.getByTestId('repeat-type-select');
+    expect(repeatTypeSelect).toBeInTheDocument();
+    await user.selectOptions(repeatTypeSelect, '매년');
+    expect(repeatTypeSelect).toHaveValue('yearly');
+
+    // 반복 간격 설정
+    const repeatIntervalInput = screen.getByTestId('repeat-interval-input');
+    expect(repeatIntervalInput).toBeInTheDocument();
+    await user.clear(repeatIntervalInput);
+    await user.type(repeatIntervalInput, '4');
+    expect(repeatIntervalInput).toHaveValue(4);
+  });
+});
+
+describe('반복 일정 표시', () => {
+  it('캘린더 뷰에서 반복 일정은 일정 제목 앞에 반복 아이콘으로 구분되어 표시되어야 한다.', async () => {
+    setupMockHandlerUpdating();
+    setup(<App />);
+    const calendarView = await screen.findByTestId('calendar-view');
+    const repeatIcon = within(calendarView).queryAllByLabelText('반복 아이콘')[0];
+    console.log(screen.debug(repeatIcon));
+    expect(repeatIcon).toBeInTheDocument();
+  });
+  it('이벤트 리스트에서 반복 일정은 일정 제목 앞에 반복 아이콘으로 구분되어 표시되어야 한다.', async () => {
+    setupMockHandlerUpdating();
+    setup(<App />);
+    const eventList = await screen.findByTestId('event-list');
+    const repeatIcon = within(eventList).queryAllByLabelText('반복 아이콘')[0];
+    expect(repeatIcon).toBeInTheDocument();
+  });
+});
+
+describe('반복 종료', () => {
+  it('2025년 9월 1일 설정한 날짜까지 반복되도록 설정할 수 있어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    // 반복 설정 체크 박스가 존재하는지 확인
+    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+    expect(checkboxInput).toBeInTheDocument();
+
+    // 클릭하기 전 반복 유형 표시되는지 확인
+    expect(screen.queryByTestId('repeat-type-select')).not.toBeInTheDocument();
+    await user.click(checkboxInput);
+
+    await user.clear(screen.getByLabelText('반복 종료일'));
+    await user.type(screen.getByLabelText('반복 종료일'), '2025-09-01');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+  });
+
+  it('3회 반복되도록 설정할 수 있어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+    expect(checkboxInput).toBeInTheDocument();
+
+    await user.click(checkboxInput);
+    expect(screen.queryByTestId('repeat-type-select')).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('반복 횟수'));
+    await user.type(screen.getByLabelText('반복 횟수'), '3');
+    expect(screen.getByLabelText('반복 횟수')).toHaveValue(3);
+  });
+});
+
+describe('반복 일정 수정', () => {
+  it('반복 일정을 수정하면 단일 일정으로 변경되어야 한다', async () => {
+    setupMockHandlerUpdating();
+    const { user } = setup(<App />);
+
+    const editButton = (await screen.findAllByLabelText('Edit event'))[2]; // 반복 일정 인덱스
+    await user.click(editButton);
+
+    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+    console.log('checkboxInput', screen.debug(checkboxInput));
+    // expect(checkboxInput).toBeChecked()
+
+    if (checkboxInput.checked) await user.click(checkboxInput);
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const eventList = await screen.findByTestId('event-list');
+    const repeatEventTitle = within(eventList).queryByText('반복');
+    expect(repeatEventTitle).not.toBeInTheDocument();
+  });
+
+  it('반복 일정 수정 후 반복 아이콘이 사라져야 한다', async () => {
+    setupMockHandlerUpdating();
+    const { user } = setup(<App />);
+
+    const editButton_1 = (await screen.findAllByLabelText('Edit event'))[2]; // 반복 일정 인덱스
+    await user.click(editButton_1);
+
+    const repeatCheckbox_1 = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput_1 = within(repeatCheckbox_1[0]).getByRole('checkbox');
+    // expect(checkboxInput).toBeChecked()
+
+    if (checkboxInput_1 && checkboxInput_1.checked) await user.click(checkboxInput_1);
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const editButton_2 = (await screen.findAllByLabelText('Edit event'))[3]; // 반복 일정 인덱스
+    await user.click(editButton_2);
+
+    const repeatCheckbox_2 = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput_2 = within(repeatCheckbox_2[0]).getByRole('checkbox');
+    // expect(checkboxInput).toBeChecked()
+
+    if (checkboxInput_2 && checkboxInput_2.checked) await user.click(checkboxInput_2);
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const calendarView = await screen.findByTestId('event-list');
+    const repeatIcon = within(calendarView).queryAllByLabelText('반복 아이콘');
+    expect(repeatIcon.length).toBe(0);
+  });
+});
+
+describe('반복 일정 삭제', () => {
+  it('반복 일정을 삭제하면 해당 일정만 삭제되어야 한다', async () => {
+    setupMockHandlerDeletion();
+    const { user } = setup(<App />);
+    const eventList = within(await screen.findByTestId('event-list'));
+    const deleteButtons = await eventList.findAllByLabelText('Delete event');
+    await user.click(deleteButtons[0]);
+    expect(eventList.queryByText('삭제할 이벤트')).not.toBeInTheDocument();
+  });
+});
+
 describe('일정 CRUD 및 기본 기능', () => {
   it('입력한 새로운 일정 정보에 맞춰 모든 필드가 이벤트 리스트에 정확히 저장된다.', async () => {
     setupMockHandlerCreation();
@@ -204,6 +491,18 @@ describe('검색 기능', () => {
               category: '업무',
               repeat: { type: 'none', interval: 0 },
               notificationTime: 10,
+            },
+            {
+              id: 3,
+              title: '세미나',
+              date: '2025-10-17',
+              startTime: '10:00',
+              endTime: '11:00',
+              description: '세미나 참석',
+              location: '외부 강당',
+              category: '교육',
+              repeat: { type: 'weekly', interval: 1 },
+              notificationTime: 30,
             },
           ],
         });

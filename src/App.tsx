@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -69,7 +70,11 @@ const notificationOptions = [
   { value: 1440, label: '1일 전' },
 ];
 
-function App() {
+export const isRepeatingEvent = (event: Event | EventForm) => {
+  return event.repeat.type !== 'none';
+};
+
+export default function App() {
   const {
     title,
     setTitle,
@@ -89,6 +94,8 @@ function App() {
     setRepeatType,
     repeatInterval,
     setRepeatInterval,
+    repeatCount,
+    setRepeatCount,
     repeatEndDate,
     setRepeatEndDate,
     notificationTime,
@@ -151,6 +158,7 @@ function App() {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
         endDate: repeatEndDate || undefined,
+        count: repeatCount || 0,
       },
       notificationTime,
     };
@@ -201,6 +209,9 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {isRepeatingEvent(event) && (
+                              <RepeatIcon aria-label="반복 아이콘" color="blue.500" />
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -271,6 +282,9 @@ function App() {
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
+                                    {isRepeatingEvent(event) && (
+                                      <RepeatIcon aria-label="반복 아이콘" color="blue.500" />
+                                    )}
                                     {event.title}
                                   </Text>
                                 </HStack>
@@ -357,7 +371,11 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              data-testid="repeat-settings-checkbox"
+              isChecked={isRepeating}
+              onChange={(e) => setIsRepeating(e.target.checked)}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
@@ -381,6 +399,7 @@ function App() {
               <FormControl>
                 <FormLabel>반복 유형</FormLabel>
                 <Select
+                  data-testid="repeat-type-select"
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
@@ -394,6 +413,7 @@ function App() {
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
                   <Input
+                    data-testid="repeat-interval-input"
                     type="number"
                     value={repeatInterval}
                     onChange={(e) => setRepeatInterval(Number(e.target.value))}
@@ -403,9 +423,20 @@ function App() {
                 <FormControl>
                   <FormLabel>반복 종료일</FormLabel>
                   <Input
+                    data-testid="repeat-end-date-input"
                     type="date"
                     value={repeatEndDate}
                     onChange={(e) => setRepeatEndDate(e.target.value)}
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>반복 횟수</FormLabel>
+                  <Input
+                    data-testid="repeat-count-input"
+                    type="number"
+                    value={repeatCount}
+                    onChange={(e) => setRepeatCount(Number(e.target.value))}
+                    min={0}
                   />
                 </FormControl>
               </HStack>
@@ -417,7 +448,7 @@ function App() {
           </Button>
         </VStack>
 
-        <VStack flex={1} spacing={5} align="stretch">
+        <VStack data-testid="calendar-view" flex={1} spacing={5} align="stretch">
           <Heading>일정 보기</Heading>
 
           <HStack mx="auto" justifyContent="space-between">
@@ -458,61 +489,69 @@ function App() {
           {filteredEvents.length === 0 ? (
             <Text>검색 결과가 없습니다.</Text>
           ) : (
-            filteredEvents.map((event) => (
-              <Box key={event.id} borderWidth={1} borderRadius="lg" p={3} width="100%">
-                <HStack justifyContent="space-between">
-                  <VStack align="start">
-                    <HStack>
-                      {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
-                      <Text
-                        fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
-                        color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
-                      >
-                        {event.title}
-                      </Text>
-                    </HStack>
-                    <Text>{event.date}</Text>
-                    <Text>
-                      {event.startTime} - {event.endTime}
-                    </Text>
-                    <Text>{event.description}</Text>
-                    <Text>{event.location}</Text>
-                    <Text>카테고리: {event.category}</Text>
-                    {event.repeat.type !== 'none' && (
+            filteredEvents.map((event) => {
+              const isNotified = notifiedEvents.includes(event.id);
+              return (
+                <Box key={event.id} borderWidth={1} borderRadius="lg" p={3} width="100%">
+                  <HStack justifyContent="space-between">
+                    <VStack align="start">
+                      <HStack>
+                        {isNotified && <BellIcon color="red.500" />}
+                        {isRepeatingEvent(event) && (
+                          <RepeatIcon aria-label="반복 아이콘" color="blue.500" />
+                        )}
+                        <Text
+                          fontWeight={isNotified ? 'bold' : 'normal'}
+                          color={isNotified ? 'red.500' : 'inherit'}
+                        >
+                          {event.title}
+                        </Text>
+                      </HStack>
+                      <Text>{event.date}</Text>
                       <Text>
-                        반복: {event.repeat.interval}
-                        {event.repeat.type === 'daily' && '일'}
-                        {event.repeat.type === 'weekly' && '주'}
-                        {event.repeat.type === 'monthly' && '월'}
-                        {event.repeat.type === 'yearly' && '년'}
-                        마다
-                        {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
+                        {event.startTime} - {event.endTime}
                       </Text>
-                    )}
-                    <Text>
-                      알림:{' '}
-                      {
-                        notificationOptions.find(
-                          (option) => option.value === event.notificationTime
-                        )?.label
-                      }
-                    </Text>
-                  </VStack>
-                  <HStack>
-                    <IconButton
-                      aria-label="Edit event"
-                      icon={<EditIcon />}
-                      onClick={() => editEvent(event)}
-                    />
-                    <IconButton
-                      aria-label="Delete event"
-                      icon={<DeleteIcon />}
-                      onClick={() => deleteEvent(event.id)}
-                    />
+                      <Text>{event.description}</Text>
+                      <Text>{event.location}</Text>
+                      <Text>카테고리: {event.category}</Text>
+                      {isRepeatingEvent(event) && (
+                        <Text>
+                          반복: {event.repeat.interval}
+                          {event.repeat.type === 'daily' && '일'}
+                          {event.repeat.type === 'weekly' && '주'}
+                          {event.repeat.type === 'monthly' && '월'}
+                          {event.repeat.type === 'yearly' && '년'}
+                          마다
+                          {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
+                          {event.repeat.count && ` (횟수: ${event.repeat.count})`}
+                        </Text>
+                      )}
+                      <Text>
+                        알림:{' '}
+                        {
+                          notificationOptions.find(
+                            (option) => option.value === event.notificationTime
+                          )?.label
+                        }
+                      </Text>
+                    </VStack>
+                    <HStack>
+                      <IconButton
+                        data-testid="edit-button"
+                        aria-label="Edit event"
+                        icon={<EditIcon />}
+                        onClick={() => editEvent(event)}
+                      />
+                      <IconButton
+                        aria-label="Delete event"
+                        icon={<DeleteIcon />}
+                        onClick={() => deleteEvent(event.id)}
+                      />
+                    </HStack>
                   </HStack>
-                </HStack>
-              </Box>
-            ))
+                </Box>
+              );
+            })
           )}
         </VStack>
       </Flex>
@@ -557,8 +596,9 @@ function App() {
                     category,
                     repeat: {
                       type: isRepeating ? repeatType : 'none',
-                      interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
+                      interval: isRepeating ? repeatInterval : 0,
+                      endDate: isRepeating ? repeatEndDate : undefined,
+                      count: isRepeating ? repeatCount : 0,
                     },
                     notificationTime,
                   });
@@ -590,5 +630,3 @@ function App() {
     </Box>
   );
 }
-
-export default App;

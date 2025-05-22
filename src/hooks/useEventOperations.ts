@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
 
+import { isRepeatingEvent } from '@/App';
+import { generateRepeatEvents } from '@/utils/eventUtils';
+
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
   const toast = useToast();
@@ -26,14 +29,60 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  const updateEventWithRepeatChange = async (eventData: Event) => {
+    try {
+      // 반복 설정이 변경된 경우
+      if (isRepeatingEvent(eventData)) {
+        // 단일 일정에서 반복 일정으로 변경
+        const repeatEvents = generateRepeatEvents(eventData);
+        return await fetch('/api/events-list', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ events: repeatEvents }),
+        });
+      } else {
+        // 반복 일정에서 단일 일정으로 변경
+        return await fetch(`/api/events/${eventData.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventData),
+        });
+      }
+    } catch (error) {
+      console.error('Error updating event with repeat change:', error);
+      throw error;
+    }
+  };
+
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
       let response;
       if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
-          method: 'PUT',
+        // 기존 이벤트 정보를 상태에서 찾기
+        const existingEvent = events.find((event) => event.id === (eventData as Event).id);
+        if (!existingEvent) {
+          throw new Error('수정할 이벤트가 없음.');
+        }
+        // 반복 설정이 변경된 경우
+        if (isRepeatingEvent(eventData) !== isRepeatingEvent(existingEvent)) {
+          response = await updateEventWithRepeatChange(eventData as Event);
+        } else {
+          response = await fetch(`/api/events/${(eventData as Event).id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+          if (response && !response.ok) {
+            throw new Error('Failed to update event');
+          }
+        }
+      } else if (isRepeatingEvent(eventData)) {
+        response = await fetch('/api/events-list', {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
+          body: JSON.stringify({
+            events: generateRepeatEvents(eventData),
+          }),
         });
       } else {
         response = await fetch('/api/events', {
@@ -43,7 +92,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         });
       }
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error('Failed to save event');
       }
 
