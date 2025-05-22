@@ -383,16 +383,13 @@ describe('반복 일정 생성 비즈니스 로직', () => {
     const events = generateRepeatEvents(baseEvent, repeatInfo);
 
     expect(events).toHaveLength(10);
-    expect(events[0].date).toBe('2025-10-01');
-    expect(events[1].date).toBe('2025-10-02');
-    expect(events[2].date).toBe('2025-10-03');
-    expect(events[3].date).toBe('2025-10-04');
-    expect(events[4].date).toBe('2025-10-05');
-    expect(events[5].date).toBe('2025-10-06');
-    expect(events[6].date).toBe('2025-10-07');
-    expect(events[7].date).toBe('2025-10-08');
-    expect(events[8].date).toBe('2025-10-09');
-    expect(events[9].date).toBe('2025-10-10');
+
+    events.forEach((event, index) => {
+      const expectedDate = `2025-10-${String(index + 1).padStart(2, '0')}`;
+
+      expect(event.date).toBe(expectedDate);
+    });
+
     expect(events.every((e) => e.repeat.type === 'daily')).toBe(true);
   });
 
