@@ -359,5 +359,5 @@ it('반복 일정 수정 시, 일정을 해제?할 경우 단일 일정으로 �
     await result.current.saveEvent(updateEvent);
   });
 
-  expect(result.current.events).toEqual(updateEvent);
+  expect(result.current.events).toEqual([updateEvent]);
 });
