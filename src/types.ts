@@ -1,9 +1,12 @@
 export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface RepeatInfo {
+  id?: string;
   type: RepeatType;
   interval: number;
   endDate?: string;
+  endCount?: number;
+  repeatCount?: number;
 }
 
 export interface EventForm {

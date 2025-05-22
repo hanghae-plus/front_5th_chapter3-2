@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw';
+import { v4 as uuidv4 } from 'uuid';
 
 import { server } from '../setupTests';
 import { Event } from '../types';
@@ -92,3 +93,215 @@ export const setupMockHandlerDeletion = () => {
     })
   );
 };
+
+export const setupMockHandlerRepeatCreation = (initEvents = [] as Event[]) => {
+  const mockEvents: Event[] = [...initEvents];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const event = (await request.json()) as Event;
+
+      const repeatId = uuidv4();
+      const newEvents = expandRepeatingEvent(event, repeatId);
+
+      mockEvents.push(...newEvents);
+
+      return HttpResponse.json(newEvents, { status: 201 });
+    })
+  );
+};
+
+export const setupMockHandlerRepeatUpdating = () => {
+  const mockEvents: Event[] = [
+    {
+      id: 'repeat-1',
+      title: '매월 반복 일정',
+      date: '2025-05-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복되는 일정입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        endDate: '2025-09-30',
+        id: 'repeat-group-id-123',
+      },
+      notificationTime: 10,
+    },
+    {
+      id: 'repeat-2',
+      title: '매월 반복 일정',
+      date: '2025-06-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복되는 일정입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        endDate: '2025-09-30',
+        id: 'repeat-group-id-123',
+      },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+
+    http.put('/api/events-list/:id', async ({ params, request }) => {
+      const { id } = params;
+      const updatedEvent = (await request.json()) as Event;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      if (index === -1) {
+        return HttpResponse.json({ error: 'Event not found' }, { status: 404 });
+      }
+
+      mockEvents[index] = {
+        ...mockEvents[index],
+        ...updatedEvent,
+        repeat: { type: 'none', interval: 0 },
+      };
+
+      return HttpResponse.json(mockEvents[index]);
+    })
+  );
+};
+export const setupMockHandlerRepeatDeletion = () => {
+  let mockEvents: Event[] = [
+    {
+      id: 'repeat-1',
+      title: '매월 반복 일정',
+      date: '2025-05-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복되는 일정입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        endDate: '2025-09-30',
+        id: 'repeat-group-id-123',
+      },
+      notificationTime: 10,
+    },
+    {
+      id: 'repeat-2',
+      title: '매월 반복 일정',
+      date: '2025-06-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복되는 일정입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        endDate: '2025-09-30',
+        id: 'repeat-group-id-123',
+      },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+
+    http.delete('/api/events-list/:id', ({ params }) => {
+      const { id } = params;
+      mockEvents = mockEvents.filter((event) => event.id !== id);
+      return HttpResponse.json({ success: true });
+    })
+  );
+};
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+function toISODateString(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+function expandRepeatingEvent(event: Event, repeatId: string): Event[] {
+  const result: Event[] = [];
+
+  const repeat = event.repeat;
+  if (!repeat || repeat.type === 'none') return [{ ...event, id: uuidv4() }];
+
+  const interval = repeat.interval || 1;
+  const startDate = new Date(event.date);
+  const endDate = new Date(repeat.endDate!);
+  const originalDay = startDate.getDate();
+
+  let currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    let adjustedDate = new Date(currentDate);
+
+    // ✅ 윤년 처리 (2월 29일 → 2월 28일)
+    if (
+      repeat.type === 'yearly' &&
+      startDate.getMonth() === 1 &&
+      startDate.getDate() === 29 &&
+      !isLeapYear(currentDate.getFullYear())
+    ) {
+      adjustedDate = new Date(currentDate.getFullYear(), 1, 28);
+    }
+
+    // ✅ 31일 → 존재하지 않는 달의 마지막 날짜로 보정
+    if (repeat.type === 'monthly' || repeat.type === 'yearly') {
+      const daysInMonth = new Date(
+        adjustedDate.getFullYear(),
+        adjustedDate.getMonth() + 1,
+        0
+      ).getDate();
+      const correctedDay = Math.min(originalDay, daysInMonth);
+      adjustedDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth(), correctedDay);
+    }
+
+    result.push({
+      ...event,
+      id: uuidv4(),
+      date: toISODateString(adjustedDate),
+      repeat: {
+        ...repeat,
+        id: repeatId,
+      },
+    });
+
+    // 🔁 다음 반복 날짜 계산
+    const temp = new Date(currentDate); // backup
+
+    switch (repeat.type) {
+      case 'daily':
+        currentDate.setDate(currentDate.getDate() + interval);
+        break;
+      case 'weekly':
+        currentDate.setDate(currentDate.getDate() + 7 * interval);
+        break;
+      case 'monthly':
+        currentDate = new Date(temp); // 원래 날짜 기준
+        currentDate.setDate(1); // overflow 방지
+        currentDate.setMonth(currentDate.getMonth() + interval);
+        break;
+      case 'yearly':
+        currentDate.setFullYear(currentDate.getFullYear() + interval);
+        break;
+    }
+  }
+
+  return result;
+}

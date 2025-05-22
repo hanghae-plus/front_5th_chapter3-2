@@ -29,7 +29,24 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
       let response;
-      if (editing) {
+
+      const isRepeatEvent = (eventData as Event).repeat.type !== 'none';
+
+      if (isRepeatEvent) {
+        if (editing) {
+          response = await fetch(`/api/events-list/${(eventData as Event).id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        } else {
+          response = await fetch('/api/events-list', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        }
+      } else if (editing) {
         response = await fetch(`/api/events/${(eventData as Event).id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -66,9 +83,12 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const deleteEvent = async (id: string) => {
+  const deleteEvent = async (id: string, repeatType?: string) => {
     try {
-      const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      const isRepeat = repeatType && repeatType !== 'none';
+      const endpoint = isRepeat ? `/api/events-list/${id}` : `/api/events/${id}`;
+
+      const response = await fetch(endpoint, { method: 'DELETE' });
 
       if (!response.ok) {
         throw new Error('Failed to delete event');

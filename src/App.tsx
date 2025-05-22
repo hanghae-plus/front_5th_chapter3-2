@@ -91,6 +91,8 @@ function App() {
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatCount,
+    setRepeatCount,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -258,6 +260,8 @@ function App() {
                           )}
                           {getEventsForDay(filteredEvents, day).map((event) => {
                             const isNotified = notifiedEvents.includes(event.id);
+                            const isRepeating = event.repeat?.type !== 'none';
+
                             return (
                               <Box
                                 key={event.id}
@@ -270,6 +274,11 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {isRepeating && (
+                                    <Text as="span" aria-label="반복 일정 아이콘" fontSize="sm">
+                                      🔁
+                                    </Text>
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -294,7 +303,7 @@ function App() {
     <Box w="full" h="100vh" m="auto" p={5}>
       <Flex gap={6} h="full">
         <VStack w="400px" spacing={5} align="stretch">
-          <Heading>{editingEvent ? '일정 수정' : '일정 추가'}</Heading>
+          <Heading data-testid="form-title">{editingEvent ? '일정 수정' : '일정 추가'}</Heading>
 
           <FormControl>
             <FormLabel>제목</FormLabel>
@@ -357,7 +366,11 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              data-testid={'repeat-checkbox'}
+              isChecked={isRepeating}
+              onChange={(e) => setIsRepeating(e.target.checked)}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
@@ -381,9 +394,11 @@ function App() {
               <FormControl>
                 <FormLabel>반복 유형</FormLabel>
                 <Select
+                  data-testid="repeat-type-select"
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
+                  <option value="none">선택</option>
                   <option value="daily">매일</option>
                   <option value="weekly">매주</option>
                   <option value="monthly">매월</option>
@@ -394,6 +409,7 @@ function App() {
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
                   <Input
+                    data-testid="repeat-interval-input"
                     type="number"
                     value={repeatInterval}
                     onChange={(e) => setRepeatInterval(Number(e.target.value))}
@@ -403,11 +419,31 @@ function App() {
                 <FormControl>
                   <FormLabel>반복 종료일</FormLabel>
                   <Input
+                    data-testid="repeat-end-date-input"
                     type="date"
                     value={repeatEndDate}
+                    max={'2025-09-30'}
                     onChange={(e) => setRepeatEndDate(e.target.value)}
                   />
                 </FormControl>
+              </HStack>
+              <HStack>
+                <FormLabel>반복 횟수</FormLabel>
+                <Input
+                  data-testid="repeat-end-count-input"
+                  type="number"
+                  value={repeatCount}
+                  onChange={(e) => setRepeatCount(Number(e.target.value))}
+                  min={0}
+                />
+              </HStack>
+              <HStack>
+                <FormLabel>종료 없음</FormLabel>
+                <Checkbox
+                  type="checkbox"
+                  data-testid="repeat-no-repeat-checkbox"
+                  onChange={(e) => e.target.checked && setRepeatEndDate('')}
+                />
               </HStack>
             </VStack>
           )}
@@ -464,6 +500,11 @@ function App() {
                   <VStack align="start">
                     <HStack>
                       {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
+                      {event.repeat.type !== 'none' && (
+                        <Text as="span" aria-label="반복 일정 아이콘" fontSize="sm">
+                          🔁
+                        </Text>
+                      )}
                       <Text
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                         color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
@@ -507,7 +548,7 @@ function App() {
                     <IconButton
                       aria-label="Delete event"
                       icon={<DeleteIcon />}
-                      onClick={() => deleteEvent(event.id)}
+                      onClick={() => deleteEvent(event.id, event.repeat.type)}
                     />
                   </HStack>
                 </HStack>
