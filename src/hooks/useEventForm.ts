@@ -38,6 +38,20 @@ export const useEventForm = (initialEvent?: Event) => {
     setTimeError(getTimeErrorMessage(startTime, newEndTime));
   };
 
+  const handleRepeatTypeChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setRepeatType(e.target.value as RepeatType);
+    setRepeatEndDate('');
+    setTimeError({ startTimeError: null, endTimeError: null });
+  };
+
+  const handleRepeatIntervalChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setRepeatInterval(parseInt(e.target.value, 10));
+  };
+
+  const handleRepeatEndDateChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setRepeatEndDate(e.target.value);
+  };
+
   const resetForm = () => {
     setTitle('');
     setDate('');
@@ -102,5 +116,8 @@ export const useEventForm = (initialEvent?: Event) => {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    handleRepeatTypeChange,
+    handleRepeatIntervalChange,
+    handleRepeatEndDateChange,
   };
 };
