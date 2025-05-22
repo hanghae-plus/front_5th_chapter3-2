@@ -20,8 +20,8 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
   );
 };
 
-export const setupMockHandlerUpdating = () => {
-  const mockEvents: Event[] = [
+export const setupMockHandlerUpdating = (
+  initEvents: Event[] = [
     {
       id: '1',
       title: '기존 회의',
@@ -46,7 +46,9 @@ export const setupMockHandlerUpdating = () => {
       repeat: { type: 'none', interval: 0 },
       notificationTime: 5,
     },
-  ];
+  ]
+) => {
+  const mockEvents: Event[] = [...initEvents];
 
   server.use(
     http.get('/api/events', () => {
