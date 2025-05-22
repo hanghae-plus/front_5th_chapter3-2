@@ -266,7 +266,7 @@ function App() {
                               {holiday}
                             </Text>
                           )}
-                          {getEventsForDay(events, day).map((event, index) => {
+                          {getEventsForDay(recurringEvents, day).map((event, index) => {
                             const isNotified = notifiedEvents.includes(event.id);
                             return (
                               <Box
