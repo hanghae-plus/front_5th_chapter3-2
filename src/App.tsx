@@ -209,7 +209,11 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
-                            {event.repeat.type !== 'none' && <RepeatIcon />}
+                            {event.repeat.type !== 'none' && (
+                              <Box data-testid="repeat-icon" aria-label="반복">
+                                <RepeatIcon />
+                              </Box>
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -279,7 +283,11 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
-                                  {event.repeat.type !== 'none' && <RepeatIcon />}
+                                  {event.repeat.type !== 'none' && (
+                                    <Box data-testid="repeat-icon" aria-label="반복">
+                                      <RepeatIcon />
+                                    </Box>
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
