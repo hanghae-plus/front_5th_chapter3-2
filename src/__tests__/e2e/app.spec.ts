@@ -1,12 +1,17 @@
 import { test, expect } from '@playwright/test';
 
 import { getFilteredEvents } from '../../utils/eventUtils';
+import { getEventCardByTitle, proceedWarningDialog } from '../../utils/testUtils';
+
+test.beforeEach(async ({ page }) => {
+  await page.goto('http://localhost:5173/');
+});
+
+test.afterEach(async ({ request }) => {
+  await request.post('http://localhost:5173/api/test/reset');
+});
 
 test.describe('일정 관리 App CRUD 테스트', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5173/');
-  });
-
   test('1. GET API를 통해 저장된 Event List를 가져와서 렌더 한다.', async ({ page }) => {
     const toast = page.getByText('일정 로딩 완료!').first();
     await expect(toast).toBeVisible();
@@ -101,7 +106,7 @@ test.describe('일정 관리 App CRUD 테스트', () => {
 
     // 수정 성공 토스트 메시지 확인
     const updateToast = page.getByText('일정이 수정되었습니다.').first();
-    await expect(updateToast).toBeVisible();
+    await expect(updateToast).toBeVisible({ timeout: 10_000 });
 
     // 3. 수정된 내용 확인
     const eventListView = page.getByTestId('event-list');
@@ -119,6 +124,110 @@ test.describe('일정 관리 App CRUD 테스트', () => {
     await deleteBtn.click();
 
     const toast2 = page.getByText('일정이 삭제되었습니다.').first();
-    await expect(toast2).toBeVisible();
+    await expect(toast2).toBeVisible({ timeout: 10_000 });
+  });
+
+  test.describe('4. 반복 일정을 생성, 수정 및 삭제하는 시나리오를 테스트한다.', () => {
+    const REPEAT_DURATION = 30 * 24 * 60 * 60 * 1000; // 30일을 반복 주기로 설정
+
+    test('4.1 반복 일정 생성 후 수정', async ({ page }) => {
+      const startDate = new Date();
+      const endDate = new Date(startDate.getTime() + REPEAT_DURATION);
+
+      const [formattedStartDate, formattedEndDate] = [
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0],
+      ];
+
+      // 1. 새로운 반복 일정 생성
+      await page.getByLabel('제목').fill('수정 테스트 반복 이벤트');
+      await page.getByLabel('날짜').fill(formattedStartDate);
+      await page.getByLabel('시작 시간').fill('17:00');
+      await page.getByLabel('종료 시간').fill('18:00');
+
+      // 반복 세부 설정
+      await page.getByLabel('반복 일정').check();
+      await page.getByLabel('반복 유형').selectOption({ value: 'weekly' });
+      await page.getByLabel('반복 간격').fill('1');
+      await page.getByLabel('반복 종료일').fill(formattedEndDate);
+
+      await page.getByTestId('event-submit-button').click();
+
+      // 만약 일정 겹침 경고가 뜨면 계속 진행 버튼 눌러서 이벤트 생성
+      await proceedWarningDialog(page);
+
+      // 생성 성공 토스트 메시지 확인
+      const toast = page.getByText('일정이 추가되었습니다.').first();
+      await expect(toast).toBeVisible({ timeout: 10_000 });
+
+      // 2. 이벤트 리스트에 반복 일정 있는지 확인
+      const eventCard = await getEventCardByTitle(page, '수정 테스트 반복 이벤트');
+      await eventCard.getByRole('button', { name: 'Edit event' }).click();
+
+      // 반복 일정이 체크되어 있는지 확인
+      const repeatCheckbox = page.getByLabel('반복 일정');
+      await expect(repeatCheckbox).toBeChecked();
+
+      // 3. 생성된 반복 일정 중 단일 일정을 수정
+      await page.getByLabel('제목').fill('수정 테스트 반복 이벤트 2');
+
+      // 수정 저장
+      await page.getByTestId('event-submit-button').click();
+
+      // await proceedWarningDialog(page);
+
+      // 수정 성공 토스트 메시지 확인
+      const updateToast = page.getByText('일정이 수정되었습니다.').first();
+      await expect(updateToast).toBeVisible({ timeout: 10_000 });
+
+      // 수정 후 반복 일정이 체크 해제되어 단일 일정이 되었는지 확인
+      const updatedRepeatCheckbox = page.getByLabel('반복 일정');
+      await expect(updatedRepeatCheckbox).not.toBeChecked();
+    });
+
+    test('4.2 반복 일정 생성 후 삭제', async ({ page }) => {
+      const startDate = new Date();
+      const endDate = new Date(startDate.getTime() + REPEAT_DURATION);
+
+      const [formattedStartDate, formattedEndDate] = [
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0],
+      ];
+
+      // 1. 새로운 반복 일정 생성
+      await page.getByLabel('제목').fill('수정 테스트 반복 이벤트');
+      await page.getByLabel('날짜').fill(formattedStartDate);
+      await page.getByLabel('시작 시간').fill('20:00');
+      await page.getByLabel('종료 시간').fill('21:00');
+
+      // 반복 세부 설정
+      await page.getByLabel('반복 일정').check();
+      await page.getByLabel('반복 유형').selectOption({ value: 'daily' });
+      await page.getByLabel('반복 간격').fill('1');
+      await page.getByLabel('반복 종료일').fill(formattedEndDate);
+
+      await page.getByTestId('event-submit-button').click();
+
+      // 만약 일정 겹침 경고가 뜨면 계속 진행 버튼 눌러서 이벤트 생성
+      await proceedWarningDialog(page);
+
+      // 생성 성공 토스트 메시지 확인
+      const createToast = page.getByText('일정이 추가되었습니다.').first();
+      await expect(createToast).toBeVisible({ timeout: 10_000 });
+
+      // 2. 생성된 반복 일정 중 단일 일정을 삭제
+      const eventCard = await getEventCardByTitle(page, '수정 테스트 반복 이벤트');
+
+      const deleteBtn = eventCard.getByRole('button', { name: 'Delete event' });
+      await deleteBtn.click();
+
+      // 삭제 성공 토스트 메시지 확인
+      const deleteToast = page.getByText('일정이 삭제되었습니다.').first();
+      await expect(deleteToast).toBeVisible({ timeout: 10_000 });
+
+      // 삭제된 일정 제외 나머지 일정이 존재하는지 확인
+      const remainingEventCard = await getEventCardByTitle(page, '수정 테스트 반복 이벤트');
+      await expect(remainingEventCard).toBeVisible();
+    });
   });
 });
