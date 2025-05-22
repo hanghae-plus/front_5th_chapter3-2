@@ -1,14 +1,19 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, render, renderHook } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
+  setupMockHandlerRepeatCreation,
+  setupMockHandlerRepeatDeletion,
+  setupMockHandlerRepeatUpdating,
   setupMockHandlerUpdating,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
 import { server } from '../../setupTests.ts';
 import { Event } from '../../types.ts';
+import { getNextOccurrence } from '../../utils/eventGenerator.ts';
+import { isRecurringEvent, getRecurringEventIcon } from '../../utils/eventUtils.ts';
 
 const toastFn = vi.fn();
 
@@ -186,19 +191,425 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 });
 
 describe('반복 일정 기능 테스트', () => {
-  it('일정 생성 시 반복 유형을 선택할 수 있다', async () => {});
+  it('일정 생성 시 반복 유형을 선택할 수 있다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
 
-  it('윤년 29일이나 31일에 매월/매년 반복 설정 시 적절히 처리된다', async () => {});
+    await act(() => Promise.resolve(null));
 
-  it('반복 일정은 시각적으로 구분할 수 있는 표시 함수가 있다', async () => {});
+    const repeatEvent: Event = {
+      id: '1',
+      title: '반복 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '팀 정기 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1 },
+      notificationTime: 10,
+    };
 
-  it('각 반복 유형에 대해 간격을 설정할 수 있다', async () => {});
+    await act(async () => {
+      await result.current.createRepeatEvents(repeatEvent);
+    });
 
-  it('반복 종료 조건을 지정할 수 있다', async () => {});
+    expect(toastFn).toHaveBeenCalledWith({
+      title: '반복 일정이 생성되었습니다.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  });
 
-  it('반복 일정이 생성되면 반복 일정 목록이 생성된다', async () => {});
+  it('윤년 29일이나 31일에 매월/매년 반복 설정 시 적절히 처리된다', async () => {
+    // 윤년 2월 29일 테스트
+    const leapYearEvent: Event = {
+      id: 'leap-year-event',
+      title: '윤년 이벤트',
+      date: '2024-02-29', // 윤년 2월 29일
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '윤년 특수 케이스',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1 },
+      notificationTime: 10,
+    };
 
-  it('반복 일정을 수정하면 단일 일정으로 변경된다', async () => {});
+    // 2025년 (윤년이 아님)으로 이동했을 때 2월 28일이 되어야 함
+    const nextYearOccurrence = getNextOccurrence(leapYearEvent, new Date('2025-01-01'));
 
-  it('반복일정을 삭제하면 해당 일정만 삭제된다', async () => {});
+    expect(nextYearOccurrence.getFullYear()).toBe(2025);
+    expect(nextYearOccurrence.getMonth()).toBe(1); // 2월 (0부터 시작)
+    expect(nextYearOccurrence.getDate()).toBe(28); // 윤년이 아니므로 28일
+
+    // 다시 윤년으로 이동 (2028년은 윤년)
+    const nextLeapYear = getNextOccurrence(leapYearEvent, new Date('2028-01-01'));
+    expect(nextLeapYear.getFullYear()).toBe(2028);
+    expect(nextLeapYear.getMonth()).toBe(1); // 2월
+    expect(nextLeapYear.getDate()).toBe(29); // 윤년이므로 29일
+
+    // 31일 매월 반복 테스트
+    const monthlyEvent: Event = {
+      id: 'monthly-31',
+      title: '월말 이벤트',
+      date: '2025-01-31', // 1월 31일
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '매월 31일',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    // 2월로 이동 (28일까지만 있음)
+    const nextMonthOccurrence = getNextOccurrence(monthlyEvent, new Date('2025-02-01'));
+    expect(nextMonthOccurrence.getMonth()).toBe(1); // 2월
+    expect(nextMonthOccurrence.getDate()).toBe(28); // 2월은 28일까지만 있으므로
+
+    // 3월로 이동 (31일까지 있음)
+    const marchOccurrence = getNextOccurrence(monthlyEvent, new Date('2025-03-01'));
+    expect(marchOccurrence.getMonth()).toBe(2); // 3월
+    expect(marchOccurrence.getDate()).toBe(31); // 3월은 31일까지 있으므로
+
+    // 4월로 이동 (30일까지만 있음)
+    const aprilOccurrence = getNextOccurrence(monthlyEvent, new Date('2025-04-01'));
+    expect(aprilOccurrence.getMonth()).toBe(3); // 4월
+    expect(aprilOccurrence.getDate()).toBe(30); // 4월은 30일까지만 있으므로
+  });
+
+  it('반복 일정은 시각적으로 구분할 수 있는 표시 함수가 있다', async () => {
+    // 각 반복 유형별 이벤트 생성
+    const dailyEvent: Event = {
+      id: 'daily-event',
+      title: '매일 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '매일 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+      notificationTime: 10,
+    };
+
+    const weeklyEvent: Event = {
+      id: 'weekly-event',
+      title: '매주 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '매주 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    const monthlyEvent: Event = {
+      id: 'monthly-event',
+      title: '매월 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '매월 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    const yearlyEvent: Event = {
+      id: 'yearly-event',
+      title: '매년 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '매년 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    // 일반 이벤트 (반복 없음)
+    const regularEvent: Event = {
+      id: 'regular-event',
+      title: '일반 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '일반 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    };
+
+    // isRecurringEvent 함수 테스트 - 반복 이벤트 여부 확인
+    expect(isRecurringEvent(dailyEvent)).toBe(true);
+    expect(isRecurringEvent(weeklyEvent)).toBe(true);
+    expect(isRecurringEvent(monthlyEvent)).toBe(true);
+    expect(isRecurringEvent(yearlyEvent)).toBe(true);
+    expect(isRecurringEvent(regularEvent)).toBe(false);
+
+    // getRecurringEventIcon 함수 테스트 - 각 반복 유형별 아이콘 확인
+    expect(getRecurringEventIcon(dailyEvent)).toBe('🔄 매일');
+    expect(getRecurringEventIcon(weeklyEvent)).toBe('🔄 매주');
+    expect(getRecurringEventIcon(monthlyEvent)).toBe('🔄 매월');
+    expect(getRecurringEventIcon(yearlyEvent)).toBe('🔄 매년');
+    expect(getRecurringEventIcon(regularEvent)).toBeNull();
+
+    // 간격이 다른 반복 이벤트도 올바르게 인식하는지 테스트
+    const biWeeklyEvent: Event = {
+      id: 'bi-weekly-event',
+      title: '격주 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '격주 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 2 }, // 2주마다
+      notificationTime: 10,
+    };
+
+    const quarterlyEvent: Event = {
+      id: 'quarterly-event',
+      title: '분기별 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '분기별 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 3 }, // 3개월마다
+      notificationTime: 10,
+    };
+
+    // 간격과 상관없이 반복 유형에 따라 올바르게 구분되는지 확인
+    expect(isRecurringEvent(biWeeklyEvent)).toBe(true);
+    expect(isRecurringEvent(quarterlyEvent)).toBe(true);
+
+    // 간격과 상관없이 반복 유형에 따라 올바른 아이콘이 반환되는지 확인
+    expect(getRecurringEventIcon(biWeeklyEvent)).toBe('🔄 매주'); // interval과 상관없이 weekly
+    expect(getRecurringEventIcon(quarterlyEvent)).toBe('🔄 매월'); // interval과 상관없이 monthly
+
+    // endDate가 있는 반복 이벤트도 올바르게 인식하는지 테스트
+    const limitedRepeatEvent: Event = {
+      id: 'limited-repeat-event',
+      title: '기간 제한 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '기간 제한 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-12-31' },
+      notificationTime: 10,
+    };
+
+    expect(isRecurringEvent(limitedRepeatEvent)).toBe(true);
+    expect(getRecurringEventIcon(limitedRepeatEvent)).toBe('🔄 매일');
+  });
+
+  it('각 반복 유형에 대해 간격을 설정할 수 있다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const intervalEvent: Event = {
+      id: '2',
+      title: '격주 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '격주 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 2 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.createRepeatEvents(intervalEvent);
+    });
+
+    expect(toastFn).toHaveBeenCalledWith({
+      title: '반복 일정이 생성되었습니다.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  });
+
+  it('반복 종료 조건을 지정할 수 있다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const endDateEvent: Event = {
+      id: '3',
+      title: '종료일 있는 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '특정 날짜까지 반복',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-12-31' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.createRepeatEvents(endDateEvent);
+    });
+
+    expect(toastFn).toHaveBeenCalledWith({
+      title: '반복 일정이 생성되었습니다.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  });
+
+  it('반복 일정이 생성되면 반복 일정 목록이 생성된다', async () => {
+    setupMockHandlerRepeatCreation([
+      {
+        id: 'repeat-4-1',
+        title: '반복 회의',
+        date: '2025-10-16',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '매주 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-11-30' },
+        notificationTime: 10,
+      },
+      {
+        id: 'repeat-4-2',
+        title: '반복 회의',
+        date: '2025-10-23',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '매주 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-11-30' },
+        notificationTime: 10,
+      },
+      {
+        id: 'repeat-4-3',
+        title: '반복 회의',
+        date: '2025-10-30',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '매주 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-11-30' },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const repeatEvent: Event = {
+      id: '4',
+      title: '반복 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '매주 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-11-30' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.createRepeatEvents(repeatEvent);
+    });
+
+    expect(toastFn).toHaveBeenCalledWith({
+      title: '반복 일정이 생성되었습니다.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+    expect(result.current.events).toHaveLength(1);
+  });
+
+  it('반복 일정을 수정하면 단일 일정으로 변경된다', async () => {
+    setupMockHandlerRepeatUpdating([
+      {
+        id: '5',
+        title: '단일 회의', // 수정된 제목
+        date: '2025-10-15',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const repeatEvent: Event = {
+      id: '5',
+      title: '반복 회의',
+      date: '2025-10-15',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1 }, // 원래는 반복 일정
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.updateSingleOccurrence(repeatEvent);
+    });
+
+    expect(toastFn).toHaveBeenCalledWith({
+      title: '일정이 단일 일정으로 변경되었습니다.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  });
+
+  it('반복 일정을 삭제하면 해당 일정만 삭제된다', async () => {
+    setupMockHandlerRepeatDeletion();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    // 삭제할 반복 일정의 특정 회차 ID
+    const eventIdToDelete = 'repeat-1';
+
+    await act(async () => {
+      await result.current.deleteSingleOccurrence(eventIdToDelete);
+    });
+
+    expect(toastFn).toHaveBeenCalledWith({
+      title: '반복 일정의 해당 회차가 삭제되었습니다.',
+      status: 'info',
+      duration: 3000,
+      isClosable: true,
+    });
+
+    expect(result.current.events).toHaveLength(1);
+  });
 });

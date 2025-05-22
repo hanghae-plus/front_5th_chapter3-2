@@ -97,7 +97,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     try {
       const repeatEvents = generateRepeatEvents(eventData);
 
-      const response = await fetch('/api/event-list', {
+      const response = await fetch('/api/events-list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ events: repeatEvents }),
@@ -129,7 +129,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     try {
       const updatedEvent = { ...eventData, repeat: { type: 'none', interval: 0 } };
 
-      const response = await fetch('/api/event-list', {
+      const response = await fetch('/api/events-list', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ events: [updatedEvent] }),

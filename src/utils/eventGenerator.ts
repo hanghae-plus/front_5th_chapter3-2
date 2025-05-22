@@ -17,43 +17,66 @@ export const getNextOccurrence = (event: Event, startDate: Date): Date => {
       nextDate.setDate(startDate.getDate() + 7 * event.repeat.interval);
       break;
     case 'monthly': {
-      // 원본 이벤트의 일
+      // eventDate를 기준으로 시작
+      const originalYear = eventDate.getFullYear();
+      const originalMonth = eventDate.getMonth();
       const originalDay = eventDate.getDate();
-      // 다음달로 이동
-      nextDate.setMonth(nextDate.getMonth() + event.repeat.interval);
-      // 해당 월의 마지막 일 계산
-      const lastDayOfMonth = new Date(nextDate.getFullYear(), nextDate.getMonth() + 1, 0).getDate();
 
-      // 원본 날짜가 29, 30, 31일이고 해당 월에 그 날짜가 없으면 월의 마지막 날로 설정
-      if (originalDay > lastDayOfMonth) {
-        nextDate.setDate(lastDayOfMonth);
-      } else {
-        nextDate.setDate(originalDay);
+      let targetYear = originalYear;
+      let targetMonth = originalMonth;
+
+      // startDate 이후가 될 때까지 월을 추가
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        targetMonth += event.repeat.interval;
+
+        // 년도 조정
+        while (targetMonth >= 12) {
+          targetMonth -= 12;
+          targetYear += 1;
+        }
+
+        // 해당 월의 마지막 일 계산
+        const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+
+        // 원본 날짜가 29, 30, 31일이고 해당 월에 그 날짜가 없으면 월의 마지막 날로 설정
+        const targetDay = originalDay > lastDayOfMonth ? lastDayOfMonth : originalDay;
+
+        const candidateDate = new Date(targetYear, targetMonth, targetDay);
+
+        if (candidateDate > startDate) {
+          nextDate.setTime(candidateDate.getTime());
+          break;
+        }
       }
       break;
     }
     case 'yearly': {
-      // 2월 29일(윤년) 특수 케이스 처리
-      if (eventDate.getMonth() === 1 && eventDate.getDate() === 29) {
-        // 다음 해의 2월 28일로 설정
-        nextDate.setFullYear(nextDate.getFullYear() + event.repeat.interval);
-        // 다음해가 윤년인지 확인
-        const isLeapYear = (year: number) => {
-          return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-        };
+      // eventDate를 기준으로 시작
+      let candidateDate = new Date(eventDate);
 
-        // 윤년이 아니면 2월 28일로 설정
-        if (!isLeapYear(nextDate.getFullYear())) {
-          nextDate.setMonth(1);
-          nextDate.setDate(28);
-        } else {
-          nextDate.setMonth(1);
-          nextDate.setDate(29);
+      const isLeapYear = (year: number) => {
+        return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+      };
+
+      // startDate 이후가 될 때까지 년도를 추가
+      while (candidateDate <= startDate) {
+        candidateDate.setFullYear(candidateDate.getFullYear() + event.repeat.interval);
+
+        // 2월 29일(윤년) 특수 케이스 처리
+        if (eventDate.getMonth() === 1 && eventDate.getDate() === 29) {
+          if (!isLeapYear(candidateDate.getFullYear())) {
+            candidateDate.setMonth(1);
+            candidateDate.setDate(28);
+          } else {
+            candidateDate.setMonth(1);
+            candidateDate.setDate(29);
+          }
         }
-      } else {
-        // 일반적인 경우
-        nextDate.setFullYear(nextDate.getFullYear() + event.repeat.interval);
       }
+
+      // 계산된 결과를 nextDate에 설정
+      nextDate.setTime(candidateDate.getTime());
       break;
     }
     default:
