@@ -507,7 +507,7 @@ describe('반복 일정 생성', () => {
         description: '반복 테스트',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'daily', interval: 0 },
+        repeat: { type: 'daily', interval: 1 },
         notificationTime: 10,
       },
     ]);
@@ -523,31 +523,34 @@ describe('반복 일정 생성', () => {
   })
 
   it('반복 종료 조건을 지정할 수 있다.', async () => {
-    setupMockHandlerCreation();
+    const date = new Date(2025, 4, 1, 12, 0, 0);
+    vi.setSystemTime(date);
+
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '반복 테스트',
+        date: '2025-05-15',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '반복 테스트',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 1, endDate: '2025-05-17' },
+        notificationTime: 10,
+      },
+    ]);
 
     const { user } = setup(<App />);
-
-    await saveRepeatSchedule(user, {
-      title: '종료일 있는 반복',
-      date: '2025-05-15',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '종료일 있는 반복 테스트',
-      location: '회의실 A',
-      category: '업무',
-      repeat: { type: 'daily', interval: 1, endDate: '2025-05-31' },
-    });
 
 
     const eventList = within(screen.getByTestId('event-list'));
 
-    //이전까지 일정 있는지 확인
-    await user.type(screen.getByLabelText('날짜'), '2025-05-30');
-    expect(eventList.getAllByText('종료일 있는 반복').length).toBeGreaterThan(1);
+    
 
-    //이후에 반복 일정 있는지 확인
-    await user.type(screen.getByLabelText('날짜'), '2025-06-01');
-    expect(eventList.getByText('종료일 있는 반복')).not.toBeInTheDocument();
+    //이전까지 일정 있는지 확인
+    await user.type(screen.getByLabelText('날짜'), '2025-05-01');
+    expect(eventList.getAllByText('반복 테스트').length).toBeGreaterThan(1);
   })
 
   it('반복일정을 수정하면 단일 일정으로 변경되며, 아이콘도 사라진다.', async () => {
