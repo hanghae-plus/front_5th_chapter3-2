@@ -68,6 +68,191 @@ it('정의된 이벤트 정보를 기준으로 적절하게 저장이 된다', a
   expect(result.current.events).toEqual([{ ...newEvent, id: '1' }]);
 });
 
+it('매일 반복 일정 저장 시 시작 날짜 뿐만 아니라 반복 일정에 대한 이벤트도 반복해서 저장된다.', async () => {
+  setupMockHandlerCreation();
+
+  const { result } = renderHook(() => useEventOperations(false));
+
+  await act(() => Promise.resolve(null));
+
+  const newEvent: Event = {
+    id: '1',
+    title: '새 회의',
+    date: '2025-09-18',
+    startTime: '11:00',
+    endTime: '12:00',
+    description: '새로운 팀 미팅',
+    location: '회의실 A',
+    category: '업무',
+    repeat: { type: 'daily', interval: 1 },
+    notificationTime: 5,
+  };
+  const expectedEvents: Event[] = [
+    {
+      id: '1',
+      title: '새 회의',
+      date: '2025-09-18',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '2',
+      title: '새 회의',
+      date: '2025-09-19',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '3',
+      title: '새 회의',
+      date: '2025-09-20',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '4',
+      title: '새 회의',
+      date: '2025-09-21',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '5',
+      title: '새 회의',
+      date: '2025-09-22',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '6',
+      title: '새 회의',
+      date: '2025-09-23',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '7',
+      title: '새 회의',
+      date: '2025-09-24',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '8',
+      title: '새 회의',
+      date: '2025-09-25',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '9',
+      title: '새 회의',
+      date: '2025-09-26',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '10',
+      title: '새 회의',
+      date: '2025-09-27',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '11',
+      title: '새 회의',
+      date: '2025-09-28',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '12',
+      title: '새 회의',
+      date: '2025-09-29',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+    {
+      id: '13',
+      title: '새 회의',
+      date: '2025-09-30',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { id: '1', type: 'daily', interval: 1 },
+      notificationTime: 5,
+    },
+  ];
+
+  await act(async () => {
+    await result.current.saveEvent(newEvent);
+  });
+
+  expect(result.current.events).toEqual(expectedEvents);
+});
+
 it("새로 정의된 'title', 'endTime' 기준으로 적절하게 일정이 업데이트 된다", async () => {
   setupMockHandlerUpdating();
 
@@ -93,6 +278,86 @@ it("새로 정의된 'title', 'endTime' 기준으로 적절하게 일정이 업�
   });
 
   expect(result.current.events[0]).toEqual(updatedEvent);
+});
+
+it('반복 일정을 수정하면 선택한 일정에 대한 정보만 수정되고, 같이 묶여 있는 모든 이벤트도 단일 이벤트로 수정된다.', async () => {
+  const initialEvents: Event[] = [
+    {
+      id: '1',
+      title: '기존 반복 일정',
+      date: '2025-10-15',
+      startTime: '13:00',
+      endTime: '14:00',
+      description: '기존 반복 일정',
+      location: '회의실 D',
+      category: '업무 회의',
+      repeat: { id: '1', type: 'daily', interval: 1, endDate: '2025-10-16' },
+      notificationTime: 10,
+    },
+    {
+      id: '2',
+      title: '기존 반복 일정',
+      date: '2025-10-16',
+      startTime: '13:00',
+      endTime: '14:00',
+      description: '기존 반복 일정',
+      location: '회의실 D',
+      category: '업무 회의',
+      repeat: { id: '1', type: 'daily', interval: 1, endDate: '2025-10-16' },
+      notificationTime: 10,
+    },
+  ];
+
+  setupMockHandlerUpdating(initialEvents);
+
+  const { result } = renderHook(() => useEventOperations(true));
+
+  await act(() => Promise.resolve(null));
+
+  const selectedEvent: Event = {
+    id: '1',
+    date: '2025-10-15',
+    startTime: '13:00',
+    endTime: '14:00',
+    title: '수정된 반복 일정',
+    description: '기존 반복 일정',
+    location: '회의실 B',
+    category: '업무',
+    repeat: { id: '1', type: 'daily', interval: 1, endDate: '2025-10-16' },
+    notificationTime: 10,
+  };
+  const updatedEvents: Event[] = [
+    {
+      id: '1',
+      date: '2025-10-15',
+      startTime: '13:00',
+      endTime: '14:00',
+      title: '수정된 반복 일정',
+      description: '기존 반복 일정',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    },
+    {
+      id: '2',
+      title: '기존 반복 일정',
+      date: '2025-10-16',
+      startTime: '13:00',
+      endTime: '14:00',
+      description: '기존 반복 일정',
+      location: '회의실 D',
+      category: '업무 회의',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    },
+  ];
+
+  await act(async () => {
+    await result.current.saveEvent(selectedEvent);
+  });
+
+  expect(result.current.events).toEqual(updatedEvents);
 });
 
 it('존재하는 이벤트 삭제 시 에러없이 아이템이 삭제된다.', async () => {

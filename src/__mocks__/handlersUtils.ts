@@ -16,12 +16,44 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
       newEvent.id = String(mockEvents.length + 1); // 간단한 ID 생성
       mockEvents.push(newEvent);
       return HttpResponse.json(newEvent, { status: 201 });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const data = (await request.json()) as { events: Event[] };
+      const newEvents = data.events;
+
+      const startNumId = mockEvents.length + 1;
+      const repeatNumId =
+        mockEvents.reduce((maxId, event) => {
+          const repeatInfo = event.repeat;
+          if (repeatInfo.type !== 'none') {
+            return Math.max(maxId, Number(repeatInfo.id as string));
+          }
+
+          return maxId;
+        }, 0) + 1;
+
+      const newEventsWithId = newEvents.map((event, i) => {
+        const isRepeatEvent = event.repeat.type !== 'none';
+
+        return {
+          ...event,
+          id: String(startNumId + i),
+          repeat: {
+            ...event.repeat,
+            id: isRepeatEvent ? String(repeatNumId) : undefined,
+          },
+        };
+      });
+
+      mockEvents.push(...newEventsWithId);
+
+      return HttpResponse.json(newEventsWithId, { status: 201 });
     })
   );
 };
 
-export const setupMockHandlerUpdating = () => {
-  const mockEvents: Event[] = [
+export const setupMockHandlerUpdating = (
+  initialEvents = [
     {
       id: '1',
       title: '기존 회의',
@@ -46,7 +78,9 @@ export const setupMockHandlerUpdating = () => {
       repeat: { type: 'none', interval: 0 },
       notificationTime: 5,
     },
-  ];
+  ] as Event[]
+) => {
+  const mockEvents: Event[] = [...initialEvents];
 
   server.use(
     http.get('/api/events', () => {
@@ -59,6 +93,20 @@ export const setupMockHandlerUpdating = () => {
 
       mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
       return HttpResponse.json(mockEvents[index]);
+    }),
+    http.put('/api/events-list', async ({ request }) => {
+      const data = (await request.json()) as { events: Event[] };
+      const updatedEvents = data.events;
+
+      mockEvents.forEach((event, index) => {
+        const updatedEvent = updatedEvents.find((target) => target.id === event.id);
+
+        if (updatedEvent) {
+          mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
+        }
+      });
+
+      return HttpResponse.json(mockEvents);
     })
   );
 };

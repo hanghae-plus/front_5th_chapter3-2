@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -37,6 +38,8 @@ import {
   Tr,
   useToast,
   VStack,
+  RadioGroup,
+  Radio,
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
 
@@ -45,7 +48,7 @@ import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { Event, EventForm, RepeatType, RepeatEndType } from './types';
 import {
   formatDate,
   formatMonth,
@@ -84,11 +87,14 @@ function App() {
     category,
     setCategory,
     isRepeating,
-    setIsRepeating,
     repeatType,
     setRepeatType,
     repeatInterval,
     setRepeatInterval,
+    repeatEndType,
+    setRepeatEndType,
+    repeatCount,
+    setRepeatCount,
     repeatEndDate,
     setRepeatEndDate,
     notificationTime,
@@ -99,6 +105,7 @@ function App() {
     setEditingEvent,
     handleStartTimeChange,
     handleEndTimeChange,
+    handleChangeIsRepeating,
     resetForm,
     editEvent,
   } = useEventForm();
@@ -150,7 +157,8 @@ function App() {
       repeat: {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
+        endDate: repeatEndType !== 'date' ? undefined : repeatEndDate || undefined,
+        count: repeatEndType !== 'count' ? undefined : repeatCount,
       },
       notificationTime,
     };
@@ -201,6 +209,11 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {event.repeat.type !== 'none' && (
+                              <Box data-testid="repeat-icon" aria-label="반복">
+                                <RepeatIcon />
+                              </Box>
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -270,6 +283,11 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && (
+                                    <Box data-testid="repeat-icon" aria-label="반복">
+                                      <RepeatIcon />
+                                    </Box>
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -357,7 +375,7 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox isChecked={isRepeating} onChange={handleChangeIsRepeating}>
               반복 일정
             </Checkbox>
           </FormControl>
@@ -400,6 +418,20 @@ function App() {
                     min={1}
                   />
                 </FormControl>
+              </HStack>
+              <RadioGroup
+                className="w-100"
+                value={repeatEndType}
+                onChange={(value) => setRepeatEndType(value as RepeatEndType)}
+              >
+                <div>반복 종료</div>
+                <HStack>
+                  <Radio value="none">없음</Radio>
+                  <Radio value="date">날짜</Radio>
+                  <Radio value="count">횟수</Radio>
+                </HStack>
+              </RadioGroup>
+              {repeatEndType === 'date' && (
                 <FormControl>
                   <FormLabel>반복 종료일</FormLabel>
                   <Input
@@ -408,7 +440,17 @@ function App() {
                     onChange={(e) => setRepeatEndDate(e.target.value)}
                   />
                 </FormControl>
-              </HStack>
+              )}
+              {repeatEndType === 'count' && (
+                <FormControl>
+                  <FormLabel>반복 횟수</FormLabel>
+                  <Input
+                    type="number"
+                    value={repeatCount}
+                    onChange={(e) => setRepeatCount(Number(e.target.value))}
+                  />
+                </FormControl>
+              )}
             </VStack>
           )}
 
@@ -558,7 +600,8 @@ function App() {
                     repeat: {
                       type: isRepeating ? repeatType : 'none',
                       interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
+                      endDate: repeatEndType !== 'date' ? undefined : repeatEndDate || undefined,
+                      count: repeatEndType !== 'count' ? undefined : repeatCount,
                     },
                     notificationTime,
                   });
