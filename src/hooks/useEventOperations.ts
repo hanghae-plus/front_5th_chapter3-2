@@ -70,7 +70,6 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
   const saveRepeatEvent = async (eventData: Event | EventForm) => {
     const repeatEvents = createRepeatEvents(eventData);
-
     try {
       let response;
       if (editing) {
@@ -95,7 +94,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
       onSave?.();
       toast({
-        title: '일정이 추가되었습니다.',
+        title: editing ? '일정이 수정되었습니다.' : '일정이 추가되었습니다.',
         status: 'success',
         duration: 3000,
         isClosable: true,
