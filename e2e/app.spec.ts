@@ -1,9 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { formatDate } from '../src/utils/dateUtils';
 
-test.beforeEach(async ({ page }) => {
-  await page.goto('http://localhost:5173/');
-});
+import { formatDate } from '../src/utils/dateUtils';
 
 function getNthDayOfCurrentMonth(n) {
   const today = new Date();
@@ -38,6 +35,10 @@ async function addEvent({ page, event }) {
 }
 
 test.describe.serial('순차적 실행', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('http://localhost:5173/');
+  });
+
   test('일정 추가하기', async ({ page }) => {
     const event = {
       title: '추가 일정',
