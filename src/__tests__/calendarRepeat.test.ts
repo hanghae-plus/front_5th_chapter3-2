@@ -12,7 +12,7 @@ describe('매일 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'daily', interval: 0 },
+      repeat: { type: 'daily', interval: 0, endType: 'none' },
       notificationTime: 1,
     };
 
@@ -27,7 +27,7 @@ describe('매일 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'daily', interval: 0 },
+      repeat: { type: 'daily', interval: 0, endType: 'none' },
       notificationTime: 1,
     });
   });
@@ -42,7 +42,7 @@ describe('매일 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'daily', interval: 2 },
+      repeat: { type: 'daily', interval: 2, endType: 'none' },
       notificationTime: 1,
     };
 
@@ -57,7 +57,7 @@ describe('매일 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'daily', interval: 2 },
+      repeat: { type: 'daily', interval: 2, endType: 'none' },
       notificationTime: 1,
     });
   });
@@ -72,7 +72,7 @@ describe('매일 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'daily', interval: 0, endDate: '2025-09-30' },
+      repeat: { type: 'daily', endType: 'date', interval: 0, endDate: '2025-09-30' },
       notificationTime: 1,
     };
 
@@ -89,7 +89,7 @@ describe('매일 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'daily', interval: 2, endDate: '2025-09-30' },
+      repeat: { type: 'daily', interval: 2, endDate: '2025-09-30', endType: 'date' },
       notificationTime: 1,
     });
   });
@@ -104,7 +104,7 @@ describe('매일 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, endDate: '2025-09-30' },
+      repeat: { type: 'daily', interval: 5, endDate: '2025-09-30', endType: 'date' },
       notificationTime: 1,
     };
 
@@ -119,7 +119,7 @@ describe('매일 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, endDate: '2025-09-30' },
+      repeat: { type: 'daily', interval: 5, endDate: '2025-09-30', endType: 'date' },
       notificationTime: 1,
     });
   });
@@ -136,7 +136,7 @@ describe('매주 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'weekly', interval: 0 },
+      repeat: { type: 'weekly', interval: 0, endType: 'none' },
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
@@ -150,7 +150,7 @@ describe('매주 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'weekly', interval: 0 },
+      repeat: { type: 'weekly', interval: 0, endType: 'none' },
       notificationTime: 1,
     });
   });
@@ -165,7 +165,7 @@ describe('매주 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'weekly', interval: 2 },
+      repeat: { type: 'weekly', interval: 2, endType: 'none' },
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
@@ -179,7 +179,7 @@ describe('매주 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'weekly', interval: 2 },
+      repeat: { type: 'weekly', interval: 2, endType: 'none' },
       notificationTime: 1,
     });
   });
@@ -194,7 +194,7 @@ describe('매주 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'weekly', interval: 0, endDate: '2025-09-30' },
+      repeat: { type: 'weekly', interval: 0, endDate: '2025-09-30', endType: 'date' },
       notificationTime: 1,
     };
 
@@ -211,7 +211,7 @@ describe('매주 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'weekly', interval: 0, endDate: '2025-09-30' },
+      repeat: { type: 'weekly', interval: 0, endDate: '2025-09-30', endType: 'date' },
       notificationTime: 1,
     });
   });
@@ -226,7 +226,7 @@ describe('매주 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'weekly', interval: 2, endDate: '2025-09-30' },
+      repeat: { type: 'weekly', interval: 2, endDate: '2025-09-30', endType: 'date' },
       notificationTime: 1,
     };
 
@@ -243,7 +243,7 @@ describe('매주 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'weekly', interval: 2, endDate: '2025-09-30' },
+      repeat: { type: 'weekly', interval: 2, endDate: '2025-09-30', endType: 'date' },
       notificationTime: 1,
     });
   });
@@ -260,7 +260,7 @@ describe('매월 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'monthly', interval: 0 },
+      repeat: { type: 'monthly', interval: 0, endType: 'none' },
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
@@ -274,7 +274,7 @@ describe('매월 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'monthly', interval: 0 },
+      repeat: { type: 'monthly', interval: 0, endType: 'none' },
       notificationTime: 1,
     });
   });
@@ -289,7 +289,7 @@ describe('매월 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'monthly', interval: 2 },
+      repeat: { type: 'monthly', interval: 2, endType: 'none' },
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
@@ -303,7 +303,7 @@ describe('매월 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'monthly', interval: 2 },
+      repeat: { type: 'monthly', interval: 2, endType: 'none' },
       notificationTime: 1,
     });
   });
@@ -318,7 +318,7 @@ describe('매월 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'monthly', interval: 0 },
+      repeat: { type: 'monthly', interval: 0, endType: 'none' },
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
@@ -332,7 +332,7 @@ describe('매월 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'monthly', interval: 0 },
+      repeat: { type: 'monthly', interval: 0, endType: 'none' },
       notificationTime: 1,
     });
   });
@@ -347,7 +347,7 @@ describe('매월 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'monthly', interval: 0 },
+      repeat: { type: 'monthly', interval: 0, endType: 'none' },
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
@@ -361,7 +361,7 @@ describe('매월 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'monthly', interval: 0 },
+      repeat: { type: 'monthly', interval: 0, endType: 'none' },
       notificationTime: 1,
     });
   });
@@ -376,7 +376,7 @@ describe('매월 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'monthly', interval: 0, endDate: '2025-09-30' },
+      repeat: { type: 'monthly', interval: 0, endDate: '2025-09-30', endType: 'date' },
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
@@ -390,7 +390,7 @@ describe('매월 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'monthly', interval: 0, endDate: '2025-09-30' },
+      repeat: { type: 'monthly', interval: 0, endDate: '2025-09-30', endType: 'date' },
       notificationTime: 1,
     });
   });
@@ -407,7 +407,7 @@ describe('매년 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'yearly', interval: 0 },
+      repeat: { type: 'yearly', interval: 0, endType: 'none' },
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
@@ -421,7 +421,7 @@ describe('매년 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'yearly', interval: 0 },
+      repeat: { type: 'yearly', interval: 0, endType: 'none' },
       notificationTime: 1,
     });
   });
@@ -436,7 +436,7 @@ describe('매년 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'yearly', interval: 2 },
+      repeat: { type: 'yearly', interval: 2, endType: 'none' },
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
@@ -450,7 +450,7 @@ describe('매년 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'yearly', interval: 2 },
+      repeat: { type: 'yearly', interval: 2, endType: 'none' },
       notificationTime: 1,
     });
   });
@@ -465,7 +465,7 @@ describe('매년 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'yearly', interval: 0 },
+      repeat: { type: 'yearly', interval: 0, endType: 'none' },
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
@@ -479,7 +479,7 @@ describe('매년 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'yearly', interval: 0 },
+      repeat: { type: 'yearly', interval: 0, endType: 'none' },
       notificationTime: 1,
     });
 
@@ -492,7 +492,7 @@ describe('매년 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'yearly', interval: 0 },
+      repeat: { type: 'yearly', interval: 0, endType: 'none' },
       notificationTime: 1,
     });
   });
@@ -507,7 +507,7 @@ describe('매년 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'yearly', interval: 0, endDate: '2030-06-01' },
+      repeat: { type: 'yearly', interval: 0, endDate: '2030-06-01', endType: 'date' },
       notificationTime: 1,
     };
     const result = getRepeatingEvents(event);
@@ -521,7 +521,7 @@ describe('매년 반복', () => {
       description: 'test description',
       location: 'test home',
       category: '업무',
-      repeat: { type: 'yearly', interval: 0, endDate: '2030-06-01' },
+      repeat: { type: 'yearly', interval: 0, endDate: '2030-06-01', endType: 'date' },
       notificationTime: 1,
     });
   });

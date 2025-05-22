@@ -4,7 +4,7 @@ export type EndType = 'none' | 'date' | 'count';
 export interface RepeatInfo {
   type: RepeatType;
   interval: number;
-  end?: EndType;
+  endType?: EndType;
   endDate?: string;
   endCount?: string;
 }

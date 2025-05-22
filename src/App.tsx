@@ -159,8 +159,6 @@ function App() {
       notificationTime,
     };
 
-    console.log('eventData', eventData, repeatType, isRepeating);
-
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
