@@ -206,6 +206,7 @@ export const useEventForm = (initialEvent?: Event) => {
       setRepeatEndDate('');
       setRepeatMaxOccurrences(undefined);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repeatEndType]);
 
   useEffect(() => {
@@ -214,12 +215,14 @@ export const useEventForm = (initialEvent?: Event) => {
     } else {
       setRepeatType('none');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRepeating]);
 
   useEffect(() => {
     if (repeatType !== 'none' && !isRepeating) {
       setIsRepeating(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repeatType]);
 
   return {

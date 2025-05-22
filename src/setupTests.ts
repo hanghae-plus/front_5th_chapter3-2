@@ -4,6 +4,13 @@ import '@testing-library/jest-dom';
 import { handlers } from './__mocks__/handlers';
 
 // ! Hard 여기 제공 안함
+if (typeof HTMLElement.prototype.focus !== 'function') {
+  Object.defineProperty(HTMLElement.prototype, 'focus', {
+    value: () => {},
+    writable: true,
+    configurable: true,
+  });
+}
 /* msw */
 export const server = setupServer(...handlers);
 

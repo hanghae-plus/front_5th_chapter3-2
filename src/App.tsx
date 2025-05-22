@@ -126,14 +126,6 @@ function App() {
 
   const toast = useToast();
 
-  const getFinalRepeatInterval = (currentInterval: string | number): number => {
-    const numericValue = Number(currentInterval);
-    if (isNaN(numericValue) || numericValue < 1) {
-      return 1;
-    }
-    return Math.floor(numericValue); // 정수 값으로 반환
-  };
-
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
       toast({

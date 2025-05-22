@@ -1,4 +1,4 @@
-import { Event, RepeatInfo, RepeatType } from '../../types';
+import { Event, RepeatInfo } from '../../types';
 import {
   generateRepeatingEvents,
   calculateNextRepeatDate,
