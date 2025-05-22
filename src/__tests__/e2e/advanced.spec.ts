@@ -53,10 +53,6 @@ test('일정의 각 항목을 입력하고 제출하면, 캘린더에 일정이 
   await expect(eventList.getByText('새로 추가한 일정의 설명', { exact: true })).toBeVisible();
 });
 
-test('다음 달의 일정과 미리 알림을 설정하면, 다음 달 버튼을 클릭했을 때 캘린더에 일정과 함께 아이콘이 렌더링된다.', async ({
-  page,
-}) => {});
-
 test('2주 간격의 반복 일정을 다음 달 말일까지 등록하면, 반복 횟수에 따라 일정이 캘린더에 표시되고 다음 달 이동 버튼을 클릭해도 일정이 표기된다.', async ({
   page,
 }) => {
@@ -81,4 +77,43 @@ test('2주 간격의 반복 일정을 다음 달 말일까지 등록하면, 반�
 
   const calendarAfter1Month = page.getByTestId('month-view');
   await expect(calendarAfter1Month.getByText('새로 반복되는 일정', { exact: true })).toHaveCount(2);
+});
+
+test('생성된 반복 일정 수정 시 해당 항목만 수정되며 단일 일정으로 변경되고 변경사항이 반영된다.', async ({
+  page,
+}) => {
+  await page.goto('http://localhost:5173/');
+  await saveScheduleForm(page, {
+    title: '수정될 반복 일정',
+    date: '2025-05-07',
+    startTime: '17:00',
+    endTime: '19:00',
+    description: '팀 회의가 진행될 예정입니다',
+    location: '11층 회의실',
+    category: '업무',
+    repeat: { type: 'weekly', interval: 1, endDate: '2025-05-30' },
+  });
+
+  const eventList = page.getByTestId('event-list');
+  await expect(eventList.getByText('수정될 반복 일정', { exact: true })).toHaveCount(4);
+
+  const repeatedCount = (await eventList.getByText('반복: ').all()).length;
+
+  const editButton = eventList
+    .locator('div')
+    .filter({ hasText: '수정될 반복 일정' })
+    .first()
+    .getByLabel('Edit event');
+  await editButton.click();
+
+  await page.getByRole('textbox', { name: '제목' }).click();
+  await page.getByRole('textbox', { name: '제목' }).fill('수정된 반복 일정');
+  await page.getByRole('textbox', { name: '설명' }).click();
+  await page.getByRole('textbox', { name: '설명' }).fill('수정된 반복 일정 설명입니다.');
+
+  await page.getByTestId('event-submit-button').click();
+
+  await expect(eventList.getByText('수정된 반복 일정', { exact: true })).toHaveCount(1);
+  await expect(eventList.getByText('수정된 반복 일정 설명입니다.', { exact: true })).toHaveCount(1);
+  await expect(eventList.getByText('반복: ')).toHaveCount(repeatedCount - 1);
 });
