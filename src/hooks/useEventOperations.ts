@@ -108,6 +108,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       type: 'daily' | 'weekly' | 'monthly' | 'yearly';
       interval: number;
       endDate: string;
+      count?: number;
     }
   ) => {
     await saveRepeatingSchedule(baseEvent, repeat);

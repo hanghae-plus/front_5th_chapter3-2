@@ -94,6 +94,8 @@ function App() {
     setRepeatEndDate,
     notificationTime,
     setNotificationTime,
+    repeatCount,
+    setRepeatCount,
     startTimeError,
     endTimeError,
     editingEvent,
@@ -151,7 +153,12 @@ function App() {
       category,
       repeat: editingEvent
         ? { type: 'none', interval: 0 }
-        : { type: repeatType, interval: repeatInterval, endDate: repeatEndDate || undefined },
+        : {
+            type: repeatType,
+            interval: repeatInterval,
+            endDate: repeatEndDate || undefined,
+            count: repeatCount,
+          },
       notificationTime,
     };
 
@@ -165,6 +172,7 @@ function App() {
           type: eventData.repeat.type as 'daily' | 'weekly' | 'monthly' | 'yearly',
           interval: repeatInterval,
           endDate: repeatEndDate,
+          count: repeatCount,
         });
       } else {
         await saveEvent(eventData);
@@ -425,6 +433,15 @@ function App() {
                   />
                 </FormControl>
               </HStack>
+              <FormControl>
+                <FormLabel>반복 횟수</FormLabel>
+                <Input
+                  type="number"
+                  value={repeatCount}
+                  onChange={(e) => setRepeatCount(Number(e.target.value))}
+                  min={0}
+                />
+              </FormControl>
             </VStack>
           )}
 
@@ -513,6 +530,7 @@ function App() {
                         )?.label
                       }
                     </Text>
+                    {event.repeat.type !== 'none' && <Text>반복 횟수: {event.repeat.count}</Text>}
                   </VStack>
                   <HStack>
                     <IconButton

@@ -78,6 +78,7 @@ export function generateRepeatEvents(
       repeat: {
         type,
         interval,
+        count: repeat.count,
       },
     });
 
@@ -111,6 +112,7 @@ export async function saveRepeatingSchedule(
     type: RepeatType;
     interval: number;
     endDate: string;
+    count?: number;
   }
 ) {
   const events = generateRepeatEvents(baseEvent, repeat);
