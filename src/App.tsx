@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -44,6 +45,7 @@ import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
+import { useRepeatEventOperations } from './hooks/useRepeatEventOperations.ts';
 import { useSearch } from './hooks/useSearch.ts';
 import { Event, EventForm, RepeatType } from './types';
 import {
@@ -55,7 +57,9 @@ import {
   getWeeksAtMonth,
 } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
+import { generateRecurringEvents } from './utils/generateRecurringEvents';
 import { getTimeErrorMessage } from './utils/timeValidation';
+import { isNumberInRange, validateRepeatEndDate } from './utils/validate';
 
 const categories = ['업무', '개인', '가족', '기타'];
 
@@ -103,8 +107,14 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, fetchEvents, saveEvent, deleteEvent } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
+  );
+  const { saveRepeatEvents } = useRepeatEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null),
+    fetchEvents
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -117,6 +127,9 @@ function App() {
 
   const toast = useToast();
 
+  /**
+   * 일정 추가 또는 수정 처리 함수
+   */
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
       toast({
@@ -138,6 +151,84 @@ function App() {
       return;
     }
 
+    if (isRepeating && repeatEndDate === 'endDate') {
+      const endDateError = validateRepeatEndDate({ date, repeat: { endDate: repeatEndDate } });
+      if (endDateError) {
+        toast({
+          title: endDateError,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+    }
+
+    if (!isNumberInRange({ value: repeatInterval, min: 1, max: 12 }) && isRepeating) {
+      toast({
+        title: '반복 간격은 1에서 12 사이의 숫자여야 합니다.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const isSingleEdit = editingEvent && !isRepeating;
+
+    // 이벤트 데이터 구성 (수정 or 신규 여부 및 반복 여부에 따라 다르게 설정)
+    const eventData: Event | EventForm = {
+      id: editingEvent ? editingEvent.id : undefined,
+      title,
+      date,
+      startTime,
+      endTime,
+      description,
+      location,
+      category,
+      repeat: isSingleEdit
+        ? { type: 'none', interval: 0 }
+        : {
+            type: isRepeating ? repeatType : 'none',
+            interval: repeatInterval,
+            endDate: repeatEndDate || undefined,
+            id: editingEvent?.repeat?.id, // 유지
+          },
+      notificationTime,
+    };
+
+    // 단일 일정 수정인 경우 반복 정보 제거 (명시적 처리)
+    if (editingEvent && !isRepeating) {
+      eventData.repeat = { type: 'none', interval: 0 };
+    }
+
+    // 중복 일정 확인
+    const overlapping = (
+      eventData.repeat.type !== 'none' ? generateRecurringEvents(eventData) : [eventData]
+    ) // 단일 일정일 경우에도 배열로 감싸서 검사
+      .flatMap((e) => findOverlappingEvents(e, events));
+
+    if (overlapping.length > 0) {
+      setOverlappingEvents(overlapping);
+      setIsOverlapDialogOpen(true);
+    } else {
+      if (editingEvent && isRepeating) {
+        await saveRepeatEvents(eventData);
+      } else if (!editingEvent && isRepeating && eventData.repeat.type !== 'none') {
+        await saveRepeatEvents(eventData);
+      } else {
+        await saveEvent(eventData);
+      }
+      resetForm();
+    }
+  };
+
+  /**
+   * 중복 확인 후 사용자 확정 시 실행되는 함수
+   */
+  const handleConfirmOverlap = async () => {
+    setIsOverlapDialogOpen(false);
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -155,13 +246,12 @@ function App() {
       notificationTime,
     };
 
-    const overlapping = findOverlappingEvents(eventData, events);
-    if (overlapping.length > 0) {
-      setOverlappingEvents(overlapping);
-      setIsOverlapDialogOpen(true);
+    if (editingEvent && isRepeating) {
+      await saveRepeatEvents(eventData);
+    } else if (!editingEvent && isRepeating && eventData.repeat.type !== 'none') {
+      await saveRepeatEvents(eventData);
     } else {
       await saveEvent(eventData);
-      resetForm();
     }
   };
 
@@ -198,9 +288,13 @@ function App() {
                           borderRadius="md"
                           fontWeight={isNotified ? 'bold' : 'normal'}
                           color={isNotified ? 'red.500' : 'inherit'}
+                          data-testid="event-item"
                         >
                           <HStack spacing={1}>
-                            {isNotified && <BellIcon />}
+                            {isNotified && <BellIcon data-testid="bell-icon" />}
+                            {event.repeat.type !== 'none' && (
+                              <RepeatIcon data-testid="repeat-icon" />
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -267,9 +361,13 @@ function App() {
                                 borderRadius="md"
                                 fontWeight={isNotified ? 'bold' : 'normal'}
                                 color={isNotified ? 'red.500' : 'inherit'}
+                                data-testid="event-item"
                               >
                                 <HStack spacing={1}>
-                                  {isNotified && <BellIcon />}
+                                  {isNotified && <BellIcon data-testid="bell-icon" />}
+                                  {event.repeat.type !== 'none' && (
+                                    <RepeatIcon data-testid="repeat-icon" />
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -357,7 +455,14 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              isChecked={isRepeating}
+              onChange={(e) => {
+                setIsRepeating(e.target.checked);
+                setRepeatType(e.target.checked ? 'daily' : 'none');
+                setRepeatInterval(e.target.checked ? 1 : 0);
+              }}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
@@ -394,9 +499,11 @@ function App() {
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
                   <Input
+                    aria-label="repeat-interval"
                     type="number"
                     value={repeatInterval}
                     onChange={(e) => setRepeatInterval(Number(e.target.value))}
+                    max={12}
                     min={1}
                   />
                 </FormControl>
@@ -501,11 +608,13 @@ function App() {
                   <HStack>
                     <IconButton
                       aria-label="Edit event"
+                      data-testid={`edit-event-${event.title}-${event.date}`}
                       icon={<EditIcon />}
                       onClick={() => editEvent(event)}
                     />
                     <IconButton
                       aria-label="Delete event"
+                      data-testid="delete-event"
                       icon={<DeleteIcon />}
                       onClick={() => deleteEvent(event.id)}
                     />
@@ -542,29 +651,7 @@ function App() {
               <Button ref={cancelRef} onClick={() => setIsOverlapDialogOpen(false)}>
                 취소
               </Button>
-              <Button
-                colorScheme="red"
-                onClick={() => {
-                  setIsOverlapDialogOpen(false);
-                  saveEvent({
-                    id: editingEvent ? editingEvent.id : undefined,
-                    title,
-                    date,
-                    startTime,
-                    endTime,
-                    description,
-                    location,
-                    category,
-                    repeat: {
-                      type: isRepeating ? repeatType : 'none',
-                      interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
-                    },
-                    notificationTime,
-                  });
-                }}
-                ml={3}
-              >
+              <Button colorScheme="red" onClick={handleConfirmOverlap} ml={3}>
                 계속 진행
               </Button>
             </AlertDialogFooter>

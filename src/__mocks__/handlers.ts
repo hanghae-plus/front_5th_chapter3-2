@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
-import { events } from '../__mocks__/response/events.json' assert { type: 'json' };
-import { Event } from '../types';
+import { events } from '@/__mocks__/response/events.json' assert { type: 'json' };
+import { Event } from '@/types';
 
 export const handlers = [
   http.get('/api/events', () => {
@@ -35,5 +35,13 @@ export const handlers = [
     }
 
     return new HttpResponse(null, { status: 404 });
+  }),
+
+  http.post('/api/events-list', async ({ request }) => {
+    const { events: newEvents } = (await request.json()) as { events: Event[] };
+    newEvents.forEach((_, index) => {
+      newEvents[index].id = String(events.length + 1 + index);
+    });
+    return HttpResponse.json(newEvents, { status: 201 });
   }),
 ];
