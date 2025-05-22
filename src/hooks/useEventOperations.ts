@@ -90,11 +90,24 @@ export const useEventOperations = (isEditing?: boolean) => {
 
   const deleteEvent = async (id: string) => {
     try {
-      const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      let response;
+      const isEventRecurring = checkEventIsRecurring(id, events);
 
-      if (!response.ok) {
-        throw new Error('Failed to delete event');
+      if (isEventRecurring) {
+        const eventIdsForDelete = getRecurringEventIdsForDelete(id, events);
+
+        response = await fetch(`${BASE_URL(isEventRecurring)}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventIds: eventIdsForDelete }),
+        });
+      } else {
+        response = await fetch(`${BASE_URL(isEventRecurring)}/${id}`, {
+          method: 'DELETE',
+        });
       }
+
+      if (!response.ok) throw new Error('Failed to delete event');
 
       await revalidateEvents();
       toast({
