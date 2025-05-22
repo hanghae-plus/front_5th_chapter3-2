@@ -54,7 +54,9 @@ export const generateMonthlyDates = (event: Event): string[] => {
   const targetDay = current.getDate();
   const endDate = event.repeat.endDate ? new Date(event.repeat.endDate) : DEFAULT_END_DATE;
 
-  while (true) {
+  let next = current;
+
+  while (next <= endDate) {
     // 다음 반복 달 계산
     const year = current.getFullYear();
     const month = current.getMonth() + interval; // JS month 0~11 범위 허용(오버플로우 가능)
@@ -74,7 +76,6 @@ export const generateMonthlyDates = (event: Event): string[] => {
 
   return result;
 };
-
 
 export const generateYearlyDates = (event: Event): string[] => {
   const dates: string[] = [];

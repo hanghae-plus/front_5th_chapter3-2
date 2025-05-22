@@ -1,6 +1,8 @@
 import { RepeatIcon } from '@chakra-ui/icons';
 import { Box, HStack, Text, Tooltip } from '@chakra-ui/react';
 
+import { Event } from '../types';
+
 const REPEAT_TYPE_LABELS = {
   daily: '매일',
   weekly: '매주',
@@ -10,22 +12,7 @@ const REPEAT_TYPE_LABELS = {
 } as const;
 
 interface RepeatProps {
-  event: {
-    id: string;
-    title: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    description: string;
-    location: string;
-    category: string;
-    repeat: {
-      type: keyof typeof REPEAT_TYPE_LABELS;
-      interval: number;
-      endDate?: string;
-    };
-    notificationTime: number;
-  };
+  event: Event;
 }
 
 export const RepeatSchedule = ({ event }: RepeatProps) => {
