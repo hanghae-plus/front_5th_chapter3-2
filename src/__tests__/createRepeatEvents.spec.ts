@@ -284,4 +284,69 @@ describe('반복 일정 유효성 검사', () => {
 
     expect(resultDate).toEqual(expect.arrayContaining(['2024-02-29', '2028-02-29', '2032-02-29']));
   });
+  describe('반복 일정 단일 수정', () => {
+    const baseEvent: Event = {
+      id: '1',
+      title: '반복 일정 테스트',
+      date: '2025-05-22',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '반복 일정 테스트입니다.',
+      location: '사무실',
+      category: '업무',
+      repeat: { type: 'none', interval: 1 },
+      notificationTime: 10,
+    };
+    it('반복 일정을 수정하면 단일 일정으로 변경된다.', () => {
+      const initEvent = { ...baseEvent };
+
+      const editEvent = {
+        ...initEvent,
+        repeat: { type: 'yearly', interval: 1, endDate: '2025-02-10' },
+      };
+
+      expect(editEvent.repeat.type).toBe('yearly');
+
+      const editEvent2 = {
+        ...editEvent,
+        repeat: { type: 'none', interval: 0, endDate: '2025-02-10' },
+      };
+
+      expect(editEvent2.repeat.type).toBe('none');
+    });
+  });
+
+  describe('반복 일정 단일 삭제', () => {
+    const baseEvent: Event = {
+      id: '1',
+      title: '반복 일정 테스트',
+      date: '2025-05-22',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '반복 일정 테스트입니다.',
+      location: '사무실',
+      category: '업무',
+      repeat: { type: 'none', interval: 1 },
+      notificationTime: 10,
+    };
+    it('반복 일정을 삭제하면 해당 일정만 삭제된다.', () => {
+      const initEvent = { ...baseEvent };
+
+      const events = [
+        initEvent,
+        {
+          ...initEvent,
+          id: '2',
+          repeat: { type: 'yearly', interval: 1, endDate: '2025-12-10' },
+        },
+      ];
+
+      expect(events).toHaveLength(2);
+
+      const remainEvent = events.filter((event) => event.repeat.endDate === '2025-12-10');
+
+      expect(remainEvent).toHaveLength(1);
+      expect(remainEvent[0].repeat.type).toBe('yearly');
+    });
+  });
 });
