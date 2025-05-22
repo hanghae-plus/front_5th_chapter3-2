@@ -1,11 +1,17 @@
 {
   "compilerOptions": {
-    "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "ES2020",
+    "target": "ES6",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["es6", "dom", "dom.iterable", "scripthost", "ES2018"],
+    "rootDir": "./",
     "module": "ESNext",
+    "baseUrl": ".",
+    "paths": {
+      // paths alias관련 설정은 아래에 작성
+      "@/*": ["src/*"]
+    },
+    "outDir": "./build",
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -18,11 +24,15 @@
     "jsx": "react-jsx",
 
     /* Linting */
+    "declaration": true,
     "strict": true,
+    "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "types": ["vitest/globals"]
   },
-  "include": ["src"]
+  "include": ["src/**/*", "server_e2e.js"],
+  "exclude": ["node_modules"]
 }

@@ -4,14 +4,29 @@ import { events } from '../__mocks__/response/events.json' assert { type: 'json'
 import { Event } from '../types';
 
 export const handlers = [
-  http.get('/api/events', () => {
-    return HttpResponse.json({ events });
-  }),
+  http.get('/api/events', () => HttpResponse.json({ events })),
 
   http.post('/api/events', async ({ request }) => {
     const newEvent = (await request.json()) as Event;
     newEvent.id = String(events.length + 1);
     return HttpResponse.json(newEvent, { status: 201 });
+  }),
+
+  http.post('/api/events-list', async ({ request }) => {
+    const repeatId = `repeat-${events.length + 1}`;
+    const { events: eventsToAdd } = (await request.json()) as { events: Event[] };
+    const newEvents = eventsToAdd.map((event) => {
+      const isRepeatEvent = event.repeat.type !== 'none';
+      return {
+        ...event,
+        repeat: {
+          ...event.repeat,
+          id: isRepeatEvent ? repeatId : undefined,
+        },
+      };
+    });
+
+    return HttpResponse.json(newEvents, { status: 201 });
   }),
 
   http.put('/api/events/:id', async ({ params, request }) => {
@@ -24,6 +39,24 @@ export const handlers = [
     }
 
     return new HttpResponse(null, { status: 404 });
+  }),
+
+  http.put('/api/events-list', async ({ request }) => {
+    const { events: eventsToUpdate } = (await request.json()) as { events: Event[] };
+
+    let isUpdated = false;
+    eventsToUpdate.forEach((event) => {
+      const eventIndex = events.findIndex((e) => e.id === event.id);
+      if (eventIndex > -1) {
+        isUpdated = true;
+      }
+    });
+
+    if (!isUpdated) {
+      return new HttpResponse('Event not found', { status: 404 });
+    }
+
+    return HttpResponse.json(events);
   }),
 
   http.delete('/api/events/:id', ({ params }) => {

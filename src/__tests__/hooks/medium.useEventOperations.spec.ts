@@ -106,15 +106,11 @@ it('존재하는 이벤트 삭제 시 에러없이 아이템이 삭제된다.', 
 
   await act(() => Promise.resolve(null));
 
-  expect(result.current.events).toEqual([]);
+  expect(result.current.events.filter((event) => event.id === '1')).toEqual([]);
 });
 
 it("이벤트 로딩 실패 시 '이벤트 로딩 실패'라는 텍스트와 함께 에러 토스트가 표시되어야 한다", async () => {
-  server.use(
-    http.get('/api/events', () => {
-      return new HttpResponse(null, { status: 500 });
-    })
-  );
+  server.use(http.get('/api/events', () => new HttpResponse(null, { status: 500 })));
 
   renderHook(() => useEventOperations(true));
 
@@ -161,11 +157,7 @@ it("존재하지 않는 이벤트 수정 시 '일정 저장 실패'라는 토스
 });
 
 it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되며 이벤트 삭제가 실패해야 한다", async () => {
-  server.use(
-    http.delete('/api/events/:id', () => {
-      return new HttpResponse(null, { status: 500 });
-    })
-  );
+  server.use(http.delete('/api/events/:id', () => new HttpResponse(null, { status: 500 })));
 
   const { result } = renderHook(() => useEventOperations(false));
 
@@ -183,4 +175,91 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
   });
 
   expect(result.current.events).toHaveLength(1);
+});
+
+describe('반복 일정 기능', () => {
+  it('반복 일정 저장 시 입력한 정보를 반영한 반복 일정이 생성된다.', async () => {
+    setupMockHandlerCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '반복 일정',
+      date: '2025-01-01',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '반복 일정',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endType: 'date', endDate: '2025-01-02' },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    expect(result.current.events).toEqual([
+      { ...newEvent, id: '1', repeat: { ...newEvent.repeat, id: 'repeat-1' } },
+      { ...newEvent, date: '2025-01-02', id: '2', repeat: { ...newEvent.repeat, id: 'repeat-1' } },
+    ]);
+  });
+
+  it('반복 일정을 수정할 경우 단일 일정으로 변경된다.', async () => {
+    setupMockHandlerUpdating();
+
+    const { result } = renderHook(() => useEventOperations(true));
+
+    await act(() => Promise.resolve(null));
+
+    // 기존 일정 4개 (0, 1: 반복 X, 2, 3: 반복)
+    expect(result.current.events.length).toBe(4);
+    const repeatEvents = result.current.events.filter((event) => event.repeat.type !== 'none');
+    expect(repeatEvents.length).toBe(2);
+
+    const updatedEvent: Event = { ...repeatEvents[0] };
+    updatedEvent.title = '수정된 반복 일정';
+    updatedEvent.date = '2025-09-20';
+
+    await act(async () => {
+      await result.current.saveEvent(updatedEvent);
+    });
+
+    expect(result.current.events.length).toBe(4);
+    // 수정된 반복 일정(index 2)은 단일 일정이 된다.
+    expect(result.current.events[2]).toEqual({
+      ...updatedEvent,
+      repeat: { type: 'none', interval: 0 },
+    });
+    // 수정되지 않은 반복 일정(index 3)은 그대로 유지된다.
+    expect(result.current.events[3]).toEqual(repeatEvents[1]);
+  });
+
+  it('반복 일정을 삭제하면 해당 반복 일정만 삭제되어야 한다.', async () => {
+    setupMockHandlerDeletion();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    // 반복 일정 2개
+    const repeatEvents = result.current.events.filter((event) => event.repeat.type !== 'none');
+    expect(repeatEvents.length).toBe(2);
+    expect(repeatEvents[0].repeat.id).toBe(repeatEvents[1].repeat.id);
+
+    // 삭제 버튼 클릭
+    await act(async () => {
+      result.current.deleteEvent('2');
+    });
+
+    // 반복 일정 1개 남음
+    const afterDeleteRepeatEvents = result.current.events.filter(
+      (event) => event.repeat.type !== 'none'
+    );
+    expect(afterDeleteRepeatEvents.length).toBe(1);
+    expect(afterDeleteRepeatEvents[0].repeat.id).toBe(repeatEvents[0].repeat.id);
+  });
 });
