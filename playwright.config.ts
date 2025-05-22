@@ -28,12 +28,19 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
     headless: true,
   },
-  webServer: {
-    command: 'pnpm dev', // dev 서버 자동 실행
-    port: 5173,
-    reuseExistingServer: true,
-    timeout: 30000,
-  },
+  webServer: [
+    {
+      command: 'pnpm dev:frontend', // dev 서버 자동 실행
+      port: 5173,
+      reuseExistingServer: !process.env.CI,
+      timeout: 30000,
+    },
+    {
+      command: 'node server_e2e.js',
+      port: 3000,
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
   /* Configure projects for major browsers */
   projects: [
     {
