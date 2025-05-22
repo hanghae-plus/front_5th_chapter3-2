@@ -499,7 +499,7 @@ function App() {
                     <Text>{event.location}</Text>
                     <Text>카테고리: {event.category}</Text>
                     {event.repeat.type !== 'none' && (
-                      <Text>
+                      <Text data-testid="repeat-text">
                         반복: {event.repeat.interval}
                         {event.repeat.type === 'daily' && '일'}
                         {event.repeat.type === 'weekly' && '주'}
