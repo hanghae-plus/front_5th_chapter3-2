@@ -23,6 +23,7 @@ export default mergeConfig(
   }),
   defineTestConfig({
     test: {
+      exclude: ['e2e/**', 'integration/**', 'node_modules/**'],
       globals: true,
       environment: 'jsdom',
       setupFiles: './src/setupTests.ts',

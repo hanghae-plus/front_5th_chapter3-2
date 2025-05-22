@@ -6,6 +6,7 @@ export interface RepeatInfo {
   endDate?: string;
   count?: number;
   excludeDates?: string[];
+  daysOfWeek?: string[];
 }
 
 export interface EventForm {

@@ -38,11 +38,13 @@ const EventList = ({
                 <VStack align="start">
                   <HStack>
                     {isNotified && <BellIcon color="red.500" />}
+                    <Text fontWeight="bold" fontSize="lg">
+                      {event.repeat?.interval !== 0 && ' 🔁'}
+                    </Text>
                     <Text
                       fontWeight={isNotified ? 'bold' : 'normal'}
                       color={isNotified ? 'red.500' : 'inherit'}
                     >
-                      {event.repeat?.interval !== 0 && ' 🔁\n'}
                       {event.title}
                     </Text>
                   </HStack>
@@ -83,7 +85,9 @@ const EventList = ({
                     aria-label="Delete event"
                     data-testid={`delete-event-button-${event.id}`}
                     icon={<DeleteIcon />}
-                    onClick={() => deleteEvent(event.id)}
+                    onClick={() => {
+                      if (event.id) deleteEvent(event.id);
+                    }}
                   />
                 </HStack>
               </HStack>
