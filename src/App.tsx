@@ -155,7 +155,9 @@ function App() {
       repeat: {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
+        endType: repeatEndType || 'date',
+        endDate: repeatEndType === 'date' ? repeatEndDate : undefined,
+        endCount: repeatEndType === 'count' ? repeatEndCount : 1,
       },
       notificationTime,
     };
@@ -206,7 +208,9 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
-                            {event.repeat.type !== 'none' && <RepeatClockIcon fontSize="xs" />}
+                            {event.repeat.type !== 'none' && (
+                              <RepeatClockIcon fontSize="xs" data-testid="repeat-icon" />
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -277,7 +281,7 @@ function App() {
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
                                   {event.repeat.type !== 'none' && (
-                                    <RepeatClockIcon fontSize="xs" />
+                                    <RepeatClockIcon fontSize="xs" data-testid="repeat-icon" />
                                   )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
@@ -366,7 +370,13 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              isChecked={isRepeating}
+              onChange={(e) => {
+                setIsRepeating(e.target.checked);
+                setRepeatType(e.target.checked ? 'daily' : 'none');
+              }}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
@@ -591,8 +601,8 @@ function App() {
                       type: isRepeating ? repeatType : 'none',
                       interval: repeatInterval,
                       endType: repeatEndType || 'date',
-                      endDate: repeatEndDate || undefined,
-                      endCount: repeatEndCount || 1,
+                      endDate: repeatEndType === 'date' ? repeatEndDate : undefined,
+                      endCount: repeatEndType === 'count' ? repeatEndCount : undefined,
                     },
                     notificationTime,
                   });

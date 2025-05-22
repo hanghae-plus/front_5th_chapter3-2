@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "server": "node server.js",
-    "server:watch": "node --watch server.js",
+    "server:watch": "node --watch server_e2e.js",
     "start": "vite",
     "dev": "concurrently \"pnpm run server:watch\" \"pnpm run start\"",
     "test": "vitest",
@@ -13,7 +13,10 @@
     "test:coverage": "vitest run --coverage",
     "build": "tsc -b && vite build",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
-    "format": "prettier --write **/*.{ts,tsx}"
+    "format": "prettier --write **/*.{ts,tsx}",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:codegen": "playwright codegen"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -34,9 +37,11 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
+    "@playwright/test": "^1.52.0",
     "@testing-library/jest-dom": "^6.4.5",
     "@testing-library/react": "^15.0.7",
     "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.15.21",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
@@ -58,6 +63,7 @@
     "eslint-plugin-vitest": "^0.2.8",
     "globals": "^16.1.0",
     "jsdom": "^25.0.1",
+    "playwright": "^1.52.0",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.32.1",
     "vite": "^5.3.1",
