@@ -94,26 +94,26 @@ describe('반복 일정', () => {
   it('설정한 반복 간격에 따라 일정이 올바른 날짜에 생성되는지 확인한다.', async () => {
     vi.setSystemTime(new Date('2025-07-01 08:49:59'));
 
-    setupMockHandlerCreation();
+    setupMockHandlerRepeatCreation();
 
     const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
 
     await saveRepeatSchedule(user, {
-      title: '매월 반복 일정',
+      title: '반복 간격 일정',
       date: '2025-05-01',
       startTime: '09:00',
       endTime: '10:00',
       description: '매월 반복 일정',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'monthly', interval: 2 },
+      repeat: { type: 'monthly', interval: 2, endDate: '2025-09-30' },
     });
 
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getByText('2025-07-01')).toBeInTheDocument();
-    expect(eventList.getByText('매월 반복 일정')).toBeInTheDocument();
+    expect(eventList.getByText('반복 간격 일정')).toBeInTheDocument();
   });
 
   it("반복 종료 조건이 '2025-09-30까지'로 설정된 경우, 해당 날짜 이후에는 반복 일정이 생성되지 않는다.", async () => {

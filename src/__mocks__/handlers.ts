@@ -66,17 +66,32 @@ function expandRepeatingEvent(event: Event, repeatId: string): Event[] {
   const interval = repeat.interval || 1;
   const startDate = new Date(event.date);
   const endDate = new Date(repeat.endDate!);
+  const originalDay = startDate.getDate();
+
   let currentDate = new Date(startDate);
 
   while (currentDate <= endDate) {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const day = currentDate.getDate();
-
     let adjustedDate = new Date(currentDate);
 
-    if (repeat.type === 'yearly' && month === 1 && day === 29 && !isLeapYear(year)) {
-      adjustedDate = new Date(year, 1, 28);
+    // 윤년 처리 (2월 29일 → 2월 28일)
+    if (
+      repeat.type === 'yearly' &&
+      startDate.getMonth() === 1 &&
+      startDate.getDate() === 29 &&
+      !isLeapYear(currentDate.getFullYear())
+    ) {
+      adjustedDate = new Date(currentDate.getFullYear(), 1, 28);
+    }
+
+    // 31일이 없는 달 보정
+    if (repeat.type === 'monthly' || repeat.type === 'yearly') {
+      const daysInMonth = new Date(
+        adjustedDate.getFullYear(),
+        adjustedDate.getMonth() + 1,
+        0
+      ).getDate();
+      const correctedDay = Math.min(originalDay, daysInMonth);
+      adjustedDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth(), correctedDay);
     }
 
     result.push({
@@ -89,6 +104,9 @@ function expandRepeatingEvent(event: Event, repeatId: string): Event[] {
       },
     });
 
+    // 다음 반복 날짜 계산
+    const temp = new Date(currentDate);
+
     switch (repeat.type) {
       case 'daily':
         currentDate.setDate(currentDate.getDate() + interval);
@@ -97,24 +115,12 @@ function expandRepeatingEvent(event: Event, repeatId: string): Event[] {
         currentDate.setDate(currentDate.getDate() + 7 * interval);
         break;
       case 'monthly':
+        currentDate = new Date(temp);
+        currentDate.setDate(1);
         currentDate.setMonth(currentDate.getMonth() + interval);
         break;
       case 'yearly':
-        // eslint-disable-next-line no-case-declarations
-        const originalMonth = startDate.getMonth();
-        // eslint-disable-next-line no-case-declarations
-        const originalDate = startDate.getDate();
-
         currentDate.setFullYear(currentDate.getFullYear() + interval);
-
-        if (
-          originalMonth === 1 &&
-          originalDate === 29 &&
-          (currentDate.getMonth() !== 1 || currentDate.getDate() !== 29)
-        ) {
-          currentDate = new Date(currentDate.getFullYear(), 1, 28);
-        }
-
         break;
     }
   }
