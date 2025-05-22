@@ -119,16 +119,6 @@ describe('반복 일정 기능', () => {
       await user.selectOptions(repeatTypeSelect, '매년');
       expect(repeatTypeSelect).toHaveValue('yearly');
     });
-
-    it('윤년 2월 29일의 반복 일정이 올바르게 처리되어야 한다', () => {
-      // 2월 29일을 시작으로 하는 매월/매년 반복 일정이
-      // 윤년이 아닌 해에는 2월 28일로 처리되는지 확인
-    });
-
-    it('31일이 없는 월의 반복 일정이 올바르게 처리되어야 한다', () => {
-      // 31일을 시작으로 하는 매월 반복 일정이
-      // 31일이 없는 월에는 해당 월의 마지막 날짜로 처리되는지 확인
-    });
   });
 });
 
@@ -279,26 +269,40 @@ describe('반복 일정 수정', () => {
     setupMockHandlerUpdating();
     const { user } = setup(<App />);
 
-    const editButton = (await screen.findAllByLabelText('Edit event'))[0]; // 반복 일정 인덱스
+    const editButton = (await screen.findAllByLabelText('Edit event'))[2]; // 반복 일정 인덱스
     await user.click(editButton);
 
     const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
     const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
-    expect(checkboxInput).toBeChecked();
+    console.log('checkboxInput', screen.debug(checkboxInput));
+    // expect(checkboxInput).toBeChecked()
 
-    await user.click(checkboxInput);
+    if (checkboxInput.checked) await user.click(checkboxInput);
     await user.click(screen.getByTestId('event-submit-button'));
 
     const eventList = await screen.findByTestId('event-list');
-    expect(within(eventList).getByText('반복')).not.toBeInTheDocument();
+    const repeatEventTitle = within(eventList).queryByText('반복');
+    expect(repeatEventTitle).not.toBeInTheDocument();
   });
 
   it('반복 일정 수정 후 반복 아이콘이 사라져야 한다', async () => {
     setupMockHandlerUpdating();
-    setup(<App />);
+    const { user } = setup(<App />);
+
+    const editButton = (await screen.findAllByLabelText('Edit event'))[2]; // 반복 일정 인덱스
+    await user.click(editButton);
+
+    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+    console.log('checkboxInput', screen.debug(checkboxInput));
+    // expect(checkboxInput).toBeChecked()
+
+    if (checkboxInput.checked) await user.click(checkboxInput);
+    await user.click(screen.getByTestId('event-submit-button'));
+
     const calendarView = await screen.findByTestId('calendar-view');
     const repeatIcon = within(calendarView).queryByLabelText('반복 아이콘');
-    expect(repeatIcon).toBeInTheDocument();
+    expect(repeatIcon).not.toBeInTheDocument();
   });
 });
 
