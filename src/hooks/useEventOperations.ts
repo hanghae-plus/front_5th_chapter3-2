@@ -29,17 +29,49 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
       let response;
+      const isRepeating = eventData.repeat.type !== 'none';
+      const id = 'id' in eventData ? eventData.id : undefined;
+
       if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
+        const originalEvent = events.find((e) => e.id === id);
+
+        // 이벤트가 존재하지 않으면 저장 실패로 처리
+        if (!originalEvent) {
+          throw new Error('수정하려는 이벤트가 존재하지 않습니다.');
+        }
+
+        const wasRepeating = originalEvent?.repeat.type !== 'none';
+
+        if (wasRepeating && !isRepeating) {
+          // 기존 반복 일정 삭제
+          await deleteEvent(id as string);
+
+          // 단일 일정 추가
+          response = await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        } else if (isRepeating) {
+          response = await fetch('/api/events-list', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ events: [eventData] }),
+          });
+        } else {
+          response = await fetch(`/api/events/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        }
       } else {
-        response = await fetch('/api/events', {
+        const endpoint = isRepeating ? '/api/events-list' : '/api/events';
+        const payload = isRepeating ? { events: [eventData] } : eventData;
+        response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
+          body: JSON.stringify(payload),
         });
       }
 
@@ -66,9 +98,24 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const deleteEvent = async (id: string) => {
+  const deleteEvent = async (id: string, type: string = 'none') => {
     try {
-      const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      const isRepeating = type !== 'none';
+      const baseId = id.includes('_') ? id.split('_')[0] : id;
+      const endpoint = isRepeating ? '/api/events-list' : `/api/events/${baseId}`;
+      const options = {
+        body: '',
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      };
+
+      if (isRepeating) {
+        options.body = JSON.stringify({ eventIds: [baseId] });
+      }
+
+      const response = await fetch(endpoint, options);
+
+      console.log(endpoint, options, id);
 
       if (!response.ok) {
         throw new Error('Failed to delete event');

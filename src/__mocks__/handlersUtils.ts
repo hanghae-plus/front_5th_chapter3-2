@@ -92,3 +92,76 @@ export const setupMockHandlerDeletion = () => {
     })
   );
 };
+
+export const setupMockHandlerRepeat = () => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '반복 일정',
+      date: '2025-05-03',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '반복 테스트',
+      location: '회의실 1',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-05-05',
+      },
+      notificationTime: 0,
+    },
+    {
+      id: '2',
+      title: '반복 일정 2',
+      date: '2025-05-07',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복 테스트 2',
+      location: '회의실 2',
+      category: '업무',
+      repeat: {
+        type: 'weekly',
+        interval: 1,
+        endDate: '2025-05-31',
+      },
+      notificationTime: 0,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.post('/api/events', async ({ request }) => {
+      const newEvent = (await request.json()) as Event;
+      newEvent.id = String(mockEvents.length + 1);
+      mockEvents.push(newEvent);
+      return HttpResponse.json(newEvent, { status: 201 });
+    }),
+    http.put('/api/events-list', async ({ request }) => {
+      const { events } = (await request.json()) as { events: Event[] };
+      events.forEach((event) => {
+        const index = mockEvents.findIndex((e) => e.id === event.id);
+        mockEvents[index] = { ...mockEvents[index], ...event };
+      });
+      return HttpResponse.json(events, { status: 200 });
+    }),
+    http.delete('/api/events-list', async ({ request }) => {
+      const { eventIds } = (await request.json()) as { eventIds: string[] };
+      eventIds.forEach((id) => {
+        const index = mockEvents.findIndex((e) => e.id === id);
+        if (index !== -1) mockEvents.splice(index, 1);
+      });
+      return new HttpResponse(null, { status: 204 });
+    }),
+
+    http.delete('/api/events/:id', ({ params }) => {
+      const { id } = params;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      mockEvents.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
+    })
+  );
+};
