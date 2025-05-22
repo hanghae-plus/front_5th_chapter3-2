@@ -4,6 +4,9 @@ export interface RepeatInfo {
   type: RepeatType;
   interval: number;
   endDate?: string;
+  count?: number;
+  id?: string; // 반복 이벤트 ID
+  exceptions?: string[]; // 예외 날짜 목록 추가
 }
 
 export interface EventForm {

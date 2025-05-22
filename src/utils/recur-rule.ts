@@ -1,24 +1,22 @@
-/**
- * 구글 캘린더와 유사한 간단한 반복 규칙 엔진
- */
-
 type Frequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 // 월별 반복 패턴 확장 - 일반 n번째 요일 또는 마지막 요일
 type MonthlyPattern = 'nthDay' | 'lastDay';
 
-interface DateRuleOptions {
+interface RecurRuleOptions {
   frequency: Frequency;
   interval: number; // 반복 간격 (1 이상)
   start: Date; // 반복 시작일
-  until: Date; // 반복 종료일 (포함)
+  until?: Date; // 반복 종료일 (포함) - count와 상호 배타적
+  count?: number; // 반복 횟수 (1 이상) - until과 상호 배타적
 }
 
-export class DateRule {
+export class RecurRule {
   private frequency: Frequency;
   private interval: number;
   private start: Date;
-  private until: Date;
+  private until?: Date;
+  private count?: number;
   private baseDate: Date;
   private startDayOfWeek?: number;
   private startWeekOfMonth?: number;
@@ -29,7 +27,7 @@ export class DateRule {
    * 반복 일정 규칙 생성자
    * @param options - 반복 규칙 옵션
    */
-  constructor(options: DateRuleOptions) {
+  constructor(options: RecurRuleOptions) {
     if (
       !options.frequency ||
       !['daily', 'weekly', 'monthly', 'yearly'].includes(options.frequency)
@@ -45,12 +43,21 @@ export class DateRule {
       throw new Error('유효한 start 날짜가 필요합니다');
     }
 
-    if (!(options.until instanceof Date) || isNaN(options.until.getTime())) {
-      throw new Error('유효한 until 날짜가 필요합니다');
+    // until과 count 중 하나만 설정되어야 함
+    if (options.until && options.count) {
+      throw new Error('until과 count 중 하나만 설정할 수 있습니다');
     }
 
-    // 날짜 비교 시 시간 정보 제거
-    if (this._normalizeDate(options.start) > this._normalizeDate(options.until)) {
+    if (typeof options.count === 'number' && options.count < 1) {
+      throw new Error('count는 1 이상의 정수여야 합니다');
+    }
+
+    if (!options.until && !options.count) {
+      throw new Error('until 또는 count 중 하나는 반드시 설정해야 합니다');
+    }
+
+    // until이 있는 경우 날짜 비교 시 시간 정보 제거
+    if (options.until && this._normalizeDate(options.start) > this._normalizeDate(options.until)) {
       throw new Error('start 날짜는 until 날짜보다 이전이어야 합니다');
     }
 
@@ -63,9 +70,15 @@ export class DateRule {
 
     // 시간 정보가 제거된 날짜 객체로 초기화
     this.start = this._normalizeDate(options.start);
-    this.until = this._normalizeDate(options.until);
-    // until은 해당 날짜의 마지막 시점(23:59:59)으로 설정하여 종료일 포함
-    this.until.setHours(23, 59, 59, 999);
+
+    // until 또는 count 설정
+    if (options.until) {
+      this.until = this._normalizeDate(options.until);
+      // until은 해당 날짜의 마지막 시점(23:59:59)으로 설정하여 종료일 포함
+      this.until.setHours(23, 59, 59, 999);
+    } else {
+      this.count = options.count;
+    }
 
     // 첫 날짜의 기준점을 저장
     this.baseDate = this._normalizeDate(options.start);
@@ -115,7 +128,44 @@ export class DateRule {
    * @returns 반복 날짜 배열
    */
   all(): Date[] {
-    return this.between(this.start, this.until);
+    if (this.count) {
+      return this.byCount(this.count);
+    } else if (this.until) {
+      return this.between(this.start, this.until);
+    } else {
+      throw new Error('종료 조건이 설정되지 않았습니다');
+    }
+  }
+
+  /**
+   * 시작일부터 지정된 횟수만큼 반복일을 반환
+   * @param count - 반복 횟수
+   * @returns 반복 날짜 배열
+   */
+  byCount(count: number): Date[] {
+    if (!Number.isInteger(count) || count < 1) {
+      throw new Error('count는 1 이상의 정수여야 합니다');
+    }
+
+    const dates: Date[] = [];
+
+    // 빈도에 따라 다른 계산 메서드 호출
+    switch (this.frequency) {
+      case 'daily':
+        this._calculateDailyOccurrencesByCount(count, dates);
+        break;
+      case 'weekly':
+        this._calculateWeeklyOccurrencesByCount(count, dates);
+        break;
+      case 'monthly':
+        this._calculateMonthlyOccurrencesByCount(count, dates);
+        break;
+      case 'yearly':
+        this._calculateYearlyOccurrencesByCount(count, dates);
+        break;
+    }
+
+    return dates;
   }
 
   /**
@@ -139,7 +189,15 @@ export class DateRule {
     endWithoutTime.setHours(23, 59, 59, 999); // 종료일은 해당 날짜의 마지막 순간으로 설정
 
     const thisStartWithoutTime = this._normalizeDate(this.start);
-    const thisUntilWithoutTime = this._normalizeDate(this.until);
+
+    // count 기반인 경우 until 날짜가 없으므로 다른 처리
+    let thisUntilWithoutTime: Date;
+    if (this.until) {
+      thisUntilWithoutTime = this._normalizeDate(this.until);
+    } else {
+      // count 기반인 경우 충분히 큰 미래 날짜를 설정
+      thisUntilWithoutTime = new Date(2100, 11, 31);
+    }
 
     // start가 this.until 이후거나 end가 this.start 이전이면 빈 배열 반환
     if (startWithoutTime > thisUntilWithoutTime || endWithoutTime < thisStartWithoutTime) {
@@ -176,46 +234,51 @@ export class DateRule {
   }
 
   /**
-   * 날짜가 해당 월의 몇 번째 주인지 계산
+   * 날짜가 해당 월의 몇 번째 주인지 계산 (Google Calendar 방식)
    * @param date - 계산할 날짜
-   * @returns 해당 월의 몇 번째 주인지 (1-5)
+   * @returns 해당 월의 몇 번째 주인지 (1-6)
    * @private
    */
   private _getWeekOfMonth(date: Date): number {
+    // 해당 월의 1일
     const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-    const dayOfWeek = firstDayOfMonth.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
 
-    // 날짜의 일(day)에 첫 날의 요일을 더하고 7로 나눈 몫에 1을 더하면 해당 월의 몇 번째 주인지 계산할 수 있음
-    return Math.ceil((date.getDate() + dayOfWeek) / 7);
+    // 해당 날짜와 같은 요일인 첫 번째 날 찾기
+    const targetDayOfWeek = date.getDay();
+    const firstDayOfWeek = firstDayOfMonth.getDay();
+
+    // 해당 요일의 첫 번째 발생일 계산
+    let firstOccurrence = 1 + ((targetDayOfWeek - firstDayOfWeek + 7) % 7);
+
+    // 현재 날짜가 몇 번째 해당 요일인지 계산
+    const dayOfMonth = date.getDate();
+    return Math.floor((dayOfMonth - firstOccurrence) / 7) + 1;
   }
 
   /**
    * 날짜가 해당 월의 마지막 특정 요일인지 확인
-   * 예: 5월의 마지막 월요일, 6월의 마지막 화요일 등
    * @param date - 확인할 날짜
    * @returns 해당 월의 마지막 특정 요일이면 true, 아니면 false
    * @private
    */
   private _isLastDayOfWeekInMonth(date: Date): boolean {
-    const dayOfWeek = date.getDay();
-    const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    const year = date.getFullYear();
+    const month = date.getMonth();
 
-    // 현재 날짜
-    const currentDay = date.getDate();
+    // 현재 날짜에서 7일 후
+    const nextWeekSameDay = new Date(date);
+    nextWeekSameDay.setDate(date.getDate() + 7);
 
-    // 같은 요일 중 다음 날짜를 계산
-    const nextSameDayOfWeekDate = currentDay + 7;
-
-    // 다음 같은 요일이 다음 달이면 현재 날짜는 이번 달의 마지막 해당 요일
-    return nextSameDayOfWeekDate > lastDayOfMonth;
+    // 7일 후가 다음 달이면 현재 날짜는 이번 달의 마지막 해당 요일
+    return nextWeekSameDay.getMonth() !== month;
   }
 
   /**
-   * 특정 월의 n번째 요일 찾기
+   * 특정 월의 n번째 요일 찾기 (Google Calendar 방식)
    * @param year - 연도
    * @param month - 월 (0-11)
    * @param dayOfWeek - 요일 (0: 일요일, ..., 6: 토요일)
-   * @param weekOfMonth - 월의 몇 번째 주 (1-5)
+   * @param weekOfMonth - 월의 몇 번째 주 (1-6)
    * @returns 해당하는 날짜 또는 null (해당 월에 n번째 요일이 없는 경우)
    * @private
    */
@@ -227,18 +290,21 @@ export class DateRule {
   ): Date | null {
     // 해당 월의 첫 날
     const firstDayOfMonth = new Date(year, month, 1);
+    const firstDayOfWeek = firstDayOfMonth.getDay();
 
-    // 첫 번째 특정 요일까지의 일수 계산
-    let daysDiff = dayOfWeek - firstDayOfMonth.getDay();
-    if (daysDiff < 0) daysDiff += 7;
+    // 첫 번째 해당 요일까지의 일수 계산
+    let daysToFirstOccurrence = dayOfWeek - firstDayOfWeek;
+    if (daysToFirstOccurrence < 0) {
+      daysToFirstOccurrence += 7;
+    }
 
-    // n번째 특정 요일의 날짜 계산
-    const nthDayDate = 1 + daysDiff + (weekOfMonth - 1) * 7;
+    // n번째 해당 요일의 날짜 계산
+    const targetDate = 1 + daysToFirstOccurrence + (weekOfMonth - 1) * 7;
 
     // 해당 월에 그 날짜가 존재하는지 확인
-    const result = new Date(year, month, nthDayDate);
+    const result = new Date(year, month, targetDate);
     if (result.getMonth() !== month) {
-      // 해당 월을 넘어간 경우 (예: 5번째 화요일이 없는 경우)
+      // 해당 월을 넘어간 경우 (예: 6번째 화요일이 없는 경우)
       return null;
     }
 
@@ -275,13 +341,136 @@ export class DateRule {
   }
 
   /**
-   * 일별 반복 계산
+   * 일별 반복 계산 (횟수 기반)
+   * @param count - 반복 횟수
+   * @param dates - 결과를 저장할 배열
+   * @private
+   */
+  private _calculateDailyOccurrencesByCount(count: number, dates: Date[]): void {
+    let currentDate = new Date(this.baseDate);
+
+    for (let i = 0; i < count; i++) {
+      dates.push(this._applyOriginalTime(currentDate));
+      currentDate.setDate(currentDate.getDate() + this.interval);
+    }
+  }
+
+  /**
+   * 주별 반복 계산 (횟수 기반)
+   * @param count - 반복 횟수
+   * @param dates - 결과를 저장할 배열
+   * @private
+   */
+  private _calculateWeeklyOccurrencesByCount(count: number, dates: Date[]): void {
+    let currentDate = new Date(this.baseDate);
+
+    for (let i = 0; i < count; i++) {
+      dates.push(this._applyOriginalTime(currentDate));
+      currentDate.setDate(currentDate.getDate() + this.interval * 7);
+    }
+  }
+
+  /**
+   * 월별 반복 계산 (횟수 기반)
+   * @param count - 반복 횟수
+   * @param dates - 결과를 저장할 배열
+   * @private
+   */
+  private _calculateMonthlyOccurrencesByCount(count: number, dates: Date[]): void {
+    let currentYear = this.baseDate.getFullYear();
+    let currentMonth = this.baseDate.getMonth();
+    let occurrenceCount = 0;
+
+    while (occurrenceCount < count) {
+      let occurrenceDate: Date | null = null;
+
+      // 패턴에 따라 다른 계산 방식 적용
+      if (this.monthlyPattern === 'lastDay') {
+        // 마지막 특정 요일 계산
+        occurrenceDate = this._findLastDayOfWeekInMonth(
+          currentYear,
+          currentMonth,
+          this.startDayOfWeek!
+        );
+      } else {
+        // n번째 특정 요일 계산
+        occurrenceDate = this._findNthDayOfWeek(
+          currentYear,
+          currentMonth,
+          this.startDayOfWeek!,
+          this.startWeekOfMonth!
+        );
+      }
+
+      if (occurrenceDate) {
+        dates.push(this._applyOriginalTime(occurrenceDate));
+        occurrenceCount++;
+      }
+
+      // 다음 간격으로 이동
+      currentMonth += this.interval;
+      if (currentMonth >= 12) {
+        currentYear += Math.floor(currentMonth / 12);
+        currentMonth %= 12;
+      }
+    }
+  }
+
+  /**
+   * 연별 반복 계산 (횟수 기반)
+   * @param count - 반복 횟수
+   * @param dates - 결과를 저장할 배열
+   * @private
+   */
+  private _calculateYearlyOccurrencesByCount(count: number, dates: Date[]): void {
+    const baseMonth = this.baseDate.getMonth();
+    const baseDay = this.baseDate.getDate();
+    let currentYear = this.baseDate.getFullYear();
+    let occurrenceCount = 0;
+
+    while (occurrenceCount < count) {
+      let occurrenceDate: Date | null = null;
+
+      // 2월 29일 특수 케이스 처리
+      if (baseMonth === 1 && baseDay === 29) {
+        const isLeapYear =
+          (currentYear % 4 === 0 && currentYear % 100 !== 0) || currentYear % 400 === 0;
+        if (isLeapYear) {
+          occurrenceDate = new Date(currentYear, baseMonth, baseDay);
+        }
+      } else {
+        occurrenceDate = new Date(currentYear, baseMonth, baseDay);
+      }
+
+      if (occurrenceDate) {
+        dates.push(this._applyOriginalTime(occurrenceDate));
+        occurrenceCount++;
+      }
+
+      currentYear += this.interval;
+    }
+  }
+
+  /**
+   * 일별 반복 계산 (날짜 범위 기반)
    * @param start - 범위 시작일
    * @param end - 범위 종료일
    * @param dates - 결과를 저장할 배열
    * @private
    */
   private _calculateDailyOccurrences(start: Date, end: Date, dates: Date[]): void {
+    // count 기반인 경우 특별 처리
+    if (this.count) {
+      const allOccurrences = this.byCount(this.count);
+      const filteredOccurrences = allOccurrences.filter(
+        (date) =>
+          this._normalizeDate(date) >= this._normalizeDate(start) &&
+          this._normalizeDate(date) <= this._normalizeDate(end)
+      );
+      dates.push(...filteredOccurrences);
+      return;
+    }
+
     // 기준일로부터 시작일까지 몇 번의 간격이 있는지 계산
     const daysDiff = Math.floor(
       (start.getTime() - this.baseDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -307,13 +496,25 @@ export class DateRule {
   }
 
   /**
-   * 주별 반복 계산
+   * 주별 반복 계산 (날짜 범위 기반)
    * @param start - 범위 시작일
    * @param end - 범위 종료일
    * @param dates - 결과를 저장할 배열
    * @private
    */
   private _calculateWeeklyOccurrences(start: Date, end: Date, dates: Date[]): void {
+    // count 기반인 경우 특별 처리
+    if (this.count) {
+      const allOccurrences = this.byCount(this.count);
+      const filteredOccurrences = allOccurrences.filter(
+        (date) =>
+          this._normalizeDate(date) >= this._normalizeDate(start) &&
+          this._normalizeDate(date) <= this._normalizeDate(end)
+      );
+      dates.push(...filteredOccurrences);
+      return;
+    }
+
     // 기준일의 요일
     const baseDayOfWeek = this.baseDate.getDay();
 
@@ -352,13 +553,25 @@ export class DateRule {
   }
 
   /**
-   * 월별 반복 계산
+   * 월별 반복 계산 (날짜 범위 기반)
    * @param start - 범위 시작일
    * @param end - 범위 종료일
    * @param dates - 결과를 저장할 배열
    * @private
    */
   private _calculateMonthlyOccurrences(start: Date, end: Date, dates: Date[]): void {
+    // count 기반인 경우 특별 처리
+    if (this.count) {
+      const allOccurrences = this.byCount(this.count);
+      const filteredOccurrences = allOccurrences.filter(
+        (date) =>
+          this._normalizeDate(date) >= this._normalizeDate(start) &&
+          this._normalizeDate(date) <= this._normalizeDate(end)
+      );
+      dates.push(...filteredOccurrences);
+      return;
+    }
+
     // 시작월 설정
     let currentYear = start.getFullYear();
     let currentMonth = start.getMonth();
@@ -417,13 +630,25 @@ export class DateRule {
   }
 
   /**
-   * 연별 반복 계산
+   * 연별 반복 계산 (날짜 범위 기반)
    * @param start - 범위 시작일
    * @param end - 범위 종료일
    * @param dates - 결과를 저장할 배열
    * @private
    */
   private _calculateYearlyOccurrences(start: Date, end: Date, dates: Date[]): void {
+    // count 기반인 경우 특별 처리
+    if (this.count) {
+      const allOccurrences = this.byCount(this.count);
+      const filteredOccurrences = allOccurrences.filter(
+        (date) =>
+          this._normalizeDate(date) >= this._normalizeDate(start) &&
+          this._normalizeDate(date) <= this._normalizeDate(end)
+      );
+      dates.push(...filteredOccurrences);
+      return;
+    }
+
     // 기준일의 월, 일
     const baseMonth = this.baseDate.getMonth();
     const baseDay = this.baseDate.getDate();

@@ -108,3 +108,71 @@ export function formatDate(currentDate: Date, day?: number) {
     fillZero(day ?? currentDate.getDate()),
   ].join('-');
 }
+
+/**
+ * 날짜 문자열에서 Date 객체 생성 시 타임존 문제 해결을 위한 유틸리티
+ * @param dateString - YYYY-MM-DD 형식의 날짜 문자열
+ * @param endOfDay - true이면 해당 날짜의 마지막 순간(23:59:59.999)으로 설정
+ * @returns 정규화된 Date 객체
+ * ex) 2025-05-22 -> 2025-05-22T00:00:00.000Z
+ */
+export function createDate(dateString: string, endOfDay = false): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+
+  // JavaScript에서 month는 0부터 시작 (1월 = 0)
+  const date = new Date(year, month - 1, day);
+
+  if (endOfDay) {
+    // 해당 날짜의 23:59:59.999로 설정 (하루의 끝)
+    date.setHours(23, 59, 59, 999);
+  } else {
+    // 해당 날짜의 00:00:00.000으로 설정 (하루의 시작)
+    date.setHours(0, 0, 0, 0);
+  }
+
+  return date;
+}
+
+/**
+ * 주어진 날짜의 월의 마지막 날짜를 문자열로 반환합니다.
+ * @param date - 날짜 객체
+ * @returns YYYY-MM-DD 형식의 문자열
+ * ex) 2025-05-22 -> 2025-05-31
+ */
+export function getLastDateStringOfMonth(date: Date): string {
+  const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+
+  return `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+}
+
+/**
+ * 주어진 날짜와 뷰에 따른 시작일과 종료일을 반환합니다.
+ * @param date - 날짜 객체
+ * @param view - 'week' 또는 'month'
+ * @returns 시작일과 종료일을 포함한 객체
+ * ex) { startDate: 2025-05-22T00:00:00.000Z, endDate: 2025-05-28T23:59:59.999Z }
+ */
+export function getDateRange(
+  date: Date,
+  view: 'week' | 'month'
+): { startDate: Date; endDate: Date } {
+  if (view === 'week') {
+    // 주 범위 계산 (일요일 ~ 토요일)
+    const weekDates = getWeekDates(date);
+    const startDate = new Date(weekDates[0]);
+    startDate.setHours(0, 0, 0, 0); // 시작일은 00:00:00.000
+
+    const endDate = new Date(weekDates[6]);
+    endDate.setHours(23, 59, 59, 999); // 종료일은 23:59:59.999
+
+    return { startDate, endDate };
+  } else {
+    // 월 범위 계산 (1일 ~ 말일)
+    const startDate = new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0);
+    const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    return { startDate, endDate };
+  }
+}
