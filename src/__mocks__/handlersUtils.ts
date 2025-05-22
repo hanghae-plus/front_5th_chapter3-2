@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import { http, HttpResponse } from 'msw';
 
 import { server } from '../setupTests';
@@ -91,4 +93,45 @@ export const setupMockHandlerDeletion = () => {
       return new HttpResponse(null, { status: 204 });
     })
   );
+};
+
+export const setupMockHandlerRecurring = () => {
+  const mockEvents: Event[] = [];
+
+  server.use(
+    http.post('/api/events-list', async ({ request }) => {
+      const { events: newEvents } = (await request.json()) as { events: Event[] };
+      const repeatId = randomUUID();
+
+      // 반복 일정 생성
+      const createdEvents = newEvents.map((event) => ({
+        ...event,
+        id: randomUUID(),
+        description: event.description || '',
+        location: event.location || '',
+        category: event.category || '',
+        notificationTime: event.notificationTime || 10,
+        repeat: {
+          ...event.repeat,
+          id: event.repeat.type !== 'none' ? repeatId : undefined,
+        },
+      }));
+
+      mockEvents.push(...createdEvents);
+      return HttpResponse.json(createdEvents, { status: 201 });
+    }),
+
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+
+    http.delete('/api/events/:id', ({ params }) => {
+      const { id } = params;
+      const idx = mockEvents.findIndex((e) => e.id === id);
+      if (idx !== -1) mockEvents.splice(idx, 1);
+      return new HttpResponse(null, { status: idx !== -1 ? 204 : 404 });
+    })
+  );
+
+  return { mockEvents };
 };

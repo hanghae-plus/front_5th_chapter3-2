@@ -40,6 +40,7 @@ import {
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
 
+import { RepeatSchedule } from './components/RepeatSchedule.tsx';
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
@@ -103,9 +104,8 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
-  );
+  const { events, saveEvent, deleteEvent, createRepeatEvent, updateRepeatEvents } =
+    useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
@@ -159,10 +159,22 @@ function App() {
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
-    } else {
-      await saveEvent(eventData);
-      resetForm();
+      return;
     }
+
+    if (eventData.repeat.type !== 'none') {
+      // 수정 중(editingEvent)이면 PUT, 아니면 POST
+      if (editingEvent) {
+        await updateRepeatEvents([eventData as Event]);
+      } else {
+        await createRepeatEvent([eventData as EventForm]);
+      }
+      resetForm();
+      return;
+    }
+
+    await saveEvent(eventData);
+    resetForm();
   };
 
   const renderWeekView = () => {
@@ -189,6 +201,12 @@ function App() {
                     .filter((event) => new Date(event.date).toDateString() === date.toDateString())
                     .map((event) => {
                       const isNotified = notifiedEvents.includes(event.id);
+
+                      // 반복 일정인 경우
+                      if (event.repeat.type !== 'none') {
+                        return <RepeatSchedule key={event.id} event={event as Event} />;
+                      }
+
                       return (
                         <Box
                           key={event.id}
@@ -258,6 +276,9 @@ function App() {
                           )}
                           {getEventsForDay(filteredEvents, day).map((event) => {
                             const isNotified = notifiedEvents.includes(event.id);
+                            if (event.repeat.type !== 'none') {
+                              return <RepeatSchedule key={event.id} event={event} />;
+                            }
                             return (
                               <Box
                                 key={event.id}
@@ -479,7 +500,7 @@ function App() {
                     <Text>{event.location}</Text>
                     <Text>카테고리: {event.category}</Text>
                     {event.repeat.type !== 'none' && (
-                      <Text>
+                      <Text data-testid="repeat-text">
                         반복: {event.repeat.interval}
                         {event.repeat.type === 'daily' && '일'}
                         {event.repeat.type === 'weekly' && '주'}
