@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import { Event, EventForm } from '../types';
 import { addRepeatingEvents } from '../utils/addRepeatingEvents';
 
+const flatEvent = (event: Event | EventForm) => {
+  if (event.repeat.type === 'none') return event;
+  return { ...event, repeat: { type: 'none', interval: 0 } };
+};
+
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
   const toast = useToast();
@@ -28,14 +33,14 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   };
 
   const saveEvent = async (eventData: Event | EventForm) => {
-    console.log('흠', eventData);
     try {
       let response;
       if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
+        const data = flatEvent(eventData);
+        response = await fetch(`/api/events/${(data as Event).id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
+          body: JSON.stringify(data),
         });
       } else {
         if (eventData.repeat.type === 'none') {
