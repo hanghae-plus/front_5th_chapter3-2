@@ -3,7 +3,6 @@ import { expect, test } from '@playwright/test';
 
 test('사용자는 캘린더에서 일정을 추가, 수정, 삭제할 수 있다', async ({ page }) => {
   await page.goto('/');
-
   //일정 추가
   await page.getByLabel('제목').fill('팀 회의');
   await page.getByLabel('날짜').fill('2025-05-20');
