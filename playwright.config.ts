@@ -8,9 +8,16 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
-  webServer: {
-    command: 'pnpm dev',
-    port: 5173,
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command: 'pnpm dev',
+      port: 5173,
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: 'node server_e2e.js',
+      port: 3000,
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });

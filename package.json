@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "server": "node server.js",
-    "server:watch": "node --watch server.js",
+    "server:watch": "node --watch server_e2e.js",
     "start": "vite",
     "dev": "concurrently \"pnpm run server:watch\" \"pnpm run start\"",
     "test": "vitest",
