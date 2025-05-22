@@ -1,5 +1,6 @@
 import { Event } from '../../types';
 import { getFilteredEvents } from '../../utils/eventUtils';
+import { isRecurringEvent, getRecurringEventIcon } from '../../utils/eventUtils.ts';
 
 describe('getFilteredEvents', () => {
   const events: Event[] = [
@@ -112,5 +113,178 @@ describe('getFilteredEvents', () => {
   it('빈 이벤트 리스트에 대해 빈 배열을 반환한다', () => {
     const result = getFilteredEvents([], '', new Date('2025-07-01'), 'month');
     expect(result).toHaveLength(0);
+  });
+});
+
+describe('getRecurringEventIcon', () => {
+  it('반복 일정은 시각적으로 구분할 수 있는 표시 함수가 있다', async () => {
+    // 각 반복 유형별 이벤트 생성
+    const dailyEvent: Event = {
+      id: 'daily-event',
+      title: '매일 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '매일 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+      notificationTime: 10,
+    };
+
+    const weeklyEvent: Event = {
+      id: 'weekly-event',
+      title: '매주 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '매주 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    const monthlyEvent: Event = {
+      id: 'monthly-event',
+      title: '매월 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '매월 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    const yearlyEvent: Event = {
+      id: 'yearly-event',
+      title: '매년 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '매년 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    // 일반 이벤트 (반복 없음)
+    const regularEvent: Event = {
+      id: 'regular-event',
+      title: '일반 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '일반 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    };
+
+    // isRecurringEvent 함수 테스트 - 반복 이벤트 여부 확인
+    expect(isRecurringEvent(dailyEvent)).toBe(true);
+    expect(isRecurringEvent(weeklyEvent)).toBe(true);
+    expect(isRecurringEvent(monthlyEvent)).toBe(true);
+    expect(isRecurringEvent(yearlyEvent)).toBe(true);
+    expect(isRecurringEvent(regularEvent)).toBe(false);
+
+    // getRecurringEventIcon 함수 테스트 - 각 반복 유형별 아이콘 확인
+    expect(getRecurringEventIcon(dailyEvent)).toBe('🔄 매일');
+    expect(getRecurringEventIcon(weeklyEvent)).toBe('🔄 매주');
+    expect(getRecurringEventIcon(monthlyEvent)).toBe('🔄 매월');
+    expect(getRecurringEventIcon(yearlyEvent)).toBe('🔄 매년');
+    expect(getRecurringEventIcon(regularEvent)).toBeNull();
+
+    // 간격이 다른 반복 이벤트도 올바르게 인식하는지 테스트
+    const biWeeklyEvent: Event = {
+      id: 'bi-weekly-event',
+      title: '격주 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '격주 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 2 }, // 2주마다
+      notificationTime: 10,
+    };
+
+    const quarterlyEvent: Event = {
+      id: 'quarterly-event',
+      title: '분기별 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '분기별 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 3 }, // 3개월마다
+      notificationTime: 10,
+    };
+
+    // 간격과 상관없이 반복 유형에 따라 올바르게 구분되는지 확인
+    expect(isRecurringEvent(biWeeklyEvent)).toBe(true);
+    expect(isRecurringEvent(quarterlyEvent)).toBe(true);
+
+    // 간격과 상관없이 반복 유형에 따라 올바른 아이콘이 반환되는지 확인
+    expect(getRecurringEventIcon(biWeeklyEvent)).toBe('🔄 매주'); // interval과 상관없이 weekly
+    expect(getRecurringEventIcon(quarterlyEvent)).toBe('🔄 매월'); // interval과 상관없이 monthly
+
+    // endDate가 있는 반복 이벤트도 올바르게 인식하는지 테스트
+    const limitedRepeatEvent: Event = {
+      id: 'limited-repeat-event',
+      title: '기간 제한 반복',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '기간 제한 반복 테스트',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-12-31' },
+      notificationTime: 10,
+    };
+
+    expect(isRecurringEvent(limitedRepeatEvent)).toBe(true);
+    expect(getRecurringEventIcon(limitedRepeatEvent)).toBe('🔄 매일');
+  });
+});
+
+describe('isRecurringEvent', () => {
+  it('반복 일정인지 확인하는 함수가 있다', () => {
+    const event: Event = {
+      id: '1',
+      title: '회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1 },
+      notificationTime: 10,
+    };
+
+    expect(isRecurringEvent(event)).toBe(true);
+  });
+
+  it('비반복 일정인지 확인하는 함수가 있다', () => {
+    const event: Event = {
+      id: '2',
+      title: '회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    };
+
+    expect(isRecurringEvent(event)).toBe(false);
   });
 });
