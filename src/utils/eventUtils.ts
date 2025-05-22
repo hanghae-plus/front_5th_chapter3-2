@@ -1,5 +1,5 @@
 import { Event, EventForm } from '../types';
-import { addDays, addWeeks, addMonths, addYears, format } from 'date-fns';
+import { addDays, addWeeks, format, getDaysInMonth } from 'date-fns';
 import { getWeekDates, isDateInRange } from './dateUtils';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
@@ -54,11 +54,12 @@ export const isLeapYear = (year: number) => {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 };
 
-export const createRepeatEvents = (event: Event | EventForm) => {
+export const generateRepeatEvents = (event: Event | EventForm) => {
   const { repeat, date } = event;
   const { type, interval, endDate } = repeat;
 
   let currentDate = new Date(date);
+  // endDate가 없으면 2025-09-30으로 설정
   const repeatEndDate = endDate ? new Date(endDate) : new Date('2025-09-30');
   const repeatEvents: Event[] = [];
 
@@ -75,23 +76,32 @@ export const createRepeatEvents = (event: Event | EventForm) => {
       case 'weekly':
         currentDate = addWeeks(currentDate, interval);
         break;
-      case 'monthly':
-        currentDate = addMonths(currentDate, interval);
+      case 'monthly': {
+        const nextMonth = currentDate.getMonth() + interval;
+        const nextYear = currentDate.getFullYear() + Math.floor(nextMonth / 12);
+        const adjustedMonth = nextMonth % 12;
+        const currentDay = currentDate.getDate();
+
+        // 말일(31일) 처리
+        if (currentDay === 31) {
+          const daysInNextMonth = getDaysInMonth(new Date(nextYear, adjustedMonth + 1, 1));
+          currentDate = new Date(nextYear, adjustedMonth, daysInNextMonth);
+        } else {
+          currentDate = new Date(nextYear, adjustedMonth, currentDay);
+        }
         break;
+      }
       case 'yearly': {
         const nextYear = currentDate.getFullYear() + interval;
         const nextMonth = currentDate.getMonth();
         const nextDay = currentDate.getDate();
 
-        // 2월 29일인 경우 다음 해가 윤년이 아닐 때 2월 28일로 조정
+        // 2월 29일 처리
         if (nextMonth === 1 && nextDay === 29) {
-          if (!isLeapYear(nextYear)) {
-            currentDate = new Date(nextYear, nextMonth, 28);
-            break;
-          }
+          currentDate = new Date(nextYear, nextMonth, isLeapYear(nextYear) ? 29 : 28);
+        } else {
+          currentDate = new Date(nextYear, nextMonth, nextDay);
         }
-
-        currentDate = new Date(nextYear, nextMonth, nextDay);
         break;
       }
       default:

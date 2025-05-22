@@ -2,7 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
-import { createRepeatEvents } from '../utils/eventUtils';
+import { generateRepeatEvents } from '../utils/eventUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -68,7 +68,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   };
 
   const saveRepeatEvent = async (eventData: Event | EventForm) => {
-    const repeatEvents = createRepeatEvents(eventData);
+    const repeatEvents = generateRepeatEvents(eventData);
 
     try {
       let response;
