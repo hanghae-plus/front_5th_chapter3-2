@@ -43,9 +43,8 @@ export const handlers = [
 
     const eventsWithIds = newEvents.map((event) => {
       const isRepeatEvent = event.repeat.type !== 'none';
-      const { id, ...eventWithoutId } = event;
       return {
-        ...eventWithoutId,
+        ...event,
         id: String(events.length + 1 + Math.random()),
         repeat: {
           ...event.repeat,
