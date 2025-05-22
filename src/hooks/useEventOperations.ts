@@ -34,7 +34,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         const editingEvent = {
           ...eventData,
           repeat: {
-            ...(eventData as Event).repeat,
+            id: undefined,
             type: 'none',
           },
         };

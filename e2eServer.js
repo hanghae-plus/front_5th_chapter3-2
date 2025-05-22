@@ -7,22 +7,23 @@ const port = 3000;
 
 app.use(express.json());
 
-let mockDB = [
-  {
-    title: '팀 회의',
-    date: '2025-05-22',
-    startTime: '10:00',
-    endTime: '11:00',
-    description: '주간 팀 미팅',
-    location: '회의실 A',
-    category: '업무',
-    repeat: { type: 'none', interval: 0 },
-    notificationTime: 1,
-  },
-];
+const mockData = {
+  id: '03e047a7-e05d-4770-9319-f235ee995513',
+  title: '팀 회의',
+  date: '2025-05-22',
+  startTime: '10:00',
+  endTime: '11:00',
+  description: '주간 팀 미팅',
+  location: '회의실 A',
+  category: '업무',
+  repeat: { type: 'none', interval: 0 },
+  notificationTime: 1,
+};
+let mockDB = [mockData];
 
-app.post('/reset', (_, res) => {
-  mockDB = [];
+app.post('/api/mock-reset', (_, res) => {
+  mockDB = [mockData];
+
   res.status(204).send();
 });
 
