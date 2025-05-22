@@ -1,7 +1,7 @@
 import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
-import { Event, EventForm } from '../types';
+import { Event, EventForm, RepeatType } from '../types';
 import { saveRepeatingSchedule } from '../utils/eventUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
@@ -105,7 +105,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const saveRepeatingEvent = async (
     baseEvent: Omit<EventForm, 'repeat'>,
     repeat: {
-      type: 'daily' | 'weekly' | 'monthly' | 'yearly';
+      type: RepeatType;
       interval: number;
       endDate: string;
       count?: number;

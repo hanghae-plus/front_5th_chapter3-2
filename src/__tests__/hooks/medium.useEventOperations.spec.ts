@@ -4,11 +4,12 @@ import { http, HttpResponse } from 'msw';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
+  setupMockHandlerRepeatingCreation,
   setupMockHandlerUpdating,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
 import { server } from '../../setupTests.ts';
-import { Event } from '../../types.ts';
+import { Event, RepeatType } from '../../types.ts';
 
 const toastFn = vi.fn();
 
@@ -183,4 +184,118 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
   });
 
   expect(result.current.events).toHaveLength(1);
+});
+
+describe('반복 일정 저장', () => {
+  it('매일 반복되는 일정이 성공적으로 저장된다', async () => {
+    setupMockHandlerRepeatingCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+    toastFn.mockClear();
+
+    const baseEvent = {
+      title: '매일 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '매일 팀 스크럼',
+      location: '회의실 A',
+      category: '업무',
+      notificationTime: 10,
+    };
+
+    const repeat = {
+      type: 'daily' as const,
+      interval: 1,
+      endDate: '2025-10-18',
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatingEvent(baseEvent, repeat);
+    });
+
+    expect(toastFn).toHaveBeenLastCalledWith({
+      title: '반복 일정이 추가되었습니다.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  });
+
+  it('반복 횟수가 제한된 일정이 성공적으로 저장된다', async () => {
+    setupMockHandlerRepeatingCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+    toastFn.mockClear();
+
+    const baseEvent = {
+      title: '제한된 반복 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '3회 반복 미팅',
+      location: '회의실 A',
+      category: '업무',
+      notificationTime: 10,
+    };
+
+    const repeat = {
+      type: 'daily' as RepeatType,
+      interval: 1,
+      endDate: '2025-10-30',
+      count: 3,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatingEvent(baseEvent, repeat);
+    });
+
+    expect(toastFn).toHaveBeenLastCalledWith({
+      title: '반복 일정이 추가되었습니다.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  });
+
+  it('서로 다른 간격으로 반복되는 일정이 성공적으로 저장된다', async () => {
+    setupMockHandlerRepeatingCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+    toastFn.mockClear();
+
+    const baseEvent = {
+      title: '격주 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '격주 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      notificationTime: 10,
+    };
+
+    const repeat = {
+      type: 'weekly' as RepeatType,
+      interval: 2,
+      endDate: '2025-11-26',
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatingEvent(baseEvent, repeat);
+    });
+
+    expect(toastFn).toHaveBeenLastCalledWith({
+      title: '반복 일정이 추가되었습니다.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  });
 });
