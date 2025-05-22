@@ -2,6 +2,11 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import { createRepeatingEvents } from '../utils/repeatUtils';
+
+function isRepeatingEvent(evt: Event | EventForm): boolean {
+  return evt.repeat?.type !== 'none';
+}
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -10,41 +15,54 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const fetchEvents = async () => {
     try {
       const response = await fetch('/api/events');
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
-      }
+      if (!response.ok) throw new Error('Failed to fetch events');
       const { events } = await response.json();
       setEvents(events);
     } catch (error) {
       console.error('Error fetching events:', error);
-      toast({
-        title: '이벤트 로딩 실패',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: '이벤트 로딩 실패', status: 'error', duration: 3000, isClosable: true });
     }
   };
 
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
-      let response;
-      if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
-      } else {
-        response = await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
-      }
+      const formData = { ...eventData } as EventForm;
 
-      if (!response.ok) {
-        throw new Error('Failed to save event');
+      if (editing) {
+        const existingEvent = eventData as Event;
+
+        if (isRepeatingEvent(formData)) {
+          // ✅ 반복 일정 → 새로운 반복 일정으로 저장 (기존 반복은 유지)
+          const newEvents = createRepeatingEvents(formData);
+          for (const evt of newEvents) {
+            const response = await fetch('/api/events', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(evt),
+            });
+            if (!response.ok) throw new Error('Failed to save event');
+          }
+        } else {
+          // ✅ 반복 해제 → 단일 일정으로 수정
+          const response = await fetch(`/api/events/${existingEvent.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+          });
+          if (!response.ok) throw new Error('Failed to save event');
+        }
+      } else {
+        // 추가 모드
+        const toSave = isRepeatingEvent(formData) ? createRepeatingEvents(formData) : [formData];
+
+        for (const evt of toSave) {
+          const response = await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(evt),
+          });
+          if (!response.ok) throw new Error('Failed to save event');
+        }
       }
 
       await fetchEvents();
@@ -69,26 +87,12 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const deleteEvent = async (id: string) => {
     try {
       const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete event');
-      }
-
+      if (!response.ok) throw new Error('Failed to delete event');
       await fetchEvents();
-      toast({
-        title: '일정이 삭제되었습니다.',
-        status: 'info',
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: '일정이 삭제되었습니다.', status: 'info', duration: 3000, isClosable: true });
     } catch (error) {
       console.error('Error deleting event:', error);
-      toast({
-        title: '일정 삭제 실패',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: '일정 삭제 실패', status: 'error', duration: 3000, isClosable: true });
     }
   };
 

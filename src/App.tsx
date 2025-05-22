@@ -45,7 +45,7 @@ import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { Event, EventForm, RepeatType, RepeatEndType } from './types';
 import {
   formatDate,
   formatMonth,
@@ -91,6 +91,10 @@ function App() {
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatEndType,
+    setRepeatEndType,
+    repeatCount,
+    setRepeatCount,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -116,6 +120,14 @@ function App() {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const toast = useToast();
+
+  const repeatIcon = () => {
+    return (
+      <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>
+        cycle
+      </span>
+    );
+  };
 
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
@@ -150,7 +162,9 @@ function App() {
       repeat: {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
+        endType: repeatEndType,
         endDate: repeatEndDate || undefined,
+        count: repeatCount,
       },
       notificationTime,
     };
@@ -200,6 +214,7 @@ function App() {
                           color={isNotified ? 'red.500' : 'inherit'}
                         >
                           <HStack spacing={1}>
+                            {event.repeat.type !== 'none' && repeatIcon()}
                             {isNotified && <BellIcon />}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
@@ -269,6 +284,7 @@ function App() {
                                 color={isNotified ? 'red.500' : 'inherit'}
                               >
                                 <HStack spacing={1}>
+                                  {event.repeat.type !== 'none' && repeatIcon()}
                                   {isNotified && <BellIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
@@ -357,7 +373,16 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              isChecked={isRepeating}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsRepeating(checked);
+                if (checked && repeatType === 'none') {
+                  setRepeatType('daily'); // ✅ 체크될 때 즉시 초기화
+                }
+              }}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
@@ -390,16 +415,29 @@ function App() {
                   <option value="yearly">매년</option>
                 </Select>
               </FormControl>
-              <HStack width="100%">
-                <FormControl>
-                  <FormLabel>반복 간격</FormLabel>
-                  <Input
-                    type="number"
-                    value={repeatInterval}
-                    onChange={(e) => setRepeatInterval(Number(e.target.value))}
-                    min={1}
-                  />
-                </FormControl>
+
+              <FormControl>
+                <FormLabel>반복 간격</FormLabel>
+                <Input
+                  type="number"
+                  value={repeatInterval}
+                  onChange={(e) => setRepeatInterval(Number(e.target.value))}
+                  min={1}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>반복 종료 방식</FormLabel>
+                <Select
+                  value={repeatEndType}
+                  onChange={(e) => setRepeatEndType(e.target.value as RepeatEndType)}
+                >
+                  <option value="date">특정 날짜까지</option>
+                  <option value="count">특정 횟수만큼</option>
+                </Select>
+              </FormControl>
+
+              {repeatEndType === 'date' && (
                 <FormControl>
                   <FormLabel>반복 종료일</FormLabel>
                   <Input
@@ -408,7 +446,19 @@ function App() {
                     onChange={(e) => setRepeatEndDate(e.target.value)}
                   />
                 </FormControl>
-              </HStack>
+              )}
+
+              {repeatEndType === 'count' && (
+                <FormControl>
+                  <FormLabel>반복 횟수</FormLabel>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={repeatCount}
+                    onChange={(e) => setRepeatCount(Number(e.target.value))}
+                  />
+                </FormControl>
+              )}
             </VStack>
           )}
 
@@ -458,61 +508,75 @@ function App() {
           {filteredEvents.length === 0 ? (
             <Text>검색 결과가 없습니다.</Text>
           ) : (
-            filteredEvents.map((event) => (
-              <Box key={event.id} borderWidth={1} borderRadius="lg" p={3} width="100%">
-                <HStack justifyContent="space-between">
-                  <VStack align="start">
-                    <HStack>
-                      {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
-                      <Text
-                        fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
-                        color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
-                      >
-                        {event.title}
-                      </Text>
-                    </HStack>
-                    <Text>{event.date}</Text>
-                    <Text>
-                      {event.startTime} - {event.endTime}
-                    </Text>
-                    <Text>{event.description}</Text>
-                    <Text>{event.location}</Text>
-                    <Text>카테고리: {event.category}</Text>
-                    {event.repeat.type !== 'none' && (
+            [...filteredEvents]
+              .sort((a, b) => {
+                const aDateTime = new Date(`${a.date}T${a.startTime}`);
+                const bDateTime = new Date(`${b.date}T${b.startTime}`);
+                return aDateTime.getTime() - bDateTime.getTime();
+              })
+              .map((event) => (
+                <Box
+                  key={event.id}
+                  borderWidth={1}
+                  borderRadius="lg"
+                  p={3}
+                  width="100%"
+                  data-testid={`event-item`}
+                >
+                  <HStack justifyContent="space-between">
+                    <VStack align="start">
+                      <HStack>
+                        {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
+                        <Text
+                          fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
+                          color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
+                          data-testid={`event-title`}
+                        >
+                          {event.title}
+                        </Text>
+                      </HStack>
+                      <Text>{event.date}</Text>
                       <Text>
-                        반복: {event.repeat.interval}
-                        {event.repeat.type === 'daily' && '일'}
-                        {event.repeat.type === 'weekly' && '주'}
-                        {event.repeat.type === 'monthly' && '월'}
-                        {event.repeat.type === 'yearly' && '년'}
-                        마다
-                        {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
+                        {event.startTime} - {event.endTime}
                       </Text>
-                    )}
-                    <Text>
-                      알림:{' '}
-                      {
-                        notificationOptions.find(
-                          (option) => option.value === event.notificationTime
-                        )?.label
-                      }
-                    </Text>
-                  </VStack>
-                  <HStack>
-                    <IconButton
-                      aria-label="Edit event"
-                      icon={<EditIcon />}
-                      onClick={() => editEvent(event)}
-                    />
-                    <IconButton
-                      aria-label="Delete event"
-                      icon={<DeleteIcon />}
-                      onClick={() => deleteEvent(event.id)}
-                    />
+                      <Text>{event.description}</Text>
+                      <Text>{event.location}</Text>
+                      <Text>카테고리: {event.category}</Text>
+                      {event.repeat.type !== 'none' && (
+                        <Text>
+                          반복: {event.repeat.interval}
+                          {event.repeat.type === 'daily' && '일'}
+                          {event.repeat.type === 'weekly' && '주'}
+                          {event.repeat.type === 'monthly' && '월'}
+                          {event.repeat.type === 'yearly' && '년'}
+                          마다
+                          {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
+                        </Text>
+                      )}
+                      <Text>
+                        알림:{' '}
+                        {
+                          notificationOptions.find(
+                            (option) => option.value === event.notificationTime
+                          )?.label
+                        }
+                      </Text>
+                    </VStack>
+                    <HStack>
+                      <IconButton
+                        aria-label="Edit event"
+                        icon={<EditIcon />}
+                        onClick={() => editEvent(event)}
+                      />
+                      <IconButton
+                        aria-label="Delete event"
+                        icon={<DeleteIcon />}
+                        onClick={() => deleteEvent(event.id)}
+                      />
+                    </HStack>
                   </HStack>
-                </HStack>
-              </Box>
-            ))
+                </Box>
+              ))
           )}
         </VStack>
       </Flex>
@@ -558,6 +622,7 @@ function App() {
                     repeat: {
                       type: isRepeating ? repeatType : 'none',
                       interval: repeatInterval,
+                      endType: repeatEndType,
                       endDate: repeatEndDate || undefined,
                     },
                     notificationTime,

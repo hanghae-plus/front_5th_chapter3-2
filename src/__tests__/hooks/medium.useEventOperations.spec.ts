@@ -35,7 +35,7 @@ it('저장되어있는 초기 이벤트 데이터를 적절하게 불러온다',
       description: '기존 팀 미팅',
       location: '회의실 B',
       category: '업무',
-      repeat: { type: 'none', interval: 0 },
+      repeat: { type: 'none', interval: 0, endType: 'date' },
       notificationTime: 10,
     },
   ]);
@@ -57,7 +57,7 @@ it('정의된 이벤트 정보를 기준으로 적절하게 저장이 된다', a
     description: '새로운 팀 미팅',
     location: '회의실 A',
     category: '업무',
-    repeat: { type: 'none', interval: 0 },
+    repeat: { type: 'none', interval: 0, endType: 'date' },
     notificationTime: 5,
   };
 
@@ -82,7 +82,7 @@ it("새로 정의된 'title', 'endTime' 기준으로 적절하게 일정이 업�
     description: '기존 팀 미팅',
     location: '회의실 B',
     category: '업무',
-    repeat: { type: 'none', interval: 0 },
+    repeat: { type: 'none', interval: 0, endType: 'date' },
     notificationTime: 10,
     title: '수정된 회의',
     endTime: '11:00',
@@ -144,7 +144,7 @@ it("존재하지 않는 이벤트 수정 시 '일정 저장 실패'라는 토스
     description: '이 이벤트는 존재하지 않습니다',
     location: '어딘가',
     category: '기타',
-    repeat: { type: 'none', interval: 0 },
+    repeat: { type: 'none', interval: 0, endType: 'date' },
     notificationTime: 10,
   };
 
@@ -183,4 +183,123 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
   });
 
   expect(result.current.events).toHaveLength(1);
+});
+
+it("반복 일정 저장 실패 시 '일정 저장 실패' 토스트가 표시된다", async () => {
+  server.use(
+    http.post('/api/events', () => {
+      return new HttpResponse(null, { status: 500 });
+    })
+  );
+
+  const { result } = renderHook(() => useEventOperations(false));
+
+  await act(() => Promise.resolve(null));
+
+  const faultyEvent: Event = {
+    id: '0',
+    title: '저장 실패 테스트',
+    date: '2025-09-01',
+    startTime: '13:00',
+    endTime: '14:00',
+    description: '',
+    location: '',
+    category: '에러',
+    notificationTime: 0,
+    repeat: { type: 'daily', interval: 1, endType: 'count', count: 2 },
+  };
+
+  await act(async () => {
+    await result.current.saveEvent(faultyEvent);
+  });
+
+  expect(toastFn).toHaveBeenCalledWith({
+    duration: 3000,
+    isClosable: true,
+    title: '일정 저장 실패',
+    status: 'error',
+  });
+});
+
+it('반복 일정 저장 시 여러 일정이 생성되어 저장된다', async () => {
+  setupMockHandlerCreation();
+
+  const { result } = renderHook(() => useEventOperations(false));
+
+  await act(() => Promise.resolve(null));
+
+  const repeatEvent: Event = {
+    id: '0',
+    title: '반복 회의',
+    date: '2025-06-01',
+    startTime: '09:00',
+    endTime: '10:00',
+    description: '',
+    location: '',
+    category: '업무',
+    notificationTime: 0,
+    repeat: {
+      type: 'daily',
+      interval: 1,
+      endType: 'count',
+      count: 3,
+    },
+  };
+
+  await act(async () => {
+    await result.current.saveEvent(repeatEvent);
+  });
+
+  expect(result.current.events).toEqual([
+    {
+      ...repeatEvent,
+      id: '1',
+      date: '2025-06-01',
+    },
+    {
+      ...repeatEvent,
+      id: '2',
+      date: '2025-06-02',
+    },
+    {
+      ...repeatEvent,
+      id: '3',
+      date: '2025-06-03',
+    },
+  ]);
+});
+
+it('수정 모드에서 반복 일정일 경우 여러 이벤트가 생성된다', async () => {
+  setupMockHandlerCreation();
+
+  const { result } = renderHook(() => useEventOperations(true));
+
+  await act(() => Promise.resolve(null));
+
+  const updatedRepeatEvent: Event = {
+    id: '999', // 기존 아이디는 무시됨
+    title: '수정된 반복',
+    date: '2025-08-01',
+    startTime: '14:00',
+    endTime: '15:00',
+    description: '반복 수정 테스트',
+    location: '회의실 C',
+    category: '기타',
+    notificationTime: 0,
+    repeat: {
+      type: 'weekly',
+      interval: 1,
+      endType: 'count',
+      count: 2,
+    },
+  };
+
+  await act(async () => {
+    await result.current.saveEvent(updatedRepeatEvent);
+  });
+
+  expect(result.current.events).toEqual([
+    { ...updatedRepeatEvent, id: '1', date: '2025-08-01' },
+    { ...updatedRepeatEvent, id: '2', date: '2025-08-08' },
+  ]);
 });

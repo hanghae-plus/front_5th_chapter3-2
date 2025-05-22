@@ -20,7 +20,13 @@ module.exports = {
     ecmaVersion: 2022,
   },
   rules: {
-    'no-unused-vars': 'warn',
+    'no-unused-vars': [
+      'warn',
+      {
+        args: 'all',
+        argsIgnorePattern: '^_',
+      },
+    ],
     'react/prop-types': 'off',
     'import/order': [
       'error',
@@ -33,6 +39,7 @@ module.exports = {
         'newlines-between': 'always',
       },
     ],
+    'prettier/prettier': ['error', { endOfLine: 'auto' }],
   },
   globals: {
     Set: true,

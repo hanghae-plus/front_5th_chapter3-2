@@ -20,8 +20,8 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
   );
 };
 
-export const setupMockHandlerUpdating = () => {
-  const mockEvents: Event[] = [
+export const setupMockHandlerUpdating = (
+  mockEvents = [
     {
       id: '1',
       title: '기존 회의',
@@ -31,7 +31,7 @@ export const setupMockHandlerUpdating = () => {
       description: '기존 팀 미팅',
       location: '회의실 B',
       category: '업무',
-      repeat: { type: 'none', interval: 0 },
+      repeat: { type: 'none', interval: 0, endType: 'date' },
       notificationTime: 10,
     },
     {
@@ -43,11 +43,11 @@ export const setupMockHandlerUpdating = () => {
       description: '기존 팀 미팅 2',
       location: '회의실 C',
       category: '업무 회의',
-      repeat: { type: 'none', interval: 0 },
+      repeat: { type: 'none', interval: 0, endType: 'date' },
       notificationTime: 5,
     },
-  ];
-
+  ] as Event[]
+) => {
   server.use(
     http.get('/api/events', () => {
       return HttpResponse.json({ events: mockEvents });
@@ -55,6 +55,7 @@ export const setupMockHandlerUpdating = () => {
     http.put('/api/events/:id', async ({ params, request }) => {
       const { id } = params;
       const updatedEvent = (await request.json()) as Event;
+
       const index = mockEvents.findIndex((event) => event.id === id);
 
       mockEvents[index] = { ...mockEvents[index], ...updatedEvent };
@@ -63,8 +64,8 @@ export const setupMockHandlerUpdating = () => {
   );
 };
 
-export const setupMockHandlerDeletion = () => {
-  const mockEvents: Event[] = [
+export const setupMockHandlerDeletion = (
+  mockEvents = [
     {
       id: '1',
       title: '삭제할 이벤트',
@@ -74,11 +75,11 @@ export const setupMockHandlerDeletion = () => {
       description: '삭제할 이벤트입니다',
       location: '어딘가',
       category: '기타',
-      repeat: { type: 'none', interval: 0 },
+      repeat: { type: 'none', interval: 0, endType: 'date' },
       notificationTime: 10,
     },
-  ];
-
+  ]
+) => {
   server.use(
     http.get('/api/events', () => {
       return HttpResponse.json({ events: mockEvents });
