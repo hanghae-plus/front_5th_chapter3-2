@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('단일 일정 추가 e2e 테스트', async ({ page }) => {
+test('단일 일정 추가을 추가하면 이벤트 리스트와 캘린더에 표시된다.', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2025-05-23T10:00:00'));
   await page.goto('/');
 
