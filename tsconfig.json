@@ -7,5 +7,15 @@
     {
       "path": "./tsconfig.node.json"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/mocks/*": ["./src/__mocks__/*"],
+      "@/tests/*": ["./src/__tests__/*"],
+      "@/apis/*": ["./src/apis/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/utils/*": ["./src/utils/*"]
+    }
+  }
 }

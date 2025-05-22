@@ -22,7 +22,18 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+
+    /* Path aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/mocks/*": ["src/__mocks__/*"],
+      "@/tests/*": ["src/__tests__/*"],
+      "@/apis/*": ["src/apis/*"],
+      "@/hooks/*": ["src/hooks/*"],
+      "@/utils/*": ["src/utils/*"]
+    }
   },
   "include": ["src"]
 }

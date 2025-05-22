@@ -38,14 +38,14 @@ import {
   useToast,
   VStack,
 } from '@chakra-ui/react';
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
-import { useCalendarView } from './hooks/useCalendarView.ts';
-import { useEventForm } from './hooks/useEventForm.ts';
-import { useEventOperations } from './hooks/useEventOperations.ts';
-import { useNotifications } from './hooks/useNotifications.ts';
-import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { useCalendarView } from '@/hooks/useCalendarView.ts';
+import { useEventForm } from '@/hooks/useEventForm.ts';
+import { useEventOperations } from '@/hooks/useEventOperations.ts';
+import { useNotifications } from '@/hooks/useNotifications.ts';
+import { useSearch } from '@/hooks/useSearch.ts';
+import { Event, EventForm, RepeatType } from '@/types';
 import {
   formatDate,
   formatMonth,
@@ -53,9 +53,9 @@ import {
   getEventsForDay,
   getWeekDates,
   getWeeksAtMonth,
-} from './utils/dateUtils';
-import { findOverlappingEvents } from './utils/eventOverlap';
-import { getTimeErrorMessage } from './utils/timeValidation';
+} from '@/utils/dateUtils';
+import { findOverlappingEvents } from '@/utils/eventOverlap';
+import { getTimeErrorMessage } from '@/utils/timeValidation';
 
 const categories = ['업무', '개인', '가족', '기타'];
 
@@ -89,6 +89,8 @@ function App() {
     setRepeatType,
     repeatInterval,
     setRepeatInterval,
+    maxOccurrences,
+    setMaxOccurrences,
     repeatEndDate,
     setRepeatEndDate,
     notificationTime,
@@ -103,8 +105,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent, saveRepeatEvents } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -147,21 +150,60 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat: editingEvent
+        ? {
+            type: 'none',
+            interval: 0,
+          }
+        : {
+            type: isRepeating ? repeatType : 'none',
+            interval: repeatInterval,
+            endDate: repeatEndDate || undefined,
+            maxOccurrences: maxOccurrences || undefined,
+          },
       notificationTime,
     };
 
-    const overlapping = findOverlappingEvents(eventData, events);
-    if (overlapping.length > 0) {
-      setOverlappingEvents(overlapping);
-      setIsOverlapDialogOpen(true);
+    if (isRepeating) {
+      if (editingEvent) {
+        await saveEvent(eventData);
+        resetForm();
+      }
+
+      if (!editingEvent) {
+        if (!repeatEndDate) {
+          toast({
+            title: '반복 종료 시간을 입력해주세요.',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+        await saveRepeatEvents(eventData);
+        resetForm();
+      }
+    }
+
+    if (!isRepeating) {
+      const overlapping = findOverlappingEvents(eventData, events);
+      if (overlapping.length > 0) {
+        setOverlappingEvents(overlapping);
+        setIsOverlapDialogOpen(true);
+      } else {
+        await saveEvent(eventData);
+        resetForm();
+      }
+    }
+  };
+
+  const handleRepeatCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setIsRepeating(checked);
+    if (checked) {
+      setRepeatType('daily');
     } else {
-      await saveEvent(eventData);
-      resetForm();
+      setRepeatType('none');
     }
   };
 
@@ -201,6 +243,7 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {event.repeat.type !== 'none' && <Text>🔁</Text>}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -270,6 +313,7 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && <Text>🔁</Text>}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -357,7 +401,7 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox isChecked={isRepeating} onChange={handleRepeatCheckboxChange}>
               반복 일정
             </Checkbox>
           </FormControl>
@@ -401,14 +445,23 @@ function App() {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>반복 종료일</FormLabel>
+                  <FormLabel>종료 횟수</FormLabel>
                   <Input
-                    type="date"
-                    value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
+                    type="number"
+                    value={maxOccurrences || 0}
+                    onChange={(e) => setMaxOccurrences(Number(e.target.value))}
+                    min={0}
                   />
                 </FormControl>
               </HStack>
+              <FormControl>
+                <FormLabel>반복 종료일</FormLabel>
+                <Input
+                  type="date"
+                  value={repeatEndDate}
+                  onChange={(e) => setRepeatEndDate(e.target.value)}
+                />
+              </FormControl>
             </VStack>
           )}
 
@@ -464,6 +517,7 @@ function App() {
                   <VStack align="start">
                     <HStack>
                       {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
+                      {event.repeat.type !== 'none' && <Text>🔁</Text>}
                       <Text
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                         color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}

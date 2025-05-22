@@ -108,3 +108,28 @@ export function formatDate(currentDate: Date, day?: number) {
     fillZero(day ?? currentDate.getDate()),
   ].join('-');
 }
+
+export const isLeapYear = (year: number): boolean => {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+};
+
+export const adjustToValidDate = (dateString: string): string => {
+  if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return dateString;
+  }
+
+  const [yearStr, monthStr, dayStr] = dateString.split('-');
+  const year = parseInt(yearStr, 10);
+  const month = parseInt(monthStr, 10);
+  const day = parseInt(dayStr, 10);
+
+  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  if (isLeapYear(year)) {
+    daysInMonth[1] = 29;
+  }
+
+  const validDay = Math.min(day, daysInMonth[month - 1]);
+
+  return `${yearStr}-${monthStr}-${validDay.toString().padStart(2, '0')}`;
+};

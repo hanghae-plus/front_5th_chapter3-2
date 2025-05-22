@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
 
+import { generateRecurringEvents } from '@/utils/generateRecurringEvents';
+
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
   const toast = useToast();
@@ -92,6 +94,41 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  const saveRepeatEvents = async (eventData: EventForm) => {
+    try {
+      const newEvents = generateRecurringEvents(
+        eventData as Event,
+        eventData.repeat.maxOccurrences
+      );
+      const response = await fetch('/api/events-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: newEvents }),
+      });
+
+      if (!response.ok) {
+        throw new Error('일정 저장 실패');
+      }
+
+      await fetchEvents();
+      onSave?.();
+      toast({
+        title: '반복 일정이 추가되었습니다.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error saving event:', error);
+      toast({
+        title: '일정 저장 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   async function init() {
     await fetchEvents();
     toast({
@@ -106,5 +143,5 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent };
+  return { events, fetchEvents, saveEvent, deleteEvent, saveRepeatEvents };
 };

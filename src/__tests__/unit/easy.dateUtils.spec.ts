@@ -1,5 +1,7 @@
 import { Event } from '../../types';
+
 import {
+  adjustToValidDate,
   fillZero,
   formatDate,
   formatMonth,
@@ -9,7 +11,8 @@ import {
   getWeekDates,
   getWeeksAtMonth,
   isDateInRange,
-} from '../../utils/dateUtils';
+  isLeapYear,
+} from '@/utils/dateUtils';
 
 describe('getDaysInMonth', () => {
   it('1월은 31일 수를 반환한다', () => {
@@ -296,5 +299,50 @@ describe('formatDate', () => {
   it('일이 한 자리 수일 때 앞에 0을 붙여 포맷팅한다', () => {
     const testDate = new Date('2023-12-05');
     expect(formatDate(testDate)).toBe('2023-12-05');
+  });
+});
+
+describe('윤년 확인 함수 테스트', () => {
+  it('400으로 나누어 떨어지는 연도는 윤년이어야 함', () => {
+    expect(isLeapYear(2000)).toBe(true);
+    expect(isLeapYear(1600)).toBe(true);
+  });
+
+  it('4로 나누어 떨어지지만 100으로는 나누어 떨어지지 않는 연도는 윤년이어야 함', () => {
+    expect(isLeapYear(2024)).toBe(true);
+    expect(isLeapYear(2020)).toBe(true);
+    expect(isLeapYear(2012)).toBe(true);
+  });
+
+  it('100으로 나누어 떨어지지만 400으로는 나누어 떨어지지 않는 연도는 윤년이 아니어야 함', () => {
+    expect(isLeapYear(1900)).toBe(false);
+    expect(isLeapYear(2100)).toBe(false);
+    expect(isLeapYear(1700)).toBe(false);
+  });
+
+  it('4로 나누어 떨어지지 않는 연도는 윤년이 아니어야 함', () => {
+    expect(isLeapYear(2023)).toBe(false);
+    expect(isLeapYear(2021)).toBe(false);
+    expect(isLeapYear(1)).toBe(false);
+  });
+});
+
+describe('adjustToValidDate 함수 테스트', () => {
+  describe('일반적인 경우', () => {
+    it('유효한 날짜는 그대로 반환해야 한다', () => {
+      expect(adjustToValidDate('2023-01-15')).toBe('2023-01-15');
+      expect(adjustToValidDate('2023-06-30')).toBe('2023-06-30');
+      expect(adjustToValidDate('2023-12-31')).toBe('2023-12-31');
+    });
+
+    it('비어있는 문자열은 그대로 반환해야 한다', () => {
+      expect(adjustToValidDate('')).toBe('');
+    });
+
+    it('날짜 형식이 아닌 문자열은 그대로 반환해야 한다', () => {
+      expect(adjustToValidDate('invalid-date')).toBe('invalid-date');
+      expect(adjustToValidDate('2023/05/15')).toBe('2023/05/15');
+      expect(adjustToValidDate('not a date')).toBe('not a date');
+    });
   });
 });
