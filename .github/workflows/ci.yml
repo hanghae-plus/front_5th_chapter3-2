@@ -65,4 +65,4 @@ jobs:
         run: |
           pnpm install
           npx playwright install --with-deps
-          pnpm run test:e2e
+          pnpm run e2e
