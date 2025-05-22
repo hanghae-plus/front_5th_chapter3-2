@@ -201,10 +201,10 @@ function App() {
 
   const renderWeekView = () => {
     const weekDates = getWeekDates(currentDate);
-    const weekStart = weekDates[0];
-    const weekEnd = weekDates[weekDates.length - 1];
-    // 반복일정까지 포함해서 전개
-    const expandedEvents = expandEvents(filteredEvents, weekStart, weekEnd);
+    const firstDay = weekDates[0];
+    const lastDay = weekDates[weekDates.length - 1];
+    const expandedEvents = expandEvents(filteredEvents, firstDay, lastDay);
+
     return (
       <VStack data-testid="week-view" align="stretch" w="full" spacing={4}>
         <Heading size="md">{formatWeek(currentDate)}</Heading>
