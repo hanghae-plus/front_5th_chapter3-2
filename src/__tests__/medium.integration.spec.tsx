@@ -507,4 +507,108 @@ describe('반복 일정', () => {
     // 2025-10-16 일정은 여전히 존재해야 함
     expect(screen.getByText('2025-10-16')).toBeInTheDocument();
   });
+
+  it('단일 일정을 반복 일정으로 수정하면 반복 아이콘이 표시된다', async () => {
+    // 초기 Mock 데이터: 단일 이벤트
+    setupMockHandlerCreation([
+      {
+        id: 'single-event-id',
+        title: '단일 회의',
+        date: '2025-10-15',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '단일로 진행하는 회의',
+        location: '회의실 C',
+        category: '개인',
+        repeat: { type: 'none', interval: 1 }, // 단일 이벤트로 시작
+        notificationTime: 0,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+
+    // 초기 이벤트 로딩 대기
+    const allEventItems = await screen.findAllByTestId('event-item');
+    const targetItem = allEventItems.find((item) => within(item).queryByText('단일 회의'));
+    expect(targetItem).toBeTruthy();
+
+    // 초기에는 반복 아이콘이 없어야 함
+    expect(within(targetItem!).queryByTestId('repeat-icon')).not.toBeInTheDocument();
+
+    // 수정 버튼 클릭
+    const editIconButton = within(targetItem!).getByLabelText('Edit event');
+    await user.click(editIconButton);
+
+    // '반복 일정' 체크박스 클릭하여 활성화
+    const repeatCheckbox = screen.getByLabelText('반복 일정');
+    await user.click(repeatCheckbox);
+
+    // 반복 유형과 간격 설정 (예: 매일, 2일마다)
+    const repeatTypeSelect = screen.getByLabelText('반복 유형');
+    await user.selectOptions(repeatTypeSelect, '매일'); // 'daily' 선택
+    const repeatIntervalInput = screen.getByLabelText('반복 간격');
+    await user.clear(repeatIntervalInput);
+    await user.type(repeatIntervalInput, '2'); // '2' 입력
+
+    // 반복 종료 조건 '횟수 제한 반복' 선택 후 횟수 설정 (예: 5회)
+    const countRadio = screen.getByLabelText('횟수 제한 반복');
+    await user.click(countRadio);
+    const repeatCountInput = screen.getByLabelText('반복 횟수');
+    await user.clear(repeatCountInput);
+    await user.type(repeatCountInput, '5');
+
+    // Mock Handler 업데이트: PUT 요청에 대한 Mock 응답 정의
+    // 이 시점에서 setupMockHandlerUpdating을 호출하여,
+    // 업데이트된 이벤트(repeat 필드 포함)에 대한 Mock 응답을 제공합니다.
+    server.use(
+      http.put('/api/events/:id', async ({ request, params }) => {
+        const updatedEvent = (await request.json()) as Event;
+        // console.log('Mock server received PUT for update:', updatedEvent); // 디버깅용
+
+        // Mock 데이터를 업데이트하여 반복 아이콘이 표시될 수 있도록 설정
+        return HttpResponse.json(
+          {
+            ...updatedEvent,
+            id: params.id as string,
+            repeat: { type: 'daily', interval: 2, count: 5 }, // 이 부분이 중요!
+          },
+          { status: 200 }
+        );
+      }),
+      // fetchEvents에 대한 GET Mock도 필요 (업데이트 후 리스트 갱신)
+      http.get('/api/events', () => {
+        return HttpResponse.json({
+          events: [
+            {
+              id: 'single-event-id',
+              title: '단일 회의',
+              date: '2025-10-15',
+              startTime: '10:00',
+              endTime: '11:00',
+              description: '단일로 진행하는 회의',
+              location: '회의실 C',
+              category: '개인',
+              repeat: { type: 'daily', interval: 2, count: 5 }, // 업데이트된 반복 정보
+              notificationTime: 0,
+            },
+          ],
+        });
+      })
+    );
+
+    // 저장 버튼 클릭
+    const saveButton = screen.getByRole('button', { name: /일정 수정/i });
+    await user.click(saveButton);
+
+    // 업데이트된 이벤트 아이템에서 반복 아이콘이 나타났는지 확인
+    // waitFor를 사용하여 DOM이 업데이트될 때까지 기다림
+    await waitFor(async () => {
+      const updatedItems = await screen.findAllByTestId('event-item');
+      const updatedItem = updatedItems.find((item) => within(item).queryByText('단일 회의'));
+      expect(updatedItem).toBeTruthy();
+      expect(within(updatedItem!).getByTestId('repeat-icon')).toBeInTheDocument();
+      // 추가적으로 반복 정보 텍스트가 정확한지 확인
+      expect(within(updatedItem!).getByText('반복: 2일마다 (총 5회)')).toBeInTheDocument();
+    });
+  });
 });

@@ -104,6 +104,10 @@ function App() {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    repeatEndOption,
+    setRepeatEndOption,
+    repeatCount,
+    setRepeatCount,
   } = useEventForm();
 
   const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
@@ -116,12 +120,17 @@ function App() {
 
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
+  const [pendingEventData, setPendingEventData] = useState<Event | EventForm | null>(null);
+
   const cancelRef = useRef<HTMLButtonElement>(null);
 
-  const [repeatEndOption, setRepeatEndOption] = useState<'untilDate' | 'count' | 'none'>('none');
-  const [repeatCount, setRepeatCount] = useState(1);
-
   const toast = useToast();
+
+  const handleSaveEvent = async (data: Event | EventForm) => {
+    await saveEvent(data);
+    resetForm();
+    setPendingEventData(null); // 저장 후 pendingEventData 초기화
+  };
 
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
@@ -144,6 +153,39 @@ function App() {
       return;
     }
 
+    // repeat 객체를 동적으로 생성하기 위한 변수
+    let finalRepeat: Event['repeat']; // Event 타입의 repeat 속성 타입을 가져옴
+
+    if (isRepeating) {
+      // 반복 일정을 선택했을 때
+      if (repeatEndOption === 'untilDate') {
+        finalRepeat = {
+          type: repeatType,
+          interval: repeatInterval,
+          endDate: repeatEndDate || undefined, // endDate가 없으면 undefined
+        };
+      } else if (repeatEndOption === 'count') {
+        finalRepeat = {
+          type: repeatType,
+          interval: repeatInterval,
+          count: repeatCount, // count 추가
+        };
+      } else {
+        // 'none' (종료 없음)인 경우
+        finalRepeat = {
+          type: repeatType,
+          interval: repeatInterval,
+          // endDate나 count는 포함하지 않음
+        };
+      }
+    } else {
+      // 반복 일정을 선택하지 않았을 때
+      finalRepeat = {
+        type: 'none',
+        interval: 1, // 'none'일 때는 interval이 큰 의미 없지만 일관성을 위해 1로 설정
+      };
+    }
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -153,11 +195,7 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat: finalRepeat,
       notificationTime,
     };
 
@@ -165,9 +203,9 @@ function App() {
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
+      setPendingEventData(eventData);
     } else {
-      await saveEvent(eventData);
-      resetForm();
+      await handleSaveEvent(eventData);
     }
   };
 
@@ -528,7 +566,7 @@ function App() {
                     <Text>{event.description}</Text>
                     <Text>{event.location}</Text>
                     <Text>카테고리: {event.category}</Text>
-                    {event.repeat.type !== 'none' && (
+                    {event.repeat?.type !== 'none' && (
                       <Text>
                         반복: {event.repeat.interval}
                         {event.repeat.type === 'daily' && '일'}
@@ -537,6 +575,7 @@ function App() {
                         {event.repeat.type === 'yearly' && '년'}
                         마다
                         {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
+                        {event.repeat.count && ` (총 ${event.repeat.count}회)`}
                       </Text>
                     )}
                     <Text>
@@ -594,24 +633,11 @@ function App() {
               </Button>
               <Button
                 colorScheme="red"
-                onClick={() => {
-                  setIsOverlapDialogOpen(false);
-                  saveEvent({
-                    id: editingEvent ? editingEvent.id : undefined,
-                    title,
-                    date,
-                    startTime,
-                    endTime,
-                    description,
-                    location,
-                    category,
-                    repeat: {
-                      type: isRepeating ? repeatType : 'none',
-                      interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
-                    },
-                    notificationTime,
-                  });
+                onClick={async () => {
+                  if (pendingEventData) {
+                    await handleSaveEvent(pendingEventData);
+                    setIsOverlapDialogOpen(false);
+                  }
                 }}
                 ml={3}
               >

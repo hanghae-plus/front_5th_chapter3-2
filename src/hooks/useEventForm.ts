@@ -13,11 +13,23 @@ export const useEventForm = (initialEvent?: Event) => {
   const [description, setDescription] = useState(initialEvent?.description || '');
   const [location, setLocation] = useState(initialEvent?.location || '');
   const [category, setCategory] = useState(initialEvent?.category || '');
-  const [isRepeating, setIsRepeating] = useState(initialEvent?.repeat.type !== 'none');
-  const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat.type || 'none');
-  const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat.interval || 1);
-  const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
+  const [isRepeating, setIsRepeating] = useState(initialEvent?.repeat?.type !== 'none');
+  const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat?.type || 'daily');
+  const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat?.interval || 1);
+  const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat?.endDate || '');
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
+
+  // repeatEndOption 상태 추가
+  const [repeatEndOption, setRepeatEndOption] = useState<'untilDate' | 'count' | 'none'>(
+    initialEvent?.repeat?.endDate // endDate가 있으면 'untilDate'
+      ? 'untilDate'
+      : initialEvent?.repeat?.count // count가 있으면 'count'
+      ? 'count'
+      : 'none' // 둘 다 없으면 'none'
+  );
+
+  // repeatCount 상태 추가
+  const [repeatCount, setRepeatCount] = useState(initialEvent?.repeat?.count || 1);
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
@@ -47,10 +59,12 @@ export const useEventForm = (initialEvent?: Event) => {
     setLocation('');
     setCategory('');
     setIsRepeating(false);
-    setRepeatType('none');
+    setRepeatType('daily');
     setRepeatInterval(1);
     setRepeatEndDate('');
     setNotificationTime(10);
+    setRepeatEndOption('none'); // 폼 초기화 시 반복 종료 옵션도 초기화
+    setRepeatCount(1); // 폼 초기화 시 반복 횟수도 초기화
   };
 
   const editEvent = (event: Event) => {
@@ -67,6 +81,17 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatInterval(event.repeat.interval);
     setRepeatEndDate(event.repeat.endDate || '');
     setNotificationTime(event.notificationTime);
+    if (event.repeat.endDate) {
+      setRepeatEndOption('untilDate');
+      setRepeatEndDate(event.repeat.endDate);
+    } else if (event.repeat.count) {
+      setRepeatEndOption('count');
+      setRepeatCount(event.repeat.count);
+    } else {
+      setRepeatEndOption('none');
+      setRepeatEndDate(''); // 혹시 모를 잔여 값 초기화
+      setRepeatCount(1); // 혹시 모를 잔여 값 초기화
+    }
   };
 
   return {
@@ -102,5 +127,9 @@ export const useEventForm = (initialEvent?: Event) => {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    repeatEndOption, // 반환 값에 추가
+    setRepeatEndOption, // 반환 값에 추가
+    repeatCount, // 반환 값에 추가
+    setRepeatCount, // 반환 값에 추가
   };
 };
