@@ -9,6 +9,8 @@
     "start": "vite",
     "dev": "concurrently \"pnpm run server:watch\" \"pnpm run start\"",
     "dev:frontend": "vite",
+    "e2e": "playwright test",       
+    "e2e:ui": "playwright test --ui" ,
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
