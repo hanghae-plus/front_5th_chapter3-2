@@ -340,6 +340,11 @@ function App() {
                                       {event.title}
                                     </Text>
                                     <IconButton
+                                      aria-label="Edit event"
+                                      icon={<EditIcon />}
+                                      onClick={() => editEvent(event)}
+                                    />
+                                    <IconButton
                                       aria-label="Delete single occurrence"
                                       icon={<DeleteIcon />}
                                       size="xs"
