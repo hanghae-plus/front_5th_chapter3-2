@@ -85,4 +85,42 @@ describe('1팀 심화 e2e 테스트', () => {
 
     cy.contains('알림: 1시간 전').should('exist');
   });
+
+  it('겹치는 일정을 추가하면 경고 다이얼로그가 뜬다', () => {
+    // 먼저 하나 추가
+    getInputByLabel('제목').type('겹침 테스트 1');
+    getInputByLabel('날짜').type('2025-05-23');
+    getInputByLabel('시작 시간').type('10:00');
+    getInputByLabel('종료 시간').type('11:00');
+    getInputByLabel('설명').type('겹침 테스트 설명');
+    getInputByLabel('위치').type('회의실 A');
+    getInputByLabel('카테고리').select('업무');
+    cy.get('[data-testid="event-submit-button"]').click();
+
+    // 같은 시간에 또 추가
+    getInputByLabel('제목').type('겹침 테스트 2');
+    getInputByLabel('날짜').type('2025-05-23');
+    getInputByLabel('시작 시간').type('10:30'); // 겹치도록
+    getInputByLabel('종료 시간').type('11:30');
+    cy.get('[data-testid="event-submit-button"]').click();
+
+    cy.contains('일정 겹침 경고').should('exist');
+  });
+
+  it('필수 정보 누락 시 에러 Toast가 나타난다', () => {
+    // 아무 것도 입력 안 하고 제출
+    cy.get('[data-testid="event-submit-button"]').click();
+
+    cy.contains('필수 정보를 모두 입력해주세요.').should('exist');
+  });
+
+  it('시작 시간이 종료 시간보다 늦으면 에러가 발생한다', () => {
+    getInputByLabel('제목').type('시간 오류 테스트');
+    getInputByLabel('날짜').type('2025-05-25');
+    getInputByLabel('시작 시간').type('14:00');
+    getInputByLabel('종료 시간').type('13:00');
+
+    cy.get('[data-testid="event-submit-button"]').click();
+    cy.contains('시간 설정을 확인해주세요.').should('exist');
+  });
 });
