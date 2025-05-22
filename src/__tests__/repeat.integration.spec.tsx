@@ -474,7 +474,7 @@ describe('integration test', () => {
       // 4) 리스트에 A, B, C, D 모두 보일 때까지 대기
       const list = await screen.findByTestId('event-list');
       await waitFor(() => {
-        ['반복 일정', '반복 일정', '반복 일정', '반복 일정'].forEach((_, i) => {
+        ['반복 일정', '반복 일정', '반복 일정', '반복 일정'].forEach(() => {
           // 같은 제목이 네 번 나오므로 nth-match 대신 그냥 네 개가 있는지 체크
           expect(within(list).getAllByText('반복 일정')).toHaveLength(4);
         });
