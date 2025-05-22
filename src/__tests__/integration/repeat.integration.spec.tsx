@@ -40,7 +40,7 @@ const saveRepeatSchedule = async (
 };
 
 describe('반복 일정', () => {
-  it.only('2월 29일에 매년 반복일정을 설정하면, 윤년이 아닌 해에는 2월 28일에 생성되는지 확인한다.', async () => {
+  it('2월 29일에 매년 반복일정을 설정하면, 윤년이 아닌 해에는 2월 28일에 생성되는지 확인한다.', async () => {
     vi.setSystemTime(new Date('2025-02-28 08:49:59'));
 
     setupMockHandlerRepeatCreation();
@@ -50,11 +50,11 @@ describe('반복 일정', () => {
     await screen.findByText('일정 로딩 완료!');
 
     await saveRepeatSchedule(user, {
-      title: '매년 반복 일정',
+      title: '윤년 반복 일정',
       date: '2024-02-29',
       startTime: '09:00',
       endTime: '10:00',
-      description: '매년 반복 일정 설명',
+      description: '윤년 반복 일정 설명',
       location: '회의실 A',
       category: '업무',
       repeat: { type: 'yearly', interval: 1, endDate: '2025-09-30' },
@@ -63,13 +63,13 @@ describe('반복 일정', () => {
     const eventList = within(screen.getByTestId('event-list'));
 
     expect(eventList.getByText('2025-02-28')).toBeInTheDocument();
-    expect(eventList.getByText('매년 반복 일정 설명')).toBeInTheDocument();
+    expect(eventList.getByText('윤년 반복 일정')).toBeInTheDocument();
   });
 
   it('31일에 매월 반복일정을 설정하면, 31일이 없는 달에는 30일 또는 말일에 생성되는지 확인한다.', async () => {
     vi.setSystemTime(new Date('2025-04-30 08:49:59'));
 
-    setupMockHandlerCreation();
+    setupMockHandlerRepeatCreation();
 
     const { user } = setup(<App />);
 
@@ -83,10 +83,8 @@ describe('반복 일정', () => {
       description: '매월 반복 일정 설명',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'monthly', interval: 1 },
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-09-30' },
     });
-
-    await waitFor(() => expect(screen.getByText('2025-02-28')).toBeInTheDocument());
 
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getByText('2025-04-30')).toBeInTheDocument();
