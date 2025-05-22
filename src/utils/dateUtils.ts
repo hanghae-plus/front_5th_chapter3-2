@@ -51,8 +51,57 @@ export function getWeeksAtMonth(currentDate: Date) {
   return weeks;
 }
 
-export function getEventsForDay(events: Event[], date: number): Event[] {
-  return events.filter((event) => new Date(event.date).getDate() === date);
+export function getEventsForDay(events: Event[], date: number, viewDate?: Date): Event[] {
+  return events.filter((event) => {
+    const eventDate = new Date(event.date);
+    const currentDate = viewDate
+      ? new Date(viewDate.getFullYear(), viewDate.getMonth(), date)
+      : new Date(eventDate.getFullYear(), eventDate.getMonth(), date);
+    const dateString = currentDate.toISOString().split('T')[0];
+
+    // 반복 일정이 아닌 경우 단순 날짜 비교
+    if (event.repeat.type === 'none') {
+      return eventDate.getDate() === date && 
+             eventDate.getMonth() === currentDate.getMonth() && 
+             eventDate.getFullYear() === currentDate.getFullYear();
+    }
+
+    // 종료일이 있고, 현재 날짜가 종료일을 넘었으면 표시하지 않음
+    if (event.repeat.endDate && dateString > event.repeat.endDate) {
+      return false;
+    }
+
+    // 시작일보다 이전 날짜면 표시하지 않음
+    if (dateString < event.date) {
+      return false;
+    }
+
+    // 반복 간격에 따른 표시 여부 계산
+    const startDate = new Date(event.date);
+    const diffTime = currentDate.getTime() - startDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    switch (event.repeat.type) {
+      case 'daily':
+        return diffDays % event.repeat.interval === 0;
+      case 'weekly':
+        return diffDays % (7 * event.repeat.interval) === 0;
+      case 'monthly':
+        const monthDiff =
+          (currentDate.getFullYear() - startDate.getFullYear()) * 12 +
+          (currentDate.getMonth() - startDate.getMonth());
+        return monthDiff % event.repeat.interval === 0 && currentDate.getDate() === startDate.getDate();
+      case 'yearly':
+        const yearDiff = currentDate.getFullYear() - startDate.getFullYear();
+        return (
+          yearDiff % event.repeat.interval === 0 &&
+          currentDate.getMonth() === startDate.getMonth() &&
+          currentDate.getDate() === startDate.getDate()
+        );
+      default:
+        return false;
+    }
+  });
 }
 
 export function formatWeek(targetDate: Date) {
