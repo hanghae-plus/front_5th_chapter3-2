@@ -31,8 +31,8 @@ const fillScheduleForm = async (page: Page, data: Omit<Event, 'id'>) => {
 
   await page.getByTestId('event-submit-button').click();
 
+  // 중복 팝업 시 계속 진행 클릭
   const proceedButton = page.getByRole('button', { name: '계속 진행' });
-
   if (await proceedButton.isVisible()) {
     await proceedButton.click();
   }
