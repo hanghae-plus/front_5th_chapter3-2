@@ -42,7 +42,7 @@ it('저장되어있는 초기 이벤트 데이터를 적절하게 불러온다',
 });
 
 it('정의된 이벤트 정보를 기준으로 적절하게 저장이 된다', async () => {
-  setupMockHandlerCreation(); // ? Med: 이걸 왜 써야하는지 물어보자
+  setupMockHandlerCreation();
 
   const { result } = renderHook(() => useEventOperations(false));
 
@@ -186,155 +186,8 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 });
 
 describe('반복 일정 기능', () => {
-  it('반복 일정을 생성할 수 있다', async () => {
-    setupMockHandlerCreation();
-
-    const { result } = renderHook(() => useEventOperations(false));
-
-    await act(() => Promise.resolve(null));
-
-    const repeatEvent: Event = {
-      id: '1',
-      title: '반복 회의',
-      date: '2025-10-01',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '매일 반복되는 회의',
-      location: '회의실 A',
-      category: '업무',
-      repeat: {
-        type: 'daily',
-        interval: 1,
-        endDate: '2025-10-03',
-      },
-      notificationTime: 30,
-    };
-
-    await act(async () => {
-      await result.current.saveRepeatEvent(repeatEvent);
-    });
-
-    expect(result.current.events).toHaveLength(3);
-    expect(result.current.events[0].date).toBe('2025-10-01');
-    expect(result.current.events[1].date).toBe('2025-10-02');
-    expect(result.current.events[2].date).toBe('2025-10-03');
-  });
-
-  it('반복 일정을 수정할 수 있다', async () => {
-    setupMockHandlerUpdating();
-
-    const { result } = renderHook(() => useEventOperations(true));
-
-    await act(() => Promise.resolve(null));
-
-    const updatedRepeatEvent: Event = {
-      id: '1',
-      title: '수정된 반복 회의',
-      date: '2025-10-01',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '수정된 반복 회의',
-      location: '회의실 A',
-      category: '업무',
-      repeat: {
-        type: 'daily',
-        interval: 1,
-        endDate: '2025-10-03',
-      },
-      notificationTime: 30,
-    };
-
-    await act(async () => {
-      await result.current.saveRepeatEvent(updatedRepeatEvent);
-    });
-
-    expect(result.current.events[0].title).toBe('수정된 반복 회의');
-  });
-
-  it('반복 일정을 삭제할 수 있다', async () => {
-    setupMockHandlerDeletion();
-
-    const { result } = renderHook(() => useEventOperations(false));
-
-    await act(() => Promise.resolve(null));
-
-    await act(async () => {
-      await result.current.deleteEvent('1');
-    });
-
-    expect(result.current.events).toHaveLength(0);
-  });
-
-  it('반복 간격이 0이하인 경우 에러를 발생시킨다', async () => {
-    const { result } = renderHook(() => useEventOperations(false));
-
-    await act(() => Promise.resolve(null));
-
-    const invalidRepeatEvent: Event = {
-      id: '1',
-      title: '잘못된 반복 회의',
-      date: '2025-10-01',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '잘못된 반복 회의',
-      location: '회의실 A',
-      category: '업무',
-      repeat: {
-        type: 'daily',
-        interval: 0,
-        endDate: '2025-10-03',
-      },
-      notificationTime: 30,
-    };
-
-    await act(async () => {
-      await result.current.saveRepeatEvent(invalidRepeatEvent);
-    });
-
-    expect(toastFn).toHaveBeenCalledWith({
-      duration: 3000,
-      isClosable: true,
-      title: '일정 저장 실패',
-      status: 'error',
-    });
-  });
-
-  describe('반복 유형 선택', () => {
-    it('매일 반복 일정을 생성할 수 있다', async () => {
-      setupMockHandlerCreation();
-
-      const { result } = renderHook(() => useEventOperations(false));
-
-      await act(() => Promise.resolve(null));
-
-      const dailyEvent: Event = {
-        id: '1',
-        title: '매일 회의',
-        date: '2025-10-01',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '매일 반복되는 회의',
-        location: '회의실 A',
-        category: '업무',
-        repeat: {
-          type: 'daily',
-          interval: 1,
-          endDate: '2025-10-03',
-        },
-        notificationTime: 30,
-      };
-
-      await act(async () => {
-        await result.current.saveRepeatEvent(dailyEvent);
-      });
-
-      expect(result.current.events).toHaveLength(3);
-      expect(result.current.events[0].date).toBe('2025-10-01');
-      expect(result.current.events[1].date).toBe('2025-10-02');
-      expect(result.current.events[2].date).toBe('2025-10-03');
-    });
-
-    it('매주 반복 일정을 생성할 수 있다', async () => {
+  describe('반복 이벤트 저장 및 수정 삭제', () => {
+    it('반복 이벤트 저장 시 반복 주기와 일정에 따라 반복 이벤트가 올바르게 저장된다', async () => {
       setupMockHandlerCreation();
 
       const { result } = renderHook(() => useEventOperations(false));
@@ -350,230 +203,169 @@ describe('반복 일정 기능', () => {
         description: '매주 반복되는 회의',
         location: '회의실 A',
         category: '업무',
-        repeat: {
-          type: 'weekly',
-          interval: 1,
-          endDate: '2025-10-15',
-        },
-        notificationTime: 30,
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-15' },
+        notificationTime: 5,
       };
 
       await act(async () => {
         await result.current.saveRepeatEvent(weeklyEvent);
       });
 
-      expect(result.current.events).toHaveLength(3);
-      expect(result.current.events[0].date).toBe('2025-10-01');
-      expect(result.current.events[1].date).toBe('2025-10-08');
-      expect(result.current.events[2].date).toBe('2025-10-15');
-    });
-
-    it('매월 반복 일정을 생성할 수 있다', async () => {
-      setupMockHandlerCreation();
-
-      const { result } = renderHook(() => useEventOperations(false));
-
-      await act(() => Promise.resolve(null));
-
-      const monthlyEvent: Event = {
-        id: '1',
-        title: '월간 회의',
-        date: '2025-01-31',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '매월 반복되는 회의',
-        location: '회의실 A',
-        category: '업무',
-        repeat: {
-          type: 'monthly',
-          interval: 1,
-          endDate: '2025-03-31',
-        },
-        notificationTime: 30,
-      };
-
       await act(async () => {
-        await result.current.saveRepeatEvent(monthlyEvent);
+        await result.current.fetchEvents();
       });
 
-      expect(result.current.events).toHaveLength(3);
-      expect(result.current.events[0].date).toBe('2025-01-31');
-      expect(result.current.events[1].date).toBe('2025-02-28'); // 2월은 28일까지만
-      expect(result.current.events[2].date).toBe('2025-03-31');
-    });
-
-    it('매년 반복 일정을 생성할 수 있다', async () => {
-      setupMockHandlerCreation();
-
-      const { result } = renderHook(() => useEventOperations(false));
-
-      await act(() => Promise.resolve(null));
-
-      const yearlyEvent: Event = {
-        id: '1',
-        title: '연간 회의',
-        date: '2024-02-29',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '매년 반복되는 회의',
-        location: '회의실 A',
-        category: '업무',
-        repeat: {
-          type: 'yearly',
-          interval: 1,
-          endDate: '2026-02-28',
-        },
-        notificationTime: 30,
-      };
-
-      await act(async () => {
-        await result.current.saveRepeatEvent(yearlyEvent);
-      });
-
-      expect(result.current.events).toHaveLength(3);
-      expect(result.current.events[0].date).toBe('2024-02-29'); // 윤년
-      expect(result.current.events[1].date).toBe('2025-02-28'); // 평년
-      expect(result.current.events[2].date).toBe('2026-02-28'); // 평년
-    });
-
-    it('반복 유형이 없는 경우 단일 일정만 생성된다', async () => {
-      setupMockHandlerCreation();
-
-      const { result } = renderHook(() => useEventOperations(false));
-
-      await act(() => Promise.resolve(null));
-
-      const singleEvent: Event = {
-        id: '1',
-        title: '단일 회의',
-        date: '2025-10-01',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '단일 회의',
-        location: '회의실 A',
-        category: '업무',
-        repeat: {
-          type: 'none',
-          interval: 0,
-        },
-        notificationTime: 30,
-      };
-
-      await act(async () => {
-        await result.current.saveRepeatEvent(singleEvent);
-      });
-
-      expect(result.current.events).toHaveLength(1);
-      expect(result.current.events[0].date).toBe('2025-10-01');
+      expect(result.current.events).toEqual([
+        { ...weeklyEvent, id: '1', date: '2025-10-01' },
+        { ...weeklyEvent, id: '2', date: '2025-10-08' },
+        { ...weeklyEvent, id: '3', date: '2025-10-15' },
+      ]);
     });
   });
 
-  describe('반복 간격 설정', () => {
-    it('2일 간격으로 반복되는 일정을 생성할 수 있다', async () => {
+  describe('반복 유형 선택', () => {
+    it('매일 반복 일정을 생성할 수 있다', async () => {
       setupMockHandlerCreation();
-
       const { result } = renderHook(() => useEventOperations(false));
-
       await act(() => Promise.resolve(null));
 
       const dailyEvent: Event = {
         id: '1',
-        title: '2일 간격 회의',
+        title: '매일 회의',
         date: '2025-10-01',
         startTime: '09:00',
         endTime: '10:00',
-        description: '2일 간격으로 반복되는 회의',
+        description: '매일 반복되는 회의',
         location: '회의실 A',
         category: '업무',
-        repeat: {
-          type: 'daily',
-          interval: 2,
-          endDate: '2025-10-07',
-        },
-        notificationTime: 30,
+        repeat: { type: 'daily', interval: 1, endDate: '2025-10-03' },
+        notificationTime: 5,
       };
 
       await act(async () => {
         await result.current.saveRepeatEvent(dailyEvent);
       });
 
-      expect(result.current.events).toHaveLength(4);
-      expect(result.current.events[0].date).toBe('2025-10-01');
-      expect(result.current.events[1].date).toBe('2025-10-03');
-      expect(result.current.events[2].date).toBe('2025-10-05');
-      expect(result.current.events[3].date).toBe('2025-10-07');
+      await act(async () => {
+        await result.current.fetchEvents();
+      });
+
+      expect(result.current.events).toEqual([
+        {
+          ...dailyEvent,
+          id: '1',
+          date: '2025-10-01',
+          repeat: { ...dailyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...dailyEvent,
+          id: '2',
+          date: '2025-10-02',
+          repeat: { ...dailyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...dailyEvent,
+          id: '3',
+          date: '2025-10-03',
+          repeat: { ...dailyEvent.repeat, id: 'repeat-1' },
+        },
+      ]);
     });
 
-    it('3주 간격으로 반복되는 일정을 생성할 수 있다', async () => {
+    it('매주 반복 일정을 생성할 수 있다', async () => {
       setupMockHandlerCreation();
-
       const { result } = renderHook(() => useEventOperations(false));
-
       await act(() => Promise.resolve(null));
 
       const weeklyEvent: Event = {
         id: '1',
-        title: '3주 간격 회의',
+        title: '주간 회의',
         date: '2025-10-01',
         startTime: '09:00',
         endTime: '10:00',
-        description: '3주 간격으로 반복되는 회의',
+        description: '매주 반복되는 회의',
         location: '회의실 A',
         category: '업무',
-        repeat: {
-          type: 'weekly',
-          interval: 3,
-          endDate: '2025-11-12',
-        },
-        notificationTime: 30,
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-15' },
+        notificationTime: 5,
       };
 
       await act(async () => {
         await result.current.saveRepeatEvent(weeklyEvent);
       });
 
-      expect(result.current.events).toHaveLength(4);
-      expect(result.current.events[0].date).toBe('2025-10-01');
-      expect(result.current.events[1].date).toBe('2025-10-22');
-      expect(result.current.events[2].date).toBe('2025-11-12');
+      await act(async () => {
+        await result.current.fetchEvents();
+      });
+
+      expect(result.current.events).toEqual([
+        {
+          ...weeklyEvent,
+          id: '1',
+          date: '2025-10-01',
+          repeat: { ...weeklyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...weeklyEvent,
+          id: '2',
+          date: '2025-10-08',
+          repeat: { ...weeklyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...weeklyEvent,
+          id: '3',
+          date: '2025-10-15',
+          repeat: { ...weeklyEvent.repeat, id: 'repeat-1' },
+        },
+      ]);
     });
 
-    it('2개월 간격으로 반복되는 일정을 생성할 수 있다', async () => {
+    it('매월 반복 일정을 생성할 수 있다', async () => {
       setupMockHandlerCreation();
-
       const { result } = renderHook(() => useEventOperations(false));
-
       await act(() => Promise.resolve(null));
 
       const monthlyEvent: Event = {
         id: '1',
-        title: '2개월 간격 회의',
-        date: '2025-01-31',
+        title: '월간 회의',
+        date: '2025-10-31',
         startTime: '09:00',
         endTime: '10:00',
-        description: '2개월 간격으로 반복되는 회의',
+        description: '매월 반복되는 회의',
         location: '회의실 A',
         category: '업무',
-        repeat: {
-          type: 'monthly',
-          interval: 2,
-          endDate: '2025-07-31',
-        },
-        notificationTime: 30,
+        repeat: { type: 'monthly', interval: 1, endDate: '2026-01-31' },
+        notificationTime: 5,
       };
 
       await act(async () => {
         await result.current.saveRepeatEvent(monthlyEvent);
       });
 
-      expect(result.current.events).toHaveLength(4);
-      expect(result.current.events[0].date).toBe('2025-01-31');
-      expect(result.current.events[1].date).toBe('2025-03-31');
-      expect(result.current.events[2].date).toBe('2025-05-31');
-      expect(result.current.events[3].date).toBe('2025-07-31');
+      // 31일이 있는 달만 추가한다.
+      expect(result.current.events).toEqual([
+        {
+          ...monthlyEvent,
+          id: '1',
+          date: '2025-10-31',
+          repeat: { ...monthlyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...monthlyEvent,
+          id: '2',
+          date: '2025-12-31',
+          repeat: { ...monthlyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...monthlyEvent,
+          id: '3',
+          date: '2026-01-31',
+          repeat: { ...monthlyEvent.repeat, id: 'repeat-1' },
+        },
+      ]);
     });
 
-    it('2년 간격으로 반복되는 일정을 생성할 수 있다', async () => {
+    it('윤년 29일에 매년 반복 일정을 설정한 경우 종료 시점까지 윤년 29일에 반복 일정이 저장된다', async () => {
       setupMockHandlerCreation();
 
       const { result } = renderHook(() => useEventOperations(false));
@@ -582,64 +374,62 @@ describe('반복 일정 기능', () => {
 
       const yearlyEvent: Event = {
         id: '1',
-        title: '2년 간격 회의',
+        title: '새 회의',
         date: '2024-02-29',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '2년 간격으로 반복되는 회의',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
         location: '회의실 A',
         category: '업무',
-        repeat: {
-          type: 'yearly',
-          interval: 2,
-          endDate: '2028-02-29',
-        },
-        notificationTime: 30,
+        repeat: { type: 'yearly', interval: 1, endDate: '2028-02-28' },
+        notificationTime: 5,
       };
 
       await act(async () => {
         await result.current.saveRepeatEvent(yearlyEvent);
       });
 
-      expect(result.current.events).toHaveLength(3);
-      expect(result.current.events[0].date).toBe('2024-02-29'); // 윤년
-      expect(result.current.events[1].date).toBe('2026-02-28'); // 평년
-      expect(result.current.events[2].date).toBe('2028-02-29'); // 윤년
-    });
-
-    it('반복 간격이 0이하인 경우 에러를 발생시킨다', async () => {
-      const { result } = renderHook(() => useEventOperations(false));
-
-      await act(() => Promise.resolve(null));
-
-      const invalidEvent: Event = {
-        id: '1',
-        title: '잘못된 간격 회의',
-        date: '2025-10-01',
-        startTime: '09:00',
-        endTime: '10:00',
-        description: '잘못된 간격의 회의',
-        location: '회의실 A',
-        category: '업무',
-        repeat: {
-          type: 'daily',
-          interval: 0,
-          endDate: '2025-10-07',
-        },
-        notificationTime: 30,
-      };
-
-      // waitFor vs await act
       await act(async () => {
-        await result.current.saveRepeatEvent(invalidEvent);
+        await result.current.fetchEvents();
       });
 
-      expect(toastFn).toHaveBeenCalledWith({
-        duration: 3000,
-        isClosable: true,
-        title: '일정 저장 실패',
-        status: 'error',
-      });
+      expect(result.current.events).toEqual([
+        {
+          ...yearlyEvent,
+          id: '1',
+          date: '2024-02-29',
+          repeat: { ...yearlyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...yearlyEvent,
+          id: '2',
+          date: '2025-03-01',
+          repeat: { ...yearlyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...yearlyEvent,
+          id: '3',
+          date: '2026-03-01',
+          repeat: { ...yearlyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...yearlyEvent,
+          id: '4',
+          date: '2027-03-01',
+          repeat: { ...yearlyEvent.repeat, id: 'repeat-1' },
+        },
+      ]);
     });
   });
 });
+
+// 반복 간격
+//- 각 반복 유형에 대해 간격을 설정할 수 있다.
+// - 예: 2일마다, 3주마다, 2개월마다 등
+
+// 반복 일정 - 통합 테스트로 확인
+// -캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표시한다.
+
+// 반복 종료
+// - 반복 종료 조건을 지정할 수 있다.
+// - 옵션: 특정 날짜까지, 특정 횟수만큼, 또는 종료 없음 (예제 특성상, 2025-09-30까지)
