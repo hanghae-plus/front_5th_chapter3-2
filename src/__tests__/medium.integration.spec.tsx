@@ -11,7 +11,7 @@ import {
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
-import { Event } from '../types';
+import { Event, RepeatType } from '../types';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
@@ -20,10 +20,15 @@ const setup = (element: ReactElement) => {
   return { ...render(<ChakraProvider>{element}</ChakraProvider>), user }; // ? Med: 왜 ChakraProvider로 감싸는지 물어보자
 };
 
-// ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'>
+  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> & {
+    isRepeating?: boolean;
+    repeatType?: Exclude<RepeatType, 'none'>;
+    repeatInterval?: number;
+    repeatEndDate?: string;
+    repeatCount?: number;
+  }
 ) => {
   const { title, date, startTime, endTime, location, description, category } = form;
 
@@ -36,6 +41,38 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
+  const isRepeatingCheckbox = screen.getByLabelText<HTMLInputElement>('반복 일정');
+
+  if (form.isRepeating) {
+    if (!isRepeatingCheckbox.checked) {
+      await user.click(isRepeatingCheckbox);
+    }
+
+    if (form.repeatType) {
+      await user.selectOptions(await screen.findByLabelText('반복 유형'), form.repeatType!);
+    }
+    if (form.repeatInterval) {
+      const intervalInput = await screen.findByLabelText('반복 간격');
+      await user.clear(intervalInput);
+      await user.type(intervalInput, form.repeatInterval!.toString());
+    }
+
+    if (form.repeatEndDate) {
+      const repeatEndArea = (await screen.findByText('반복 종료')).parentElement;
+      await user.click(within(repeatEndArea!).getByLabelText('날짜'));
+      await user.type(screen.getByLabelText('반복 종료일'), form.repeatEndDate);
+    } else if (form.repeatCount) {
+      const repeatEndArea = (await screen.findByText('반복 종료')).parentElement;
+      await user.click(within(repeatEndArea!).getByLabelText('횟수'));
+      const repeatCountInput = screen.getByLabelText('반복 횟수');
+      await user.clear(repeatCountInput);
+      await user.type(repeatCountInput, form.repeatCount.toString());
+    }
+  } else {
+    if (isRepeatingCheckbox.checked) {
+      await user.click(isRepeatingCheckbox);
+    }
+  }
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -57,6 +94,8 @@ describe('일정 CRUD 및 기본 기능', () => {
     });
 
     const eventList = within(screen.getByTestId('event-list'));
+    screen.debug();
+
     expect(eventList.getByText('새 회의')).toBeInTheDocument();
     expect(eventList.getByText('2025-10-15')).toBeInTheDocument();
     expect(eventList.getByText('14:00 - 15:00')).toBeInTheDocument();
