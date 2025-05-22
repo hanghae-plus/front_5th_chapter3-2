@@ -42,6 +42,7 @@ test.describe.serial('순차적 실행', () => {
 
     await page.waitForTimeout(500);
 
+    await expect(page.getByText('일정이 추가되었습니다')).toBeVisible();
     const eventList = page.getByTestId('event-list');
     await expect(eventList.getByText('추가 일정')).toBeVisible();
     await expect(eventList.getByText('코어 타임')).toBeVisible();
@@ -54,13 +55,18 @@ test.describe.serial('순차적 실행', () => {
     };
     await addEvent({ page, event });
 
-    await page.getByRole('button', { name: 'Edit event' }).first().click();
+    await page.waitForTimeout(500);
+
+    await page.getByRole('button', { name: 'Edit event' }).last().click();
     await page.getByRole('textbox', { name: '제목' }).click();
     await page.getByRole('textbox', { name: '제목' }).fill('팀 회의 수정!');
     await page.getByTestId('event-submit-button').click();
 
+    await page.waitForTimeout(500);
+
     await expect(page.getByText('일정이 수정되었습니다')).toBeVisible();
     const eventList = page.getByTestId('event-list');
+    await expect(eventList.getByText('수정할 일정')).not.toBeVisible();
     await expect(eventList.getByText('팀 회의 수정!')).toBeVisible();
   });
 
@@ -71,16 +77,17 @@ test.describe.serial('순차적 실행', () => {
     };
     await addEvent({ page, event });
 
-    const eventList = page.getByTestId('event-list');
+    await page.waitForTimeout(500);
 
+    const eventList = page.getByTestId('event-list');
     await expect(eventList.getByText('삭제할 일정')).toBeVisible();
 
     const deleteButtons = page.getByRole('button', { name: 'Delete event' });
-    const count = await deleteButtons.count();
-    for (let i = 0; i < count; i++) {
-      await deleteButtons.first().click();
-    }
+    await deleteButtons.last().click();
 
+    await page.waitForTimeout(500);
+
+    await expect(page.getByText('일정이 삭제되었습니다')).toBeVisible();
     await expect(eventList.getByText('삭제할 일정')).not.toBeVisible();
   });
 });
