@@ -1,9 +1,10 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { ReactElement } from 'react';
 
 import {
+  setupMockHandlerDeletion,
   setupMockHandlerEventsListCreation,
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
@@ -101,7 +102,7 @@ describe('반복 일정 CRUD 테스트', () => {
 
       const eventList = within(screen.getByTestId('event-list'));
 
-      expect(eventList.queryByText('반복')).not.toBeInTheDocument();
+      expect(eventList.queryByTestId('repeat-info')).not.toBeInTheDocument();
 
       const monthView = within(screen.getByTestId('month-view'));
       const repeatIcon = monthView.queryByLabelText('repeat-icon');
@@ -110,37 +111,60 @@ describe('반복 일정 CRUD 테스트', () => {
     });
   });
 
-  // describe('반복 일정 단일 삭제', () => {
-  //   it('반복 일정 중 하나를 삭제하면 해당 일정만 사라지고 나머지는 유지된다', async () => {
-  //     const { user } = setup(<App />);
+  describe('반복 일정 단일 삭제', () => {
+    it('반복 일정 중 하나를 삭제하면 해당 일정만 사라지고 나머지는 유지된다', async () => {
+      const { user } = setup(<App />);
 
-  //     // 1. 반복 일정 생성
-  //     await user.click(screen.getByText('일정 추가'));
-  //     await user.type(screen.getByLabelText('제목'), '반복 회의');
-  //     await user.type(screen.getByLabelText('날짜'), '2025-05-01');
-  //     await user.type(screen.getByLabelText('시작 시간'), '09:00');
-  //     await user.type(screen.getByLabelText('종료 시간'), '10:00');
-  //     await user.type(screen.getByLabelText('설명'), '삭제 테스트');
-  //     await user.type(screen.getByLabelText('위치'), '회의실');
-  //     await user.selectOptions(screen.getByLabelText('카테고리'), '업무');
-  //     await user.selectOptions(screen.getByLabelText('반복 유형'), 'daily');
-  //     await user.type(screen.getByLabelText('반복 종료일'), '2025-05-03');
-  //     await user.click(screen.getByTestId('event-submit-button'));
+      setupMockHandlerDeletion([
+        {
+          id: '1',
+          title: '새 회의',
+          date: '2025-10-01',
+          startTime: '11:00',
+          endTime: '12:00',
+          description: '새로운 팀 미팅',
+          location: '회의실 A',
+          category: '업무',
+          repeat: { type: 'daily', interval: 1, endDate: '2025-10-03' },
+          notificationTime: 5,
+        },
+        {
+          id: '2',
+          title: '새 회의',
+          date: '2025-10-02',
+          startTime: '11:00',
+          endTime: '12:00',
+          description: '새로운 팀 미팅',
+          location: '회의실 A',
+          category: '업무',
+          repeat: { type: 'daily', interval: 1, endDate: '2025-10-03' },
+          notificationTime: 5,
+        },
+        {
+          id: '3',
+          title: '새 회의',
+          date: '2025-10-03',
+          startTime: '11:00',
+          endTime: '12:00',
+          description: '새로운 팀 미팅',
+          location: '회의실 A',
+          category: '업무',
+          repeat: { type: 'daily', interval: 1, endDate: '2025-10-03' },
+          notificationTime: 5,
+        },
+      ]);
 
-  //     const eventList = within(screen.getByTestId('event-list'));
+      await screen.findByText('일정 로딩 완료!');
 
-  //     // 2. 반복 일정이 3개 렌더링되었는지 확인
-  //     await screen.findAllByText('반복 회의');
-  //     expect(eventList.getAllByText('반복 회의')).toHaveLength(3);
+      const deleteButtons = await screen.findAllByLabelText('Delete event');
+      await user.click(deleteButtons[0]);
 
-  //     // 3. 첫 번째 일정 삭제
-  //     const deleteButtons = await screen.findAllByLabelText('Delete event');
-  //     await user.click(deleteButtons[0]);
+      await screen.findByText('일정이 삭제되었습니다.');
 
-  //     // 4. 삭제 후 2개만 남아 있어야 함
-  //     await waitFor(() => {
-  //       expect(eventList.getAllByText('반복 회의')).toHaveLength(2);
-  //     });
-  //   });
-  // });
+      await waitFor(() => {
+        const eventList = within(screen.getByTestId('event-list'));
+        expect(eventList.queryByTestId('repeat-info')).not.toBeInTheDocument();
+      });
+    });
+  });
 });
