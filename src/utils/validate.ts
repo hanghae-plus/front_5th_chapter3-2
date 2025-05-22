@@ -21,3 +21,25 @@ export function isNumberInRange({
 
   return true;
 }
+
+/**
+ * 반복 종료일이 시작일보다 늦은지 확인합니다.
+ *
+ * @param event - 검사할 이벤트입니다.
+ * @returns 종료일이 시작일보다 빠르거나 같으면 에러 메시지를, 그렇지 않으면 null을 반환합니다.
+ */
+export function validateRepeatEndDate(event: {
+  date: string;
+  repeat: { endDate?: string };
+}): string | null {
+  if (!event.repeat.endDate) return null;
+
+  const startDate = new Date(event.date);
+  const endDate = new Date(event.repeat.endDate);
+
+  if (endDate <= startDate) {
+    return '종료일은 시작일보다 늦어야 합니다.';
+  }
+
+  return null;
+}
