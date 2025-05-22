@@ -340,7 +340,7 @@ function App() {
                                       {event.title}
                                     </Text>
                                     <IconButton
-                                      aria-label="Edit event"
+                                      aria-label="Edit single occurrence"
                                       icon={<EditIcon />}
                                       onClick={() => {
                                         // console.log(event, event.parentId);
