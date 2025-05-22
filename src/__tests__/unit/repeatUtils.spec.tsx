@@ -1,3 +1,5 @@
+import { render, screen } from '@testing-library/react';
+
 import { RepeatType, type Event } from '../../types';
 import {
   generateRepeatDates,
@@ -7,7 +9,6 @@ import {
   convertRecurringToSingleEvent,
   deleteSingleOccurrence,
 } from '../../utils/repeatUtils';
-import { render, screen } from '@testing-library/react';
 
 vi.mock('@chakra-ui/icons', () => ({
   RepeatClockIcon: () => <svg data-testid="daily-icon" />,

@@ -55,6 +55,13 @@ import {
   getWeeksAtMonth,
 } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
+import {
+  getRepeatTypeLabel,
+  generateRepeatDates,
+  getRecurringIcon,
+  isRepeatEnded,
+  convertRecurringToSingleEvent,
+} from './utils/repeatUtils';
 import { getTimeErrorMessage } from './utils/timeValidation';
 
 const categories = ['업무', '개인', '가족', '기타'];
@@ -115,6 +122,8 @@ function App() {
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
   const cancelRef = useRef<HTMLButtonElement>(null);
 
+  const repeatOptions: RepeatType[] = ['daily', 'weekly', 'monthly', 'yearly'];
+
   const toast = useToast();
 
   const addOrUpdateEvent = async () => {
@@ -138,8 +147,7 @@ function App() {
       return;
     }
 
-    const eventData: Event | EventForm = {
-      id: editingEvent ? editingEvent.id : undefined,
+    const baseEventData: EventForm = {
       title,
       date,
       startTime,
@@ -155,18 +163,61 @@ function App() {
       notificationTime,
     };
 
-    const overlapping = findOverlappingEvents(eventData, events);
-    if (overlapping.length > 0) {
-      setOverlappingEvents(overlapping);
-      setIsOverlapDialogOpen(true);
+    const isRecurring = isRepeating && repeatType !== 'none';
+
+    console.log({ baseEventData });
+    if (isRecurring) {
+      const repeatDates = generateRepeatDates(date, baseEventData.repeat);
+      const repeatedEvents: Event[] = repeatDates.map((repeatDate, index) => ({
+        ...baseEventData,
+        id: `${title}-${repeatDate}-${startTime}-${index}`,
+        date: repeatDate,
+      }));
+
+      const overlappingAll = repeatedEvents.flatMap((e) => findOverlappingEvents(e, events));
+
+      if (overlappingAll.length > 0) {
+        setOverlappingEvents(overlappingAll);
+        setIsOverlapDialogOpen(true);
+        return;
+      }
+
+      for (const e of repeatedEvents) {
+        await saveEvent(e);
+      }
     } else {
-      await saveEvent(eventData);
-      resetForm();
+      const eventToSave: Event = {
+        ...baseEventData,
+        id: editingEvent ? editingEvent.id : `${title}-${date}-${startTime}`,
+        date,
+      };
+
+      const overlapping = findOverlappingEvents(eventToSave, events);
+      if (overlapping.length > 0) {
+        setOverlappingEvents(overlapping);
+        setIsOverlapDialogOpen(true);
+        return;
+      }
+
+      await saveEvent(eventToSave);
     }
+
+    resetForm();
   };
 
   const renderWeekView = () => {
     const weekDates = getWeekDates(currentDate);
+    const expandedEvents = events.flatMap((event) => {
+      if (event.repeat.type === 'none') return [event];
+
+      const dates = generateRepeatDates(event.date, event.repeat);
+      return dates.map((date, index) => ({
+        ...event,
+        id: `${event.id}-repeat-${index}`,
+        date,
+      }));
+    });
+
     return (
       <VStack data-testid="week-view" align="stretch" w="full" spacing={4}>
         <Heading size="md">{formatWeek(currentDate)}</Heading>
@@ -186,9 +237,11 @@ function App() {
                 <Td key={date.toISOString()} height="100px" verticalAlign="top" width="14.28%">
                   <Text fontWeight="bold">{date.getDate()}</Text>
                   {filteredEvents
+                    .filter((event) => !isRepeatEnded(event.date, event.repeat.endDate))
                     .filter((event) => new Date(event.date).toDateString() === date.toDateString())
                     .map((event) => {
                       const isNotified = notifiedEvents.includes(event.id);
+
                       return (
                         <Box
                           key={event.id}
@@ -201,9 +254,42 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
-                            <Text fontSize="sm" noOfLines={1}>
+                            <Text data-testid="event-title" fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
+                            {getEventsForDay(expandedEvents, date).map((event) => {
+                              const isNotified = notifiedEvents.includes(event.id);
+                              return (
+                                <Box
+                                  key={event.id}
+                                  p={1}
+                                  my={1}
+                                  bg={isNotified ? 'red.100' : 'gray.100'}
+                                  borderRadius="md"
+                                  fontWeight={isNotified ? 'bold' : 'normal'}
+                                  color={isNotified ? 'red.500' : 'inherit'}
+                                >
+                                  <HStack spacing={1} align="start">
+                                    {isNotified && <BellIcon />}
+                                    <VStack align="start" spacing={0}>
+                                      <Text fontSize="sm" noOfLines={1}>
+                                        {event.title}
+                                      </Text>
+                                      {getRecurringIcon(event.repeat.type) && (
+                                        <Text
+                                          fontSize="xs"
+                                          color="blue.500"
+                                          fontWeight="medium"
+                                          data-testid="repeat-icon"
+                                        >
+                                          {getRecurringIcon(event.repeat.type)}
+                                        </Text>
+                                      )}
+                                    </VStack>
+                                  </HStack>
+                                </Box>
+                              );
+                            })}
                           </HStack>
                         </Box>
                       );
@@ -219,6 +305,17 @@ function App() {
 
   const renderMonthView = () => {
     const weeks = getWeeksAtMonth(currentDate);
+
+    const expandedEvents = events.flatMap((event) => {
+      if (event.repeat.type === 'none') return [event];
+
+      const dates = generateRepeatDates(event.date, event.repeat);
+      return dates.map((date, index) => ({
+        ...event,
+        id: `${event.id}-repeat-${index}`,
+        date,
+      }));
+    });
 
     return (
       <VStack data-testid="month-view" align="stretch" w="full" spacing={4}>
@@ -239,6 +336,7 @@ function App() {
                 {week.map((day, dayIndex) => {
                   const dateString = day ? formatDate(currentDate, day) : '';
                   const holiday = holidays[dateString];
+                  const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
 
                   return (
                     <Td
@@ -256,7 +354,8 @@ function App() {
                               {holiday}
                             </Text>
                           )}
-                          {getEventsForDay(filteredEvents, day).map((event) => {
+
+                          {getEventsForDay(expandedEvents, date).map((event) => {
                             const isNotified = notifiedEvents.includes(event.id);
                             return (
                               <Box
@@ -268,11 +367,23 @@ function App() {
                                 fontWeight={isNotified ? 'bold' : 'normal'}
                                 color={isNotified ? 'red.500' : 'inherit'}
                               >
-                                <HStack spacing={1}>
+                                <HStack spacing={1} align="start">
                                   {isNotified && <BellIcon />}
-                                  <Text fontSize="sm" noOfLines={1}>
-                                    {event.title}
-                                  </Text>
+                                  <VStack align="start" spacing={0}>
+                                    <Text data-testid="event-title" fontSize="sm" noOfLines={1}>
+                                      {event.title}
+                                    </Text>
+                                    {getRecurringIcon(event.repeat.type) && (
+                                      <Text
+                                        fontSize="xs"
+                                        color="blue.500"
+                                        fontWeight="medium"
+                                        data-testid="repeat-icon"
+                                      >
+                                        {getRecurringIcon(event.repeat.type)}
+                                      </Text>
+                                    )}
+                                  </VStack>
                                 </HStack>
                               </Box>
                             );
@@ -357,7 +468,13 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              isChecked={isRepeating}
+              onChange={(e) => {
+                console.log({ isRepeating: e.target.checked });
+                setIsRepeating(e.target.checked);
+              }}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
@@ -379,15 +496,21 @@ function App() {
           {isRepeating && (
             <VStack width="100%">
               <FormControl>
-                <FormLabel>반복 유형</FormLabel>
+                <FormLabel htmlFor="repeatType" data-testid="test">
+                  반복 유형
+                </FormLabel>
                 <Select
+                  id="repeatType"
                   value={repeatType}
-                  onChange={(e) => setRepeatType(e.target.value as RepeatType)}
+                  onChange={(e) => {
+                    setRepeatType(e.target.value as RepeatType);
+                  }}
                 >
-                  <option value="daily">매일</option>
-                  <option value="weekly">매주</option>
-                  <option value="monthly">매월</option>
-                  <option value="yearly">매년</option>
+                  {repeatOptions.map((type) => (
+                    <option key={type} value={type}>
+                      {getRepeatTypeLabel(type)}
+                    </option>
+                  ))}
                 </Select>
               </FormControl>
               <HStack width="100%">
@@ -478,15 +601,14 @@ function App() {
                     <Text>{event.description}</Text>
                     <Text>{event.location}</Text>
                     <Text>카테고리: {event.category}</Text>
-                    {event.repeat.type !== 'none' && (
-                      <Text>
-                        반복: {event.repeat.interval}
-                        {event.repeat.type === 'daily' && '일'}
-                        {event.repeat.type === 'weekly' && '주'}
-                        {event.repeat.type === 'monthly' && '월'}
-                        {event.repeat.type === 'yearly' && '년'}
-                        마다
-                        {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
+                    {getRecurringIcon(event.repeat.type) && (
+                      <Text
+                        color="blue.500"
+                        fontSize="sm"
+                        fontWeight="medium"
+                        data-testid="repeat-icon"
+                      >
+                        {getRecurringIcon(event.repeat.type)}
                       </Text>
                     )}
                     <Text>
@@ -504,6 +626,18 @@ function App() {
                       icon={<EditIcon />}
                       onClick={() => editEvent(event)}
                     />
+                    {event.repeat.type !== 'none' && (
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        onClick={() => {
+                          const singleEvent = convertRecurringToSingleEvent(event);
+                          setEditingEvent(singleEvent);
+                        }}
+                      >
+                        이 일정만 수정
+                      </Button>
+                    )}
                     <IconButton
                       aria-label="Delete event"
                       icon={<DeleteIcon />}

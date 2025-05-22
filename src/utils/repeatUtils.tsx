@@ -1,7 +1,8 @@
+import { RepeatClockIcon, RepeatIcon, CalendarIcon, SunIcon } from '@chakra-ui/icons';
 import { ReactElement } from 'react';
+
 import { Event, RepeatType } from '../types';
 import { formatDate } from './dateUtils';
-import { RepeatClockIcon, RepeatIcon, CalendarIcon, SunIcon } from '@chakra-ui/icons';
 
 // 1. 반복 유형에 따른 라벨 반환
 export function getRepeatTypeLabel(type: RepeatType): string {
