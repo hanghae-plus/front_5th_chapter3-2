@@ -38,9 +38,16 @@ const saveSchedule = async (
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
 
   if (repeat) {
+    await user.click(screen.getByLabelText('반복 일정'));
     await user.selectOptions(screen.getByLabelText('반복 유형'), repeat.type ?? 'none');
-    await user.type(screen.getByLabelText('반복 간격'), repeat.interval.toString() ?? '');
-    await user.type(screen.getByLabelText('반복 종료일'), repeat.endDate ?? '');
+    await user.type(screen.getByLabelText('반복 간격'), repeat.interval.toString() ?? '1');
+    await user.type(screen.getByLabelText('반복 종료 유형'), repeat.endType ?? 'date');
+
+    if (repeat.endType === 'date') {
+      await user.type(screen.getByLabelText('반복 종료일'), repeat.endDate ?? '');
+    } else if (repeat.endType === 'count') {
+      await user.type(screen.getByLabelText('설정 횟수'), repeat.endCount?.toString() ?? '1');
+    }
   }
 
   await user.click(screen.getByTestId('event-submit-button'));
@@ -220,6 +227,56 @@ describe('일정 뷰', () => {
     // 1월 1일 셀 확인
     const januaryFirstCell = within(monthView).getByText('1').closest('td')!;
     expect(within(januaryFirstCell).getByText('신정')).toBeInTheDocument();
+  });
+
+  it('월별 뷰에 반복 일정으로 등록된 이벤트에는 반복 아이콘이 렌더링된다.', async () => {
+    setupMockHandlerCreation();
+
+    vi.setSystemTime(new Date('2025-09-15'));
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-09-15',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endType: 'date', endDate: '2025-09-17' },
+    });
+
+    const monthView = within(screen.getByTestId('month-view'));
+    expect(monthView.getByText('새 회의')).toBeInTheDocument();
+
+    const repeatIcon = monthView.getByTestId('repeat-icon');
+    expect(repeatIcon).toBeInTheDocument();
+  });
+
+  it('주별 뷰에 반복 일정으로 등록된 이벤트에는 반복 아이콘이 렌더링된다.', async () => {
+    setupMockHandlerCreation();
+
+    vi.setSystemTime(new Date('2025-09-15'));
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-09-15',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endType: 'date', endDate: '2025-09-16' },
+    });
+
+    await user.selectOptions(screen.getByLabelText('view'), 'week');
+
+    const weekView = within(screen.getByTestId('week-view'));
+    expect(weekView.getByText('새 회의')).toBeInTheDocument();
+
+    const repeatIcon = weekView.getByTestId('repeat-icon');
+    expect(repeatIcon).toBeInTheDocument();
   });
 });
 
