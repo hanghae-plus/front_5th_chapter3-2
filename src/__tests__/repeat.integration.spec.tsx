@@ -1,7 +1,6 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act, waitFor } from '@testing-library/react';
+import { render, screen, within, act } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
-import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
 
 import {
@@ -10,7 +9,6 @@ import {
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
-import { server } from '../setupTests';
 import { Event } from '../types';
 
 // ! Hard 여기 제공 안함
@@ -56,7 +54,7 @@ describe('반복 유형 선택', () => {
   it('일정 생성 시 반복 일정 checkBox가 존재한다.', async () => {
     setupMockHandlerCreation();
 
-    const { user } = setup(<App />);
+    setup(<App />);
 
     await act(() => Promise.resolve(null));
 
@@ -67,7 +65,7 @@ describe('반복 유형 선택', () => {
   it('반복 일정 체크 시 반복 유형 select가 존재한다.', async () => {
     setupMockHandlerCreation();
 
-    const { user } = setup(<App />);
+    setup(<App />);
 
     await act(() => Promise.resolve(null));
 
@@ -78,7 +76,7 @@ describe('반복 유형 선택', () => {
   it('반복 일정 체크 시 반복 유형 select에는 매일, 매주, 매월, 매년 Option이 존재한다.', async () => {
     setupMockHandlerCreation();
 
-    const { user } = setup(<App />);
+    setup(<App />);
 
     await act(() => Promise.resolve(null));
 
