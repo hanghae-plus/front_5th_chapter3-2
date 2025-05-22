@@ -64,38 +64,6 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  // const getRepeatEvents = (eventData: Event | EventForm): EventForm[] => {
-  //   const { type, endDate, interval } = eventData.repeat;
-  //   const repeatType = type;
-  //   if (repeatType === 'none' || !endDate) return [eventData];
-
-  //   const newEvents: EventForm[] = [{ ...eventData }];
-  //   let currentDate = new Date(eventData.date);
-  //   const end = new Date(endDate);
-
-  //   while (currentDate < end) {
-  //     switch (repeatType) {
-  //       case 'daily':
-  //         currentDate.setDate(currentDate.getDate() + interval);
-  //         break;
-  //       case 'weekly':
-  //         currentDate.setDate(currentDate.getDate() + 7 * interval);
-  //         break;
-  //       case 'monthly':
-  //         currentDate.setMonth(currentDate.getMonth() + interval);
-  //         break;
-  //       case 'yearly':
-  //         currentDate.setFullYear(currentDate.getFullYear() + interval);
-  //         break;
-  //     }
-  //     if (currentDate > end) break;
-
-  //     newEvents.push({ ...eventData, date: formatDate(currentDate) });
-  //   }
-
-  //   return newEvents;
-  // };
-
   const saveRepeatEvent = async (eventData: Event | EventForm) => {
     try {
       let response: Response;

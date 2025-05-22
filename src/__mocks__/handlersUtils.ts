@@ -158,4 +158,47 @@ export const setupMockRepeatHandlerUpdation = () => {
   );
 };
 
-export const setupMockRepeatHandlerDeletion = () => {};
+export const setupMockRepeatHandlerDeletion = () => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '새 반복 일정',
+      date: '2025-05-01',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 반복 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-05-03' },
+      notificationTime: 5,
+    },
+    {
+      id: '2',
+      title: '삭제할 반복 이벤트2',
+      date: '2025-05-02',
+      startTime: '12:00',
+      endTime: '13:00',
+      description: '새로운 반복 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-05-03' },
+      notificationTime: 5,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.delete('api/events-list', async ({ request }) => {
+      const { eventIds: eventIdsToDelete } = (await request.json()) as { eventIds: string[] };
+      const deletedEvents = mockEvents.filter((event) => eventIdsToDelete.includes(event.id));
+
+      deletedEvents.forEach((deletedEvent) => {
+        const index = mockEvents.findIndex((mockEvent) => mockEvent.id === deletedEvent.id);
+        mockEvents.splice(index, 1);
+      });
+      return new HttpResponse(null, { status: 204 });
+    })
+  );
+};

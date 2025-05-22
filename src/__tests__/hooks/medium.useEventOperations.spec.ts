@@ -6,6 +6,7 @@ import {
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
   setupMockRepeatHandlerCreateion,
+  setupMockRepeatHandlerDeletion,
   setupMockRepeatHandlerUpdation,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
@@ -485,7 +486,7 @@ describe('반복 일정', () => {
   });
 
   it('반복 일정 중 특정 일정을 삭제하면, 해당 일정만 삭제한다.', async () => {
-    setupMockHandlerDeletion();
+    setupMockRepeatHandlerDeletion();
 
     const { result } = renderHook(() => useEventOperations(false));
 
@@ -503,11 +504,12 @@ describe('반복 일정', () => {
       repeat: { type: 'daily', interval: 1, endDate: '2025-05-03' },
       notificationTime: 5,
     };
+    expect(result.current.events.length).toBe(2);
 
     await act(async () => {
-      await result.current.deleteEvent(newEvent.id);
+      await result.current.deleteRepeatEvent(newEvent.id);
     });
 
-    expect(result.current.events.length).toBe(0);
+    expect(result.current.events.length).toBe(1);
   });
 });
