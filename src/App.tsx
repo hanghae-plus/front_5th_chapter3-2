@@ -82,7 +82,12 @@ function expandEvents(events, startDate, endDate) {
       const dateStr = current.toISOString().slice(0, 10);
       // 예외 날짜에 포함되어 있으면 skip
       if (current >= startDate && !(event.exceptions && event.exceptions.includes(dateStr))) {
-        expanded.push({ ...event, date: dateStr });
+        expanded.push({ 
+          ...event, 
+          id: `${event.id}-${dateStr}`, // 날짜를 포함한 고유 ID 생성
+          parentId: event.id, // 원래 이벤트의 ID를 참조
+          date: dateStr 
+        });
       }
       switch (event.repeat.type) {
         case 'daily':
@@ -335,6 +340,15 @@ function App() {
                                     <Text fontSize="sm" noOfLines={1}>
                                       {event.title}
                                     </Text>
+                                    <IconButton
+                                      aria-label="Delete single occurrence"
+                                      icon={<DeleteIcon />}
+                                      size="xs"
+                                      onClick={() => {
+                                        console.log(event);
+                                        deleteEvent(event.id);
+                                      }}
+                                    />
                                   </HStack>
                                 </Box>
                               );

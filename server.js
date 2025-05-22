@@ -60,11 +60,31 @@ app.put('/api/events/:id', async (req, res) => {
 app.delete('/api/events/:id', async (req, res) => {
   const events = await getEvents();
   const id = req.params.id;
+  const { parentId } = req.body; // 클라이언트에서 전달된 parentId
+
+  let newEvents;
+
+  if (parentId) {
+    // 반복 일정의 단일 인스턴스 삭제 처리
+    newEvents = events.events.map((event) => {
+      if (event.id === parentId) {
+        // 예외 날짜 추가
+        return {
+          ...event,
+          exceptions: [...(event.exceptions || []), id.split('-')[1]], // 날짜 부분만 예외로 추가
+        };
+      }
+      return event;
+    });
+  } else {
+    // 단일 이벤트 삭제
+    newEvents = events.events.filter((event) => event.id !== id);
+  }
 
   fs.writeFileSync(
     `${__dirname}/src/__mocks__/response/realEvents.json`,
     JSON.stringify({
-      events: events.events.filter((event) => event.id !== id),
+      events: newEvents,
     })
   );
 
