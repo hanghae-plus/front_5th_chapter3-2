@@ -4,6 +4,7 @@ import {
   formatDate,
   formatMonth,
   formatWeek,
+  getDateByInterval,
   getDaysInMonth,
   getEventsForDay,
   getWeekDates,
@@ -296,5 +297,39 @@ describe('formatDate', () => {
   it('일이 한 자리 수일 때 앞에 0을 붙여 포맷팅한다', () => {
     const testDate = new Date('2023-12-05');
     expect(formatDate(testDate)).toBe('2023-12-05');
+  });
+});
+
+describe('getDateByInterval', () => {
+  it('daily 타입의 경우 일자를 증가시킨다', () => {
+    const date = new Date('2025-10-01');
+
+    const result = getDateByInterval(date, 'daily', 1);
+
+    expect(formatDate(result)).toBe('2025-10-02');
+  });
+
+  it('weekly 타입의 경우 주자를 증가시킨다', () => {
+    const date = new Date('2025-10-01');
+
+    const result = getDateByInterval(date, 'weekly', 1);
+
+    expect(formatDate(result)).toBe('2025-10-08');
+  });
+
+  it('monthly 타입의 경우 월을 증가시킨다', () => {
+    const date = new Date('2025-10-01');
+
+    const result = getDateByInterval(date, 'monthly', 1);
+
+    expect(formatDate(result)).toBe('2025-11-01');
+  });
+
+  it('yearly 타입의 경우 년도를 증가시킨다', () => {
+    const date = new Date('2025-10-01');
+
+    const result = getDateByInterval(date, 'yearly', 1);
+
+    expect(formatDate(result)).toBe('2026-10-01');
   });
 });

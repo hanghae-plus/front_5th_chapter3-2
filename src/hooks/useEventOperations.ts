@@ -2,6 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import { generateRepeatEvents, getAllRepeatEventsIds } from '../utils/eventUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -30,24 +31,40 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     try {
       let response;
       if (editing) {
+        const editingEvent = {
+          ...eventData,
+          repeat: {
+            id: undefined,
+            type: 'none',
+            interval: 0,
+          },
+        };
+
         response = await fetch(`/api/events/${(eventData as Event).id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
+          body: JSON.stringify(editingEvent),
         });
+
+        await fetchEvents();
       } else {
-        response = await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
+        if (eventData.repeat.type === 'none') {
+          response = await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+
+          await fetchEvents();
+        } else {
+          response = await saveRepeatEvents(eventData);
+        }
       }
 
-      if (!response.ok) {
+      if (!response?.ok) {
         throw new Error('Failed to save event');
       }
 
-      await fetchEvents();
       onSave?.();
       toast({
         title: editing ? '일정이 수정되었습니다.' : '일정이 추가되었습니다.',
@@ -92,6 +109,96 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  const saveRepeatEvents = async (eventData: Event | EventForm) => {
+    const repeatEvents = generateRepeatEvents(eventData);
+    const response = await fetch('/api/events-list', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ events: repeatEvents }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to save repeat events');
+    }
+
+    await fetchEvents();
+
+    return response;
+  };
+
+  const deleteAllRepeatEvents = async (repeatId: string) => {
+    try {
+      const allRepeatEventsIds = getAllRepeatEventsIds(repeatId, events);
+      const response = await fetch(`/api/events-list`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventIds: allRepeatEventsIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete all repeat events');
+      }
+
+      await fetchEvents();
+      onSave?.();
+      toast({
+        title: '반복 일정 모두 삭제 완료',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error deleting all repeat events:', error);
+      toast({
+        title: '반복 일정 모두 삭제 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const updateAllRepeatEvents = async (updatedFields: Event | EventForm, repeatId: string) => {
+    try {
+      const allRepeatEventsIds = getAllRepeatEventsIds(repeatId, events);
+      const eventsToUpdate = allRepeatEventsIds.map((id) => {
+        const event = events.find((e) => e.id === id);
+        return {
+          ...updatedFields,
+          id: event?.id,
+          date: event?.date,
+        };
+      });
+
+      const response = await fetch(`/api/events-list`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: eventsToUpdate }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update all repeat events');
+      }
+
+      await fetchEvents();
+      onSave?.();
+      toast({
+        title: '반복 일정 모두 수정 완료',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error updating all repeat events:', error);
+      toast({
+        title: '반복 일정 모두 수정 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   async function init() {
     await fetchEvents();
     toast({
@@ -106,5 +213,13 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent };
+  return {
+    events,
+    fetchEvents,
+    saveEvent,
+    deleteEvent,
+    saveRepeatEvents,
+    deleteAllRepeatEvents,
+    updateAllRepeatEvents,
+  };
 };

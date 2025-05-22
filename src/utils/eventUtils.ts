@@ -1,5 +1,5 @@
-import { Event } from '../types';
-import { getWeekDates, isDateInRange } from './dateUtils';
+import { Event, EventForm } from '../types';
+import { formatDate, getDateByInterval, getWeekDates, isDateInRange } from './dateUtils';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
   return events.filter((event) => {
@@ -47,4 +47,47 @@ export function getFilteredEvents(
   }
 
   return searchedEvents;
+}
+
+export function generateRepeatEvents(event: Event | EventForm) {
+  const repeatEvents = [];
+  let currentDate = new Date(event.date);
+
+  if (event.repeatEnd?.type === 'endCount' && event.repeatEnd.endCount) {
+    let count = 0;
+    while (count < event.repeatEnd.endCount) {
+      repeatEvents.push({
+        ...event,
+        date: formatDate(currentDate),
+      });
+      currentDate = getDateByInterval(currentDate, event.repeat.type, event.repeat.interval);
+      count++;
+    }
+  } else {
+    const repeatEndDate = event.repeatEnd?.endDate
+      ? new Date(event.repeatEnd.endDate)
+      : new Date('2025-09-30');
+
+    while (currentDate <= repeatEndDate) {
+      repeatEvents.push({
+        ...event,
+        date: formatDate(currentDate),
+      });
+      currentDate = getDateByInterval(currentDate, event.repeat.type, event.repeat.interval);
+    }
+  }
+
+  return repeatEvents;
+}
+
+export function getAllRepeatEventsIds(repeatId: string, events: Event[]) {
+  const result = events
+    .map((event) => {
+      if (event.repeat.id === repeatId) return event.id;
+
+      return null;
+    })
+    .filter(Boolean);
+
+  return result;
 }

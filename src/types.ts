@@ -1,9 +1,9 @@
 export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
-
+export type RepeatEndType = 'endDate' | 'endCount';
 export interface RepeatInfo {
+  id?: string;
   type: RepeatType;
   interval: number;
-  endDate?: string;
 }
 
 export interface EventForm {
@@ -16,6 +16,11 @@ export interface EventForm {
   category: string;
   repeat: RepeatInfo;
   notificationTime: number; // 분 단위로 저장
+  repeatEnd?: {
+    type: RepeatEndType;
+    endDate?: string;
+    endCount?: number;
+  };
 }
 
 export interface Event extends EventForm {
