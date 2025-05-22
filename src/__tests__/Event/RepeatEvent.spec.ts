@@ -890,3 +890,64 @@ describe('반복 종료 조건', () => {
     });
   });
 });
+
+describe('반복 일정 체크박스 선택 시 기본값 설정', () => {
+  beforeEach(() => {
+    setupMockHandlerCreation();
+  });
+
+  test('반복 간격이 0 이하일 경우 에러가 발생한다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    const invalidEvent: EventForm = {
+      title: '잘못된 반복 간격',
+      date: '2025-05-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '테스트',
+      location: '회의실 A',
+      category: '회의',
+      repeat: {
+        type: 'daily',
+        interval: 0, // 잘못된 간격
+        endDate: '2025-05-30',
+      },
+      notificationTime: 10,
+    };
+
+    // Promise rejection 확인
+    await expect(
+      act(async () => {
+        await result.current.saveEvent(invalidEvent);
+      })
+    ).rejects.toThrowError('반복 간격은 1 이상이어야 합니다');
+  });
+
+  test('반복 횟수가 0인 경우 에러가 발생한다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    const invalidEvent: EventForm = {
+      title: '잘못된 반복 횟수',
+      date: '2025-05-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '테스트',
+      location: '회의실 A',
+      category: '회의',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endType: 'endcount',
+        endCount: 0, // 잘못된 반복 횟수
+      },
+      notificationTime: 10,
+    };
+
+    // Promise rejection 확인
+    await expect(
+      act(async () => {
+        await result.current.saveEvent(invalidEvent);
+      })
+    ).rejects.toThrowError('반복 횟수는 1 이상이어야 합니다');
+  });
+});
