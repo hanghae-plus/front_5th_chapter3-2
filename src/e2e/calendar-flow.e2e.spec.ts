@@ -1,8 +1,11 @@
 import { test, expect } from '@playwright/test';
 
-test('일정 추가 → 수정 → 삭제가 event-list에 반영되는지 확인', async ({ page }) => {
+test.beforeEach(async ({ request, page }) => {
+  await request.post('http://localhost:3000/__reset');
   await page.goto('http://localhost:5173');
+});
 
+test('일정 추가 → 수정 → 삭제가 event-list에 반영되는지 확인', async ({ page }) => {
   const listItems = page.locator('[data-testid="event-list"] > *');
   const initialCount = await listItems.count();
 
