@@ -164,6 +164,8 @@ const EventForm: FC<EventFormProps> = ({
       <FormControl>
         <FormLabel>반복 설정</FormLabel>
         <Checkbox
+          aria-label="반복 일정"
+          data-testid="repeat-toggle"
           isChecked={isRepeating}
           onChange={(e: ChangeEvent<HTMLInputElement>) => setIsRepeating(e.target.checked)}
         >

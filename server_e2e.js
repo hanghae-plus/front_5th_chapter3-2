@@ -7,7 +7,7 @@ const port = 3000;
 
 app.use(express.json());
 
-let db = [ㄹ];
+let db = [];
 
 // 상태 초기화 API
 app.post('/__reset', (_, res) => {

@@ -22,7 +22,7 @@ const EventItem: FC<EventItemProps> = ({ event, isNotified }) => {
     >
       <HStack spacing={1}>
         {isNotified && <BellIcon />}
-        <Text fontSize="sm" noOfLines={1}>
+        <Text fontSize="sm" noOfLines={1} data-testid="event-title">
           {formatEventTitle(event)}
         </Text>
       </HStack>

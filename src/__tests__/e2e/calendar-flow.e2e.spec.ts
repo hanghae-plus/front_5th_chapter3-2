@@ -6,7 +6,7 @@ test('사용자는 캘린더에서 일정을 추가, 수정, 삭제할 수 있�
 
   //일정 추가
   await page.getByLabel('제목').fill('팀 회의');
-  await page.getByLabel('날짜').fill('2025-05-09');
+  await page.getByLabel('날짜').fill('2025-05-20');
   await page.getByLabel('시작 시간').fill('14:00');
   await page.getByLabel('종료 시간').fill('15:00');
   await page.getByLabel('설명').fill('E2E 테스트 일정');
@@ -17,7 +17,7 @@ test('사용자는 캘린더에서 일정을 추가, 수정, 삭제할 수 있�
   // 2. 추가 확인
   const eventList = page.getByTestId('event-list');
   await expect(eventList.locator('text=팀 회의')).toBeVisible();
-  await expect(eventList.locator('text=2025-05-09')).toBeVisible();
+  await expect(eventList.locator('text=2025-05-20')).toBeVisible();
 
   // 3. 수정
   await page
