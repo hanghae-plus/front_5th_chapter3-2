@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -45,7 +46,7 @@ import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { Event, EventForm, RepeatEndCondition, RepeatType } from './types';
 import {
   formatDate,
   formatMonth,
@@ -55,6 +56,7 @@ import {
   getWeeksAtMonth,
 } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
+import { generateRepeatEvents } from './utils/repeatEventUtils.ts';
 import { getTimeErrorMessage } from './utils/timeValidation';
 
 const categories = ['업무', '개인', '가족', '기타'];
@@ -91,6 +93,10 @@ function App() {
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatEndCondition,
+    setRepeatEndCondition,
+    repeatCount,
+    setRepeatCount,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -103,8 +109,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, saveRepeatEvents, deleteEvent } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -150,7 +157,9 @@ function App() {
       repeat: {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
+        endCondition: repeatEndCondition,
         endDate: repeatEndDate || undefined,
+        endCount: repeatCount || undefined,
       },
       notificationTime,
     };
@@ -160,7 +169,12 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      if (isRepeating) {
+        const repeatEvents = generateRepeatEvents(eventData);
+        await saveRepeatEvents(repeatEvents);
+      } else {
+        await saveEvent(eventData);
+      }
       resetForm();
     }
   };
@@ -183,12 +197,19 @@ function App() {
           <Tbody>
             <Tr>
               {weekDates.map((date) => (
-                <Td key={date.toISOString()} height="100px" verticalAlign="top" width="14.28%">
+                <Td
+                  key={date.toISOString()}
+                  height="100px"
+                  verticalAlign="top"
+                  width="14.28%"
+                  data-date={`${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`}
+                >
                   <Text fontWeight="bold">{date.getDate()}</Text>
                   {filteredEvents
                     .filter((event) => new Date(event.date).toDateString() === date.toDateString())
                     .map((event) => {
                       const isNotified = notifiedEvents.includes(event.id);
+                      const isRepeat = !!event.repeat?.id && !event.repeat?.isUpdated;
                       return (
                         <Box
                           key={event.id}
@@ -201,6 +222,7 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {isRepeat && <RepeatIcon />}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -247,6 +269,7 @@ function App() {
                       verticalAlign="top"
                       width="14.28%"
                       position="relative"
+                      data-date={`${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${day?.toString().padStart(2, '0')}`}
                     >
                       {day && (
                         <>
@@ -258,6 +281,7 @@ function App() {
                           )}
                           {getEventsForDay(filteredEvents, day).map((event) => {
                             const isNotified = notifiedEvents.includes(event.id);
+                            const isRepeat = !!event.repeat?.id && !event.repeat?.isUpdated;
                             return (
                               <Box
                                 key={event.id}
@@ -270,6 +294,7 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {isRepeat && <RepeatIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -288,6 +313,43 @@ function App() {
         </Table>
       </VStack>
     );
+  };
+
+  const renderRepeatEndCondition = () => {
+    if (repeatEndCondition === 'date') {
+      return (
+        <HStack width="100%">
+          <FormControl>
+            <FormLabel>반복 종료일</FormLabel>
+            <Input
+              type="date"
+              value={repeatEndDate}
+              onChange={(e) => setRepeatEndDate(e.target.value)}
+            />
+          </FormControl>
+        </HStack>
+      );
+    }
+
+    if (repeatEndCondition === 'count') {
+      return (
+        <HStack width="100%">
+          <FormControl>
+            <FormLabel>반복 종료 횟수</FormLabel>
+            <Input
+              value={repeatCount}
+              onChange={(e) => {
+                const value = e.target.value ? Number(e.target.value) : 1;
+                setRepeatCount(value);
+              }}
+              min={1}
+            />
+          </FormControl>
+        </HStack>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -394,21 +456,27 @@ function App() {
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
                   <Input
-                    type="number"
                     value={repeatInterval}
-                    onChange={(e) => setRepeatInterval(Number(e.target.value))}
+                    onChange={(e) => {
+                      const value = e.target.value ? Number(e.target.value) : 0;
+                      setRepeatInterval(value);
+                    }}
                     min={1}
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>반복 종료일</FormLabel>
-                  <Input
-                    type="date"
-                    value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
-                  />
+                  <FormLabel>반복 종료 조건</FormLabel>
+                  <Select
+                    value={repeatEndCondition}
+                    onChange={(e) => setRepeatEndCondition(e.target.value as RepeatEndCondition)}
+                  >
+                    <option value="date">특정 날짜</option>
+                    <option value="count">특정 횟수</option>
+                    <option value="no-end">종료 없음</option>
+                  </Select>
                 </FormControl>
               </HStack>
+              {renderRepeatEndCondition()}
             </VStack>
           )}
 
@@ -464,6 +532,7 @@ function App() {
                   <VStack align="start">
                     <HStack>
                       {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
+                      {!event.repeat?.id && !event.repeat?.isUpdated && <RepeatIcon />}
                       <Text
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                         color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
@@ -486,7 +555,10 @@ function App() {
                         {event.repeat.type === 'monthly' && '월'}
                         {event.repeat.type === 'yearly' && '년'}
                         마다
-                        {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
+                        {event.repeat?.endCondition === 'date' &&
+                          ` (종료: ${event.repeat.endDate})`}
+                        {event.repeat?.endCondition === 'count' &&
+                          ` (종료: ${event.repeat.endCount}회)`}
                       </Text>
                     )}
                     <Text>
@@ -546,22 +618,26 @@ function App() {
                 colorScheme="red"
                 onClick={() => {
                   setIsOverlapDialogOpen(false);
-                  saveEvent({
-                    id: editingEvent ? editingEvent.id : undefined,
-                    title,
-                    date,
-                    startTime,
-                    endTime,
-                    description,
-                    location,
-                    category,
-                    repeat: {
-                      type: isRepeating ? repeatType : 'none',
-                      interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
-                    },
-                    notificationTime,
-                  });
+                  if (isRepeating) {
+                    // 반복 이벤트 만드는 유틸
+                    // saveRepeatEvents();
+                  } else {
+                    saveEvent({
+                      id: editingEvent ? editingEvent.id : undefined,
+                      title,
+                      date,
+                      startTime,
+                      endTime,
+                      description,
+                      location,
+                      category,
+                      repeat: {
+                        type: 'none',
+                        interval: repeatInterval,
+                      },
+                      notificationTime,
+                    });
+                  }
                 }}
                 ml={3}
               >
