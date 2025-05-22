@@ -17,7 +17,6 @@ import {
   AlertTitle,
   Box,
   Button,
-  Checkbox,
   CloseButton,
   Flex,
   FormControl,
@@ -47,7 +46,7 @@ import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useRepeatSettings } from './hooks/useRepeatSettings.ts';
 import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { Event, EventForm } from './types';
 import {
   formatDate,
   formatMonth,
