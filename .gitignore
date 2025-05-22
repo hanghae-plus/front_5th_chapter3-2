@@ -2,3 +2,9 @@
 .vscode
 node_modules
 .coverage
+# E2E 테스트 산출물 무시
+playwright-report/
+test-results/
+*.log
+*.mp4
+*.ziptest-results/

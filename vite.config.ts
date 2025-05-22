@@ -1,3 +1,5 @@
+import path from 'path';
+
 import react from '@vitejs/plugin-react-swc';
 import { defineConfig } from 'vite';
 import { defineConfig as defineTestConfig, mergeConfig } from 'vitest/config';
@@ -13,9 +15,15 @@ export default mergeConfig(
         },
       },
     },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
   }),
   defineTestConfig({
     test: {
+      exclude: ['e2e/**', 'integration/**', 'node_modules/**'],
       globals: true,
       environment: 'jsdom',
       setupFiles: './src/setupTests.ts',

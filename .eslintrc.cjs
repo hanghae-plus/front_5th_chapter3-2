@@ -20,7 +20,13 @@ module.exports = {
     ecmaVersion: 2022,
   },
   rules: {
-    'no-unused-vars': 'warn',
+    'no-unused-vars': [
+      'warn',
+      {
+        argsIgnorePattern: '^_', // 매개변수 무시
+        varsIgnorePattern: '^_', // 변수 무시
+      },
+    ],
     'react/prop-types': 'off',
     'import/order': [
       'error',
