@@ -1,9 +1,19 @@
 import { Event, EventForm } from '@/types';
 
+/**
+ * 윤년인지 확인하는 함수
+ * @param year
+ * @returns
+ */
 function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
 
+/**
+ * 숫자를 두 자리 문자열로 변환하는 함수
+ * @param n
+ * @returns
+ */
 function pad(n: number): string {
   return n.toString().padStart(2, '0');
 }
