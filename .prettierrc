@@ -13,9 +13,7 @@
   "jsxBracketSameLine": false,
   "requirePragma": false,
   "insertPragma": false,
-  "proseWrap": "preserve",{
-  "endOfLine": "auto"
-},
+  "proseWrap": "preserve",
   "overrides": [
     {
       "files": "*.svg",
