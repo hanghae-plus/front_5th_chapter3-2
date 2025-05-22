@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test('반복 일정을 단일 일정으로 수정하면 반복 아이콘이 사라진다', async ({ page }) => {
+// 반복 일정 생성 후 단일 일정으로  전환 시 반복 아이콘이 사라지는지 확인하는 테스트
+
+test('반복 일정 중 하나를 단일 일정으로 수정하면 반복 아이콘이 사라진다', async ({ page }) => {
   await page.goto('/');
 
   const title = `반복 일정 테스트 ${Date.now()}`;
