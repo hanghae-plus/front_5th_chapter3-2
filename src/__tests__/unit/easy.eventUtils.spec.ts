@@ -678,4 +678,180 @@ describe('getRepeatedEvents', () => {
       },
     ]);
   });
+  it(`'2월 29일마다 반복' 설정의 이벤트를 입력하면, 평년의 2월은 제외한 일정 배열을 반환한다.`, async () => {
+    const event: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2024-02-29',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1, endDate: '2034-03-01' },
+      notificationTime: 10,
+    };
+
+    const repeatedEvents = getRepeatedEvents(event);
+
+    expect(repeatedEvents).toEqual([
+      {
+        title: '새로운 반복 이벤트',
+        date: '2024-02-29',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'yearly', interval: 1, endDate: '2034-03-01' },
+        notificationTime: 10,
+      },
+      {
+        title: '새로운 반복 이벤트',
+        date: '2028-02-29',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'yearly', interval: 1, endDate: '2034-03-01' },
+        notificationTime: 10,
+      },
+      {
+        title: '새로운 반복 이벤트',
+        date: '2032-02-29',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'yearly', interval: 1, endDate: '2034-03-01' },
+        notificationTime: 10,
+      },
+    ]);
+  });
+
+  it(`'30일마다 반복' 설정의 이벤트를 입력하면, 30일이 없는 달은 제외한 일정 배열을 반환한다.`, async () => {
+    const event: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-01-30',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-05-31' },
+      notificationTime: 10,
+    };
+
+    const repeatedEvents = getRepeatedEvents(event);
+
+    expect(repeatedEvents).toEqual([
+      {
+        title: '새로운 반복 이벤트',
+        date: '2025-01-30',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-05-31' },
+        notificationTime: 10,
+      },
+      {
+        title: '새로운 반복 이벤트',
+        date: '2025-03-30',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-05-31' },
+        notificationTime: 10,
+      },
+      {
+        title: '새로운 반복 이벤트',
+        date: '2025-04-30',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-05-31' },
+        notificationTime: 10,
+      },
+      {
+        title: '새로운 반복 이벤트',
+        date: '2025-05-30',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-05-31' },
+        notificationTime: 10,
+      },
+    ]);
+  });
+  it(`'31일마다 반복' 설정의 이벤트를 입력하면, 31일이 없는 달은 제외한 일정 배열을 반환한다.`, async () => {
+    const event: EventForm = {
+      title: '새로운 반복 이벤트',
+      date: '2025-01-31',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '새로운 이벤트입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-07-31' },
+      notificationTime: 10,
+    };
+
+    const repeatedEvents = getRepeatedEvents(event);
+
+    expect(repeatedEvents).toEqual([
+      {
+        title: '새로운 반복 이벤트',
+        date: '2025-01-31',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-07-31' },
+        notificationTime: 10,
+      },
+      {
+        title: '새로운 반복 이벤트',
+        date: '2025-03-31',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-07-31' },
+        notificationTime: 10,
+      },
+      {
+        title: '새로운 반복 이벤트',
+        date: '2025-05-31',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-07-31' },
+        notificationTime: 10,
+      },
+      {
+        title: '새로운 반복 이벤트',
+        date: '2025-07-31',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '새로운 이벤트입니다.',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-07-31' },
+        notificationTime: 10,
+      },
+    ]);
+  });
 });
