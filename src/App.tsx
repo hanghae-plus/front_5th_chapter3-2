@@ -58,9 +58,7 @@ import { findOverlappingEvents } from './utils/eventOverlap';
 import { getTimeErrorMessage } from './utils/timeValidation';
 
 const categories = ['업무', '개인', '가족', '기타'];
-
 const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
-
 const notificationOptions = [
   { value: 1, label: '1분 전' },
   { value: 10, label: '10분 전' },
@@ -69,7 +67,7 @@ const notificationOptions = [
   { value: 1440, label: '1일 전' },
 ];
 
-function expandRecurringEvents(events, startDate, endDate) {
+function expandEvents(events, startDate, endDate) {
   const expanded: any = [];
   events.forEach((event: any) => {
     if (event.repeat.type === 'none') {
@@ -82,10 +80,7 @@ function expandRecurringEvents(events, startDate, endDate) {
     while (current <= endDate && current <= repeatEnd) {
       const dateStr = current.toISOString().slice(0, 10);
       // 예외 날짜에 포함되어 있으면 skip
-      if (
-        current >= startDate &&
-        !(event.exceptions && event.exceptions.includes(dateStr))
-      ) {
+      if (current >= startDate && !(event.exceptions && event.exceptions.includes(dateStr))) {
         expanded.push({ ...event, date: dateStr });
       }
       switch (event.repeat.type) {
@@ -209,7 +204,7 @@ function App() {
     const weekStart = weekDates[0];
     const weekEnd = weekDates[weekDates.length - 1];
     // 반복일정까지 포함해서 전개
-    const expandedEvents = expandRecurringEvents(filteredEvents, weekStart, weekEnd);
+    const expandedEvents = expandEvents(filteredEvents, weekStart, weekEnd);
     return (
       <VStack data-testid="week-view" align="stretch" w="full" spacing={4}>
         <Heading size="md">{formatWeek(currentDate)}</Heading>
@@ -262,7 +257,7 @@ function App() {
 
   const renderMonthView = () => {
     const weeks = getWeeksAtMonth(currentDate);
-    // 한 달의 시작~끝 날짜 구하기
+    // 한 달의 시작 & 끝 날짜 구하기
     const flatDays = weeks.flat().filter((d): d is number => typeof d === 'number');
     const firstDay =
       flatDays.length > 0
@@ -272,8 +267,8 @@ function App() {
       flatDays.length > 0
         ? new Date(currentDate.getFullYear(), currentDate.getMonth(), flatDays[flatDays.length - 1])
         : currentDate;
-    // 반복일정까지 포함해서 전개
-    const expandedEvents = expandRecurringEvents(filteredEvents, firstDay, lastDay);
+    // 반복일정까지 포함
+    const expandedEvents = expandEvents(filteredEvents, firstDay, lastDay);
 
     return (
       <VStack data-testid="month-view" align="stretch" w="full" spacing={4}>
@@ -282,7 +277,9 @@ function App() {
           <Thead>
             <Tr>
               {weekDays.map((day) => (
-                <Th key={day} width="14.28%">{day}</Th>
+                <Th key={day} width="14.28%">
+                  {day}
+                </Th>
               ))}
             </Tr>
           </Thead>
@@ -290,20 +287,30 @@ function App() {
             {weeks.map((week, weekIndex) => (
               <Tr key={weekIndex}>
                 {week.map((day, dayIndex) => {
-                  const dateObj = day ? new Date(currentDate.getFullYear(), currentDate.getMonth(), day) : null;
+                  const dateObj = day
+                    ? new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+                    : null;
                   const dateString = dateObj ? dateObj.toISOString().slice(0, 10) : '';
                   const holiday = holidays[dateString];
                   return (
-                    <Td key={dayIndex} height="100px" verticalAlign="top" width="14.28%" position="relative">
+                    <Td
+                      key={dayIndex}
+                      height="100px"
+                      verticalAlign="top"
+                      width="14.28%"
+                      position="relative"
+                    >
                       {day && (
                         <>
                           <Text fontWeight="bold">{day}</Text>
                           {holiday && (
-                            <Text color="red.500" fontSize="sm">{holiday}</Text>
+                            <Text color="red.500" fontSize="sm">
+                              {holiday}
+                            </Text>
                           )}
                           {expandedEvents
-                            .filter(event => event.date === dateString)
-                            .map(event => {
+                            .filter((event) => event.date === dateString)
+                            .map((event) => {
                               const isNotified = notifiedEvents.includes(event.id);
                               return (
                                 <Box
@@ -317,7 +324,9 @@ function App() {
                                 >
                                   <HStack spacing={1}>
                                     {isNotified && <BellIcon />}
-                                    <Text fontSize="sm" noOfLines={1}>{event.title}</Text>
+                                    <Text fontSize="sm" noOfLines={1}>
+                                      {event.title}
+                                    </Text>
                                   </HStack>
                                 </Box>
                               );
