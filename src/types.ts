@@ -20,4 +20,5 @@ export interface EventForm {
 
 export interface Event extends EventForm {
   id: string;
+  exceptions?: string[]; // 예외 날짜 배열 추가
 }

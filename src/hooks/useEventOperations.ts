@@ -42,11 +42,11 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           body: JSON.stringify(eventData),
         });
       }
-
+  
       if (!response.ok) {
         throw new Error('Failed to save event');
       }
-
+  
       await fetchEvents();
       onSave?.();
       toast({
@@ -66,23 +66,35 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const deleteEvent = async (id: string, parentId?: string) => {
+  const deleteEvent = async (id: string, parentId?: string, date?: string) => {
     try {
       const response = await fetch(`/api/events/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ parentId }), // parentId를 서버로 전달
+        body: JSON.stringify({ parentId, date }), // parentId와 date를 서버로 전달
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to delete event');
       }
-
+  
       await fetchEvents();
+      toast({
+        title: '일정이 삭제되었습니다.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error('Error deleting event:', error);
+      toast({
+        title: '일정 삭제 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 

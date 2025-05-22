@@ -60,18 +60,18 @@ app.put('/api/events/:id', async (req, res) => {
 app.delete('/api/events/:id', async (req, res) => {
   const events = await getEvents();
   const id = req.params.id;
-  const { parentId } = req.body; // 클라이언트에서 전달된 parentId
+  const { parentId, date } = req.body; // 클라이언트에서 전달된 parentId와 date
 
   let newEvents;
 
-  if (parentId) {
+  if (parentId && date) {
     // 반복 일정의 단일 인스턴스 삭제 처리
     newEvents = events.events.map((event) => {
       if (event.id === parentId) {
         // 예외 날짜 추가
         return {
           ...event,
-          exceptions: [...(event.exceptions || []), id.split('-')[1]], // 날짜 부분만 예외로 추가
+          exceptions: [...(event.exceptions || []), date], // 예외 날짜 추가
         };
       }
       return event;

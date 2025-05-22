@@ -166,7 +166,7 @@ function App() {
       });
       return;
     }
-
+  
     if (startTimeError || endTimeError) {
       toast({
         title: '시간 설정을 확인해주세요.',
@@ -176,7 +176,7 @@ function App() {
       });
       return;
     }
-
+  
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -187,13 +187,13 @@ function App() {
       location,
       category,
       repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
+        type: isRepeating ? repeatType : 'none', // isRepeating이 true일 때만 repeatType 사용
+        interval: isRepeating ? repeatInterval || 1 : 0, // 기본값 설정
+        endDate: isRepeating ? repeatEndDate || undefined : undefined,
       },
       notificationTime,
     };
-
+  
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
@@ -202,7 +202,6 @@ function App() {
       await saveEvent(eventData);
       resetForm();
     }
-    console.log('저장되는 이벤트:', eventData);
   };
 
   const renderWeekView = () => {
@@ -345,8 +344,14 @@ function App() {
                                       icon={<DeleteIcon />}
                                       size="xs"
                                       onClick={() => {
-                                        console.log(event);
-                                        deleteEvent(event.id);
+                                        // console.log(event, event.parentId);
+                                        if (event.parentId) {
+                                          // 반복 일정의 단일 인스턴스 삭제
+                                          deleteEvent(event.id, event.parentId, event.date);
+                                        } else {
+                                          // 일반 이벤트 삭제
+                                          deleteEvent(event.id);
+                                        }
                                       }}
                                     />
                                   </HStack>
@@ -438,7 +443,7 @@ function App() {
               onChange={(e) => {
                 setIsRepeating(e.target.checked);
                 if (e.target.checked && repeatType === 'none') {
-                  setRepeatType('daily'); // 반복 켜면 기본값
+                  setRepeatType('daily'); // 반복 켜면 기본값 설정
                 }
                 if (!e.target.checked) {
                   setRepeatType('none'); // 반복 끄면 none
@@ -497,7 +502,7 @@ function App() {
                 </FormControl>
               </HStack>
             </VStack>
-          )}
+          )}  
 
           <Button data-testid="event-submit-button" onClick={addOrUpdateEvent} colorScheme="blue">
             {editingEvent ? '일정 수정' : '일정 추가'}
