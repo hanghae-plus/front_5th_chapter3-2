@@ -89,6 +89,15 @@ export const setupMockHandlerDeletion = () => {
 
       mockEvents.splice(index, 1);
       return new HttpResponse(null, { status: 204 });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const newEvents = (await request.json()) as { events: Event[] };
+      const eventList: Event[] = newEvents.events.map((event, index) => ({
+        ...event,
+        id: String(mockEvents.length + index + 1),
+      }));
+      mockEvents.push(...eventList);
+      return HttpResponse.json(eventList, { status: 201 });
     })
   );
 };

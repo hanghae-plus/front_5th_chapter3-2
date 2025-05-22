@@ -344,6 +344,10 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 });
 
 describe('반복 일정 추가', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('반복 일정을 추가하면 해당 일정들이 달력에 표시된다.', async () => {
     vi.setSystemTime(new Date('2025-05-20'));
     setupMockHandlerCreationList();
@@ -368,5 +372,38 @@ describe('반복 일정 추가', () => {
 
     // 반복 아이콘이 반복 일정수만큼 있는가
     expect(monthView.getAllByLabelText('repeat-icon')).toHaveLength(11);
+  });
+
+  it('반복 일정 등록 후 이벤트 삭제시 그 일정 하나만 삭제된다.', async () => {
+    vi.setSystemTime(new Date('2025-05-20'));
+    setupMockHandlerDeletion();
+
+    const { user } = setup(<App />);
+
+    const data: EventForm = {
+      title: '반복 회의',
+      date: '2025-05-21',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복 회의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-05-26' },
+      notificationTime: 10,
+    };
+
+    await saveSchedule(user, data);
+
+    const monthView = within(screen.getByTestId('month-view'));
+
+    expect(monthView.getAllByLabelText('repeat-icon')).toHaveLength(6);
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('2025-05-22')).toBeInTheDocument();
+
+    const deleteButton = (await screen.findAllByLabelText('Delete event'))[1];
+    await user.click(deleteButton);
+
+    expect(eventList.queryByText('2025-05-22')).not.toBeInTheDocument();
   });
 });
