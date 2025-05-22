@@ -16,6 +16,7 @@
     "test:e2e:report": "playwright show-report",
     "codegen": "playwright codegen http://localhost:3000",
     "test:e2e:ui": "playwright show-report",
+    "playwright:ui": "playwright test --ui",
     "install:playwright": "playwright install",
     "build": "tsc -b && vite build",
     "lint": "eslint . --ext ts,tsx,js --report-unused-disable-directives --max-warnings 0"
