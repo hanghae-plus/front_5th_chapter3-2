@@ -30,11 +30,19 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     try {
       let response;
       const isRepeating = eventData.repeat.type !== 'none';
+      const id = 'id' in eventData ? eventData.id : undefined;
 
       if (editing) {
-        const id = 'id' in eventData ? eventData.id : undefined;
+        const originalEvent = events.find((e) => e.id === id);
 
-        if (!isRepeating) {
+        // 이벤트가 존재하지 않으면 저장 실패로 처리
+        if (!originalEvent) {
+          throw new Error('수정하려는 이벤트가 존재하지 않습니다.');
+        }
+
+        const wasRepeating = originalEvent?.repeat.type !== 'none';
+
+        if (wasRepeating && !isRepeating) {
           // 기존 반복 일정 삭제
           await deleteEvent(id as string);
 
