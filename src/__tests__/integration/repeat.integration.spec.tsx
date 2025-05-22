@@ -6,6 +6,7 @@ import { ReactElement } from 'react';
 import {
   setupMockHandlerCreation,
   setupMockHandlerRepeatCreation,
+  setupMockHandlerRepeatUpdating,
 } from '../../__mocks__/handlersUtils';
 import App from '../../App';
 import { Event } from '../../types';
@@ -161,33 +162,23 @@ describe('반복 일정', () => {
       repeat: { type: 'monthly', interval: 1, endDate: '2025-09-30' },
     });
 
-    const eventList = within(screen.getByTestId('event-list'));
+    const monthView = within(screen.getByTestId('month-view'));
 
-    const repeatIcon = eventList.getByLabelText('반복 아이콘');
+    const titleElement = monthView.getByText('매월 반복 일정');
+    expect(titleElement).toBeInTheDocument();
 
-    expect(repeatIcon).toBeInTheDocument();
-    expect(repeatIcon.closest('p')).toHaveTextContent('매월 반복 일정');
+    const container = titleElement.closest('div');
+    expect(within(container!).getByLabelText('반복 일정 아이콘')).toBeInTheDocument();
   });
 
   it('반복 일정의 한 인스턴스를 수정하면, 해당 일정이 반복에서 분리되어 단일 일정으로 변경된다.', async () => {
     vi.setSystemTime(new Date('2025-06-01 08:49:59'));
 
-    setupMockHandlerRepeatCreation();
+    setupMockHandlerRepeatUpdating();
 
     const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
-
-    await saveRepeatSchedule(user, {
-      title: '매월 반복 일정',
-      date: '2025-05-01',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '매월 반복 일정',
-      location: '회의실 A',
-      category: '업무',
-      repeat: { type: 'monthly', interval: 1, endDate: '2025-09-30' },
-    });
 
     const eventList = within(screen.getByTestId('event-list'));
     const editButton = eventList.getByText('매월 반복 일정').closest('li')?.querySelector('button');

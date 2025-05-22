@@ -115,6 +115,69 @@ export const setupMockHandlerRepeatCreation = (initEvents = [] as Event[]) => {
   );
 };
 
+export const setupMockHandlerRepeatUpdating = () => {
+  const mockEvents: Event[] = [
+    {
+      id: 'repeat-1',
+      title: '매월 반복 일정',
+      date: '2025-05-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복되는 일정입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        endDate: '2025-09-30',
+        id: 'repeat-group-id-123',
+      },
+      notificationTime: 10,
+    },
+    {
+      id: 'repeat-2',
+      title: '매월 반복 일정',
+      date: '2025-06-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복되는 일정입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        endDate: '2025-09-30',
+        id: 'repeat-group-id-123',
+      },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+
+    http.put('/api/events/:id', async ({ params, request }) => {
+      const { id } = params;
+      const updatedEvent = (await request.json()) as Event;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      if (index === -1) {
+        return HttpResponse.json({ error: 'Event not found' }, { status: 404 });
+      }
+
+      mockEvents[index] = {
+        ...mockEvents[index],
+        ...updatedEvent,
+        repeat: { type: 'none', interval: 0 },
+      };
+
+      return HttpResponse.json(mockEvents[index]);
+    })
+  );
+};
+
 function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }

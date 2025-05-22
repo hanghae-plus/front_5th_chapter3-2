@@ -260,6 +260,8 @@ function App() {
                           )}
                           {getEventsForDay(filteredEvents, day).map((event) => {
                             const isNotified = notifiedEvents.includes(event.id);
+                            const isRepeating = event.repeat?.type !== 'none';
+
                             return (
                               <Box
                                 key={event.id}
@@ -272,6 +274,11 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {isRepeating && (
+                                    <Text as="span" aria-label="반복 일정 아이콘" fontSize="sm">
+                                      🔁
+                                    </Text>
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
