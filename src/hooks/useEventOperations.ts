@@ -66,9 +66,15 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const deleteEvent = async (id: string) => {
+  const deleteEvent = async (id: string, parentId?: string, date?: string) => {
     try {
-      const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/events/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ parentId, date }), // parentId와 date를 서버로 전달
+      });
 
       if (!response.ok) {
         throw new Error('Failed to delete event');
@@ -77,7 +83,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       await fetchEvents();
       toast({
         title: '일정이 삭제되었습니다.',
-        status: 'info',
+        status: 'success',
         duration: 3000,
         isClosable: true,
       });
