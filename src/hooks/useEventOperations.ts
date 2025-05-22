@@ -42,11 +42,11 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           body: JSON.stringify(eventData),
         });
       }
-  
+
       if (!response.ok) {
         throw new Error('Failed to save event');
       }
-  
+
       await fetchEvents();
       onSave?.();
       toast({
@@ -75,11 +75,11 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         },
         body: JSON.stringify({ parentId, date }), // parentId와 date를 서버로 전달
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to delete event');
       }
-  
+
       await fetchEvents();
       toast({
         title: '일정이 삭제되었습니다.',
