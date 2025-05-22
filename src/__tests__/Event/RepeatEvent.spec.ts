@@ -613,3 +613,280 @@ describe('반복 일정 수정', () => {
     });
   });
 });
+
+describe('반복 종료 조건', () => {
+  beforeEach(() => {
+    setupMockHandlerCreation();
+  });
+  test('특정 횟수만큼 반복되는 일정을 생성할 수 있다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    const newEvent: EventForm = {
+      title: '주간 회의',
+      date: '2025-05-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '팀 미팅',
+      location: '회의실 A',
+      category: '회의',
+      repeat: {
+        type: 'weekly',
+        interval: 1,
+        endType: 'endcount',
+        endCount: 5, // 5회 반복
+        endDate: undefined,
+      },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    // 정확히 5개의 이벤트가 생성되었는지 확인
+    expect(result.current.events).toHaveLength(5);
+
+    // 날짜가 올바르게 증가하는지 확인 (주간 반복이므로 7일씩 증가)
+    const dates = result.current.events.map((event) => event.date).sort();
+    expect(dates).toEqual(['2025-05-15', '2025-05-22', '2025-05-29', '2025-06-05', '2025-06-12']);
+
+    // 다른 속성들이 동일하게 복사되었는지 확인
+    result.current.events.forEach((event) => {
+      expect(event).toMatchObject({
+        title: newEvent.title,
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+        description: newEvent.description,
+        location: newEvent.location,
+        category: newEvent.category,
+      });
+    });
+  });
+  test('종료일까지 반복되는 일정을 생성할 수 있다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    const newEvent: EventForm = {
+      title: '주간 회의',
+      date: '2025-05-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '팀 미팅',
+      location: '회의실 A',
+      category: '회의',
+      repeat: {
+        type: 'weekly',
+        interval: 1,
+        endType: 'enddate',
+        endDate: '2025-06-15',
+        endCount: 0,
+      },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    // 시작일부터 종료일까지의 모든 주간 이벤트가 생성되었는지 확인
+    expect(result.current.events).toHaveLength(5); // 5/15, 5/22, 5/29, 6/5, 6/12
+
+    const dates = result.current.events.map((event) => event.date).sort();
+
+    // 마지막 이벤트가 종료일을 넘어가지 않는지 확인
+    const lastEventDate = new Date(dates[dates.length - 1]);
+    const endDate = new Date('2025-06-15');
+    expect(lastEventDate.getTime()).toBeLessThanOrEqual(endDate.getTime());
+  });
+  test('매일 반복 이벤트를 등록 시 횟수만큼 반복 일정을 생성한다.', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    const newEvent: EventForm = {
+      title: '매일 회고',
+      date: '2025-09-21',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: 'test',
+      location: 'test',
+      category: 'test',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endType: 'endcount',
+        endCount: 3,
+      },
+      notificationTime: 10,
+    };
+
+    // When (실행)
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    // Then (검증)
+    const savedEvents = result.current.events;
+
+    // 1. 정확히 3개의 이벤트가 생성되었는지 확인
+    expect(savedEvents).toHaveLength(3);
+
+    // 2. 날짜가 올바르게 증가하는지 확인 (매일 반복이므로 1일씩 증가)
+    const dates = savedEvents.map((event) => event.date).sort();
+    expect(dates).toEqual(['2025-09-21', '2025-09-22', '2025-09-23']);
+
+    // 3. 다른 속성들이 동일하게 복사되었는지 확인
+    savedEvents.forEach((event) => {
+      expect(event).toMatchObject({
+        title: newEvent.title,
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+        description: newEvent.description,
+        location: newEvent.location,
+        category: newEvent.category,
+        notificationTime: newEvent.notificationTime,
+        repeat: {
+          type: 'daily',
+          interval: 1,
+        },
+      });
+    });
+  });
+
+  test('매주 반복 이벤트를 등록 시 횟수만큼 반복 일정을 생성한다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    const newEvent: EventForm = {
+      title: '주간 회고',
+      date: '2025-09-21',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '주간 회고 미팅',
+      location: '회의실 A',
+      category: '회의',
+      repeat: {
+        type: 'weekly',
+        interval: 1,
+        endType: 'endcount',
+        endCount: 3,
+      },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    const savedEvents = result.current.events;
+
+    expect(savedEvents).toHaveLength(3);
+    const dates = savedEvents.map((event) => event.date).sort();
+    expect(dates).toEqual(['2025-09-21', '2025-09-28', '2025-10-05']); // 7일씩 증가
+
+    savedEvents.forEach((event) => {
+      expect(event).toMatchObject({
+        title: newEvent.title,
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+        description: newEvent.description,
+        location: newEvent.location,
+        category: newEvent.category,
+        notificationTime: newEvent.notificationTime,
+        repeat: {
+          type: 'weekly',
+          interval: 1,
+        },
+      });
+    });
+  });
+
+  test('매월 반복 이벤트를 등록 시 횟수만큼 반복 일정을 생성한다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    const newEvent: EventForm = {
+      title: '월간 보고',
+      date: '2025-09-21',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '월간 실적 보고',
+      location: '회의실 B',
+      category: '회의',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        endType: 'endcount',
+        endCount: 3,
+      },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    const savedEvents = result.current.events;
+
+    expect(savedEvents).toHaveLength(3);
+    const dates = savedEvents.map((event) => event.date).sort();
+    expect(dates).toEqual(['2025-09-21', '2025-10-21', '2025-11-21']); // 한 달씩 증가
+
+    savedEvents.forEach((event) => {
+      expect(event).toMatchObject({
+        title: newEvent.title,
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+        description: newEvent.description,
+        location: newEvent.location,
+        category: newEvent.category,
+        notificationTime: newEvent.notificationTime,
+        repeat: {
+          type: 'monthly',
+          interval: 1,
+        },
+      });
+    });
+  });
+  test('매년 반복 이벤트를 등록 시 횟수만큼 반복 일정을 생성한다', async () => {
+    const { result } = renderHook(() => useEventOperations(false));
+
+    const newEvent: EventForm = {
+      title: '연간 계획',
+      date: '2025-09-21',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '연간 사업 계획',
+      location: '대회의실',
+      category: '회의',
+      repeat: {
+        type: 'yearly',
+        interval: 1,
+        endType: 'endcount',
+        endCount: 3,
+      },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveEvent(newEvent);
+    });
+
+    const savedEvents = result.current.events;
+
+    expect(savedEvents).toHaveLength(3);
+    const dates = savedEvents.map((event) => event.date).sort();
+    expect(dates).toEqual(['2025-09-21', '2026-09-21', '2027-09-21']); // 1년씩 증가
+
+    savedEvents.forEach((event) => {
+      expect(event).toMatchObject({
+        title: newEvent.title,
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+        description: newEvent.description,
+        location: newEvent.location,
+        category: newEvent.category,
+        notificationTime: newEvent.notificationTime,
+        repeat: {
+          type: 'yearly',
+          interval: 1,
+        },
+      });
+    });
+  });
+});
