@@ -54,9 +54,7 @@ import {
   getWeekDates,
   getWeeksAtMonth,
 } from './utils/dateUtils';
-import { findOverlappingEvents } from './utils/eventOverlap';
 import { getTimeErrorMessage } from './utils/timeValidation';
-import { generateRepeatDates } from './utils/repeatUtils';
 
 import { useRecurringEvents } from './hooks/useRegisterSchedule.ts';
 
@@ -152,23 +150,6 @@ function App() {
       });
       return;
     }
-    console.log('saveRecurringEvents');
-    console.log('formData', {
-      id: editingEvent?.id,
-      title,
-      date,
-      startTime,
-      endTime,
-      description,
-      location,
-      category,
-      notificationTime,
-      repeat: {
-        type: repeatType,
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
-    });
 
     await saveRecurringEvents({
       formData: {
@@ -194,70 +175,6 @@ function App() {
       repeatEndDate,
       repeatCount,
     });
-
-    // const startDateObj = new Date(date);
-    //
-    // let effectiveEndDate: Date | undefined = undefined;
-    // let effectiveMaxCount: number | undefined = undefined;
-    //
-    // const effectiveRepeatType: RepeatType =
-    //   isRepeating && repeatType === 'none' ? 'daily' : repeatType;
-    //
-    // //  '종료 없음'일 때만 제한 걸기
-    // let effectiveMaxAbsoluteLimit: Date | undefined =
-    //   isRepeating && repeatEndType === 'none' ? new Date('2025-09-30') : undefined;
-    //
-    // if (isRepeating) {
-    //   if (repeatEndType === 'date') {
-    //     effectiveEndDate = new Date(repeatEndDate);
-    //   } else if (repeatEndType === 'count') {
-    //     effectiveMaxCount = repeatCount;
-    //   }
-    // }
-    //
-    // const allDates = isRepeating
-    //   ? generateRepeatDates(
-    //       startDateObj,
-    //       effectiveRepeatType,
-    //       repeatInterval,
-    //       effectiveEndDate,
-    //       effectiveMaxCount,
-    //       effectiveMaxAbsoluteLimit
-    //     )
-    //   : [date];
-    //
-    // console.log('allDates', allDates);
-    //
-    // // 중복 확인 & 저장
-    // for (const repeatDate of allDates) {
-    //   const eventData: Event | EventForm = {
-    //     id: editingEvent ? editingEvent.id : undefined,
-    //     title,
-    //     date: repeatDate,
-    //     startTime,
-    //     endTime,
-    //     description,
-    //     location,
-    //     category,
-    //     repeat: {
-    //       type: isRepeating ? repeatType : 'none',
-    //       interval: repeatInterval,
-    //       endDate: repeatEndDate || undefined,
-    //     },
-    //     notificationTime,
-    //   };
-    //
-    //   const overlapping = findOverlappingEvents(eventData, events);
-    //   if (overlapping.length > 0) {
-    //     setOverlappingEvents(overlapping);
-    //     setIsOverlapDialogOpen(true);
-    //     return;
-    //   }
-    //
-    //   await saveEvent(eventData);
-    // }
-    //
-    // resetForm();
   };
 
   const renderWeekView = () => {

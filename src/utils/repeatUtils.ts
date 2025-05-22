@@ -110,8 +110,9 @@ export function generateRepeatDates(
   const dates: string[] = [];
   let current = new Date(start.getTime());
   let count = 0;
+  let keepGoing = true;
 
-  while (true) {
+  while (keepGoing) {
     if (maxAbsoluteLimit && current.getTime() > maxAbsoluteLimit.getTime()) break;
 
     appendFormattedDate(dates, current);
@@ -123,10 +124,11 @@ export function generateRepeatDates(
     const next = findNextValidDate(current, type, interval, effectiveEndDate);
 
     // 내부 제한 등록일 (2025.09.30)
-    if (!next) break;
-    if (maxAbsoluteLimit && next.getTime() > maxAbsoluteLimit.getTime()) break;
-
-    current = next;
+    if (!next || (maxAbsoluteLimit && next.getTime() > maxAbsoluteLimit.getTime())) {
+      keepGoing = false;
+    } else {
+      current = next;
+    }
   }
 
   return dates;
