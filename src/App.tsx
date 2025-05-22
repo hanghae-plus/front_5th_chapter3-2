@@ -530,6 +530,7 @@ function App() {
                         <Text
                           fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                           color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
+                          data-testid={`event-title`}
                         >
                           {event.title}
                         </Text>
