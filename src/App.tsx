@@ -44,7 +44,7 @@ import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
-import { useRecurringEvents } from './hooks/useRecurringEvents.ts';
+import { useRecurringEvents } from './hooks/useRecurringEvents';
 import { useSearch } from './hooks/useSearch.ts';
 import { Event, EventForm, RepeatType, RepeatEndType } from './types';
 import {
@@ -55,7 +55,6 @@ import {
   getWeekDates,
   getWeeksAtMonth,
 } from './utils/dateUtils';
-import { findOverlappingEvents } from './utils/eventOverlap';
 import { getTimeErrorMessage } from './utils/timeValidation';
 
 const categories = ['업무', '개인', '가족', '기타'];
@@ -115,13 +114,20 @@ function App() {
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
   const { searchTerm, filteredEvents, setSearchTerm } = useSearch(events, currentDate, view);
-  const recurringEvents = useRecurringEvents(filteredEvents);
 
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
   const [overlappingEvents, setOverlappingEvents] = useState<Event[]>([]);
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const toast = useToast();
+
+  const { saveRecurringEvents } = useRecurringEvents({
+    events,
+    saveEvent,
+    resetForm,
+    setOverlappingEvents,
+    setIsOverlapDialogOpen,
+  });
 
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
@@ -156,22 +162,15 @@ function App() {
       repeat: {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
-        endType: repeatEndType,
         endDate: repeatEndDate || undefined,
+        endType: repeatEndType,
         endCount: repeatEndType === 'count' ? repeatCount : undefined,
       },
       notificationTime,
       isRecurring: isRepeating,
     };
 
-    const overlapping = findOverlappingEvents(eventData, events);
-    if (overlapping.length > 0) {
-      setOverlappingEvents(overlapping);
-      setIsOverlapDialogOpen(true);
-    } else {
-      await saveEvent(eventData);
-      resetForm();
-    }
+    await saveRecurringEvents(eventData);
   };
 
   const renderWeekView = () => {
@@ -194,7 +193,7 @@ function App() {
               {weekDates.map((date) => (
                 <Td key={date.toISOString()} height="100px" verticalAlign="top" width="14.28%">
                   <Text fontWeight="bold">{date.getDate()}</Text>
-                  {recurringEvents
+                  {filteredEvents
                     .filter((event) => new Date(event.date).toDateString() === date.toDateString())
                     .map((event, index) => {
                       const isNotified = notifiedEvents.includes(event.id);
@@ -266,7 +265,7 @@ function App() {
                               {holiday}
                             </Text>
                           )}
-                          {getEventsForDay(recurringEvents, day).map((event, index) => {
+                          {getEventsForDay(filteredEvents, day).map((event, index) => {
                             const isNotified = notifiedEvents.includes(event.id);
                             return (
                               <Box
@@ -373,20 +372,6 @@ function App() {
             </Checkbox>
           </FormControl>
 
-          <FormControl>
-            <FormLabel>알림 설정</FormLabel>
-            <Select
-              value={notificationTime}
-              onChange={(e) => setNotificationTime(Number(e.target.value))}
-            >
-              {notificationOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-          </FormControl>
-
           {isRepeating && (
             <VStack width="100%">
               <HStack width="100%">
@@ -451,6 +436,20 @@ function App() {
             </VStack>
           )}
 
+          <FormControl>
+            <FormLabel>알림 설정</FormLabel>
+            <Select
+              value={notificationTime}
+              onChange={(e) => setNotificationTime(Number(e.target.value))}
+            >
+              {notificationOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </FormControl>
+
           <Button data-testid="event-submit-button" onClick={addOrUpdateEvent} colorScheme="blue">
             {editingEvent ? '일정 수정' : '일정 추가'}
           </Button>
@@ -494,10 +493,10 @@ function App() {
             />
           </FormControl>
 
-          {recurringEvents.length === 0 ? (
+          {filteredEvents.length === 0 ? (
             <Text>검색 결과가 없습니다.</Text>
           ) : (
-            recurringEvents.map((event, index) => (
+            filteredEvents.map((event, index) => (
               <Box
                 key={`${event.id}_${index}`}
                 borderWidth={1}
@@ -605,11 +604,8 @@ function App() {
                       type: isRepeating ? repeatType : 'none',
                       interval: repeatInterval,
                       endDate: repeatEndDate || undefined,
-                      endType: repeatEndType,
-                      endCount: repeatEndType === 'count' ? repeatCount : undefined,
                     },
                     notificationTime,
-                    isRecurring: undefined,
                   });
                 }}
                 ml={3}

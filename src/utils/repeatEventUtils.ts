@@ -34,6 +34,7 @@ export function generateRecurringEvents(event: Event): Event[] {
   while (currentDate <= endDate) {
     events.push({
       ...event,
+      id: undefined,
       date: formatDate(currentDate),
     });
 

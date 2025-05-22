@@ -10,7 +10,7 @@ export interface RepeatInfo {
 }
 
 export interface EventForm {
-  id: string;
+  id: string | undefined;
   isRecurring: any;
   title: string;
   date: string;
