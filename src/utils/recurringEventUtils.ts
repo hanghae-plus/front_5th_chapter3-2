@@ -1,4 +1,4 @@
-import { isBefore, addDays, addMonths, addYears } from 'date-fns';
+import { isBefore, addDays, addMonths, addYears, isSameDay } from 'date-fns';
 
 import { Event } from '../types';
 
@@ -57,7 +57,7 @@ export const createRecurringEvents = (event: Event) => {
   console.log('startDate, endDate, type, interval', startDate, endDate, type, interval);
 
   if (type === 'daily') {
-    while (isBefore(startDate, endDate)) {
+    while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
       events.push({
         ...event,
         date: startDate.toISOString(),
@@ -68,7 +68,7 @@ export const createRecurringEvents = (event: Event) => {
   }
 
   if (type === 'weekly') {
-    while (isBefore(startDate, endDate)) {
+    while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
       events.push({
         ...event,
         date: startDate.toISOString(),
@@ -79,7 +79,7 @@ export const createRecurringEvents = (event: Event) => {
   }
 
   if (type === 'monthly') {
-    while (isBefore(startDate, endDate)) {
+    while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
       events.push({
         ...event,
         date: startDate.toISOString(),
@@ -90,7 +90,7 @@ export const createRecurringEvents = (event: Event) => {
   }
 
   if (type === 'yearly') {
-    while (isBefore(startDate, endDate)) {
+    while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
       events.push({
         ...event,
         date: startDate.toISOString(),
