@@ -50,47 +50,83 @@ export function getFilteredEvents(
 }
 export function getRepeatEvents(event: Event): Event[] {
   const events: Event[] = [];
-  const { type, interval, endDate } = event.repeat;
+  const { type, interval } = event.repeat;
 
   const startDate = new Date(event.date);
-  const endDateObj = new Date(endDate ?? '2025-09-30');
+  const endDateObj = new Date(event.repeat.endDate ?? '2025-09-30');
 
   let currentDate = new Date(startDate);
-  if (type === 'daily') {
-    while (currentDate <= endDateObj) {
-      events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
-      currentDate.setDate(currentDate.getDate() + interval);
-    }
-  } else if (type === 'weekly') {
-    while (currentDate <= endDateObj) {
-      events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
-      currentDate.setDate(currentDate.getDate() + interval * 7);
-    }
-  } else if (type === 'monthly') {
-    const day = startDate.getDate();
-    let year = startDate.getFullYear();
-    let month = startDate.getMonth();
-    let lastDayOfMonth = getDaysInMonth(year, month);
-    let eventDay = Math.min(day, lastDayOfMonth);
+  console.log('currentDate: ', currentDate);
+  console.log('endDateObj: ', endDateObj);
 
-    let nextDate = new Date(year, month, eventDay);
-
-    while (nextDate <= endDateObj) {
-      events.push({ ...event, date: nextDate.toISOString().split('T')[0] });
-      // 다음 반복
-      month += interval;
-      while (month >= 12) {
-        month -= 12;
-        year += 1;
+  // 반복 종료 조건이 횟수일 떄
+  if (event.repeat?.endType === 'endcount' && event.repeat.endCount) {
+    let count = 0;
+    if (type === 'daily') {
+      while (count < event.repeat.endCount) {
+        events.push({
+          ...event,
+          date: currentDate.toISOString().split('T')[0],
+        });
+        currentDate.setDate(currentDate.getDate() + interval);
+        count++;
       }
-      lastDayOfMonth = getDaysInMonth(year, month + 1);
-      eventDay = Math.min(day, lastDayOfMonth);
-      nextDate = new Date(year, month, eventDay);
+    } else if (type === 'weekly') {
+      while (count < event.repeat.endCount) {
+        events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
+        currentDate.setDate(currentDate.getDate() + interval * 7);
+        count++;
+      }
+    } else if (type === 'monthly') {
+      while (count < event.repeat.endCount) {
+        events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
+        currentDate.setMonth(currentDate.getMonth() + interval); // setDate가 아닌 setMonth 사용
+        count++;
+      }
+    } else if (type === 'yearly') {
+      while (count < event.repeat.endCount) {
+        events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
+        currentDate.setFullYear(currentDate.getFullYear() + interval);
+        count++;
+      }
     }
-  } else if (type === 'yearly') {
-    while (currentDate <= endDateObj) {
-      events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
-      currentDate.setFullYear(currentDate.getFullYear() + interval);
+  } else {
+    if (type === 'daily') {
+      while (currentDate <= endDateObj) {
+        events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
+        currentDate.setDate(currentDate.getDate() + interval);
+      }
+    } else if (type === 'weekly') {
+      while (currentDate <= endDateObj) {
+        events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
+        currentDate.setDate(currentDate.getDate() + interval * 7);
+      }
+    } else if (type === 'monthly') {
+      const day = startDate.getDate();
+      let year = startDate.getFullYear();
+      let month = startDate.getMonth();
+      let lastDayOfMonth = getDaysInMonth(year, month);
+      let eventDay = Math.min(day, lastDayOfMonth);
+
+      let nextDate = new Date(year, month, eventDay);
+
+      while (nextDate <= endDateObj) {
+        events.push({ ...event, date: nextDate.toISOString().split('T')[0] });
+        // 다음 반복
+        month += interval;
+        while (month >= 12) {
+          month -= 12;
+          year += 1;
+        }
+        lastDayOfMonth = getDaysInMonth(year, month + 1);
+        eventDay = Math.min(day, lastDayOfMonth);
+        nextDate = new Date(year, month, eventDay);
+      }
+    } else if (type === 'yearly') {
+      while (currentDate <= endDateObj) {
+        events.push({ ...event, date: currentDate.toISOString().split('T')[0] });
+        currentDate.setFullYear(currentDate.getFullYear() + interval);
+      }
     }
   }
 

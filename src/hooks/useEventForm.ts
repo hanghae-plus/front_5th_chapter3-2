@@ -1,6 +1,6 @@
 import { ChangeEvent, useState } from 'react';
 
-import { Event, RepeatType } from '../types';
+import { EndType, Event, RepeatType } from '../types';
 import { getTimeErrorMessage } from '../utils/timeValidation';
 
 type TimeErrorRecord = Record<'startTimeError' | 'endTimeError', string | null>;
@@ -18,6 +18,10 @@ export const useEventForm = (initialEvent?: Event) => {
   const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat.interval || 1);
   const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
+  const [repeatEndType, setRepeatEndType] = useState<EndType>(
+    initialEvent?.repeat.endType || 'enddate'
+  );
+  const [repeatEndCount, setRepeatEndCount] = useState(initialEvent?.repeat.endCount || 0);
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
@@ -50,7 +54,9 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatType('none');
     setRepeatInterval(1);
     setRepeatEndDate('');
+    setRepeatEndType('enddate');
     setNotificationTime(10);
+    setRepeatEndCount(0);
   };
 
   const editEvent = (event: Event) => {
@@ -67,6 +73,8 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatInterval(event.repeat.interval);
     setRepeatEndDate(event.repeat.endDate || '');
     setNotificationTime(event.notificationTime);
+    setRepeatEndType(event.repeat.endType || 'enddate');
+    setRepeatEndCount(event.repeat.endCount || 0);
   };
 
   return {
@@ -102,5 +110,9 @@ export const useEventForm = (initialEvent?: Event) => {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    repeatEndType,
+    setRepeatEndType,
+    repeatEndCount,
+    setRepeatEndCount,
   };
 };

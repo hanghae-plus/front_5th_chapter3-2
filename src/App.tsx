@@ -45,7 +45,7 @@ import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { Event, EventForm, RepeatType, EndType } from './types';
 import {
   formatDate,
   formatMonth,
@@ -101,6 +101,10 @@ function App() {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    repeatEndType,
+    setRepeatEndType,
+    repeatEndCount,
+    setRepeatEndCount,
   } = useEventForm();
 
   const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
@@ -150,10 +154,14 @@ function App() {
       repeat: {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
+        endType: repeatEndType,
+        endCount: repeatEndCount,
+        endDate: repeatEndDate,
       },
+
       notificationTime,
     };
+    console.log('App.tsx - eventData', eventData);
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
@@ -409,14 +417,39 @@ function App() {
                     min={1}
                   />
                 </FormControl>
-                <FormControl>
-                  <FormLabel>반복 종료일</FormLabel>
-                  <Input
-                    type="date"
-                    value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
-                  />
+              </HStack>
+              <HStack width="100%" spacing={4}>
+                <FormControl flex={1}>
+                  <FormLabel>반복 종료 조건</FormLabel>
+                  <Select
+                    value={repeatEndType}
+                    onChange={(e) => setRepeatEndType(e.target.value as EndType)}
+                  >
+                    <option value="enddate">종료일</option>
+                    <option value="endcount">횟수</option>
+                  </Select>
                 </FormControl>
+                {repeatEndType === 'enddate' ? (
+                  <FormControl flex={1}>
+                    <FormLabel>반복 종료일</FormLabel>
+                    <Input
+                      type="date"
+                      value={repeatEndDate}
+                      onChange={(e) => setRepeatEndDate(e.target.value)}
+                    />
+                  </FormControl>
+                ) : (
+                  <FormControl flex={1}>
+                    <FormLabel>반복 횟수</FormLabel>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={repeatEndCount}
+                      onChange={(e) => setRepeatEndCount(Number(e.target.value))}
+                      placeholder="반복 횟수 입력"
+                    />
+                  </FormControl>
+                )}
               </HStack>
             </VStack>
           )}
