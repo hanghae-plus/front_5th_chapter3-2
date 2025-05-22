@@ -5,17 +5,32 @@ import { Event } from '../types';
 
 // ! Hard 여기 제공 안함
 export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
-  const mockEvents: Event[] = [...initEvents];
+  let mockEvents: Event[] = [...initEvents];
 
   server.use(
-    http.get('/api/events', () => {
-      return HttpResponse.json({ events: mockEvents });
-    }),
+    http.get('/api/events', () => HttpResponse.json({ events: mockEvents })),
+
     http.post('/api/events', async ({ request }) => {
       const newEvent = (await request.json()) as Event;
-      newEvent.id = String(mockEvents.length + 1); // 간단한 ID 생성
-      mockEvents.push(newEvent);
+      newEvent.id = String(mockEvents.length + 1);
+      mockEvents = [...mockEvents, newEvent];
       return HttpResponse.json(newEvent, { status: 201 });
+    }),
+
+    http.post('/api/events-list', async ({ request }) => {
+      const { events: eventsToAdd } = (await request.json()) as { events: Event[] };
+      const repeatId = `repeat-${mockEvents.length + 1}`;
+      const newEvents = eventsToAdd.map((event, index) => ({
+        ...event,
+        id: String(mockEvents.length + index + 1),
+        repeat: {
+          ...event.repeat,
+          id: repeatId,
+        },
+      }));
+      // 새로운 이벤트를 기존 이벤트에 추가
+      mockEvents = [...mockEvents, ...newEvents];
+      return HttpResponse.json(newEvents, { status: 201 });
     })
   );
 };

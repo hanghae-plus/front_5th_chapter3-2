@@ -8,11 +8,13 @@ function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event
   });
 }
 
-function containsTerm(target: string, term: string) {
+function containsTerm(target: string | undefined, term: string) {
+  if (!target || !term) return false;
   return target.toLowerCase().includes(term.toLowerCase());
 }
 
 function searchEvents(events: Event[], term: string) {
+  if (!term) return events;
   return events.filter(
     ({ title, description, location }) =>
       containsTerm(title, term) || containsTerm(description, term) || containsTerm(location, term)
