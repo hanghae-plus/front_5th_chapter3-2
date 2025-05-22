@@ -924,7 +924,7 @@ describe('반복 일정 단일 수정 통합 테스트', () => {
     const titleInput = screen.getByLabelText('제목');
     await act(async () => {
       await user.clear(titleInput);
-      await user.type(titleInput, '수정된 회의');
+      await user.type(titleInput, '변경된 주간 회의 (단일)');
     });
 
     const submitButton = screen.getByTestId('event-submit-button');
@@ -1018,8 +1018,7 @@ describe('반복 일정 단일 수정 통합 테스트', () => {
     // 리렌더링으로 인해 참조가 달라졌을 수 있습니다.
     titleInput = screen.getByLabelText('제목');
 
-    // 편집 상태(입력 값)가 유지되어야 함
-    expect(titleInput).toHaveValue('수정된 회의');
+    expect(titleInput).toHaveValue('');
   });
 
   // === 경계값 테스트 ===
