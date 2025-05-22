@@ -467,4 +467,178 @@ describe('반복 일정 기능', () => {
       expect(result.current.events[0].date).toBe('2025-10-01');
     });
   });
+
+  describe('반복 간격 설정', () => {
+    it('2일 간격으로 반복되는 일정을 생성할 수 있다', async () => {
+      setupMockHandlerCreation();
+
+      const { result } = renderHook(() => useEventOperations(false));
+
+      await act(() => Promise.resolve(null));
+
+      const dailyEvent: Event = {
+        id: '1',
+        title: '2일 간격 회의',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '2일 간격으로 반복되는 회의',
+        location: '회의실 A',
+        category: '업무',
+        repeat: {
+          type: 'daily',
+          interval: 2,
+          endDate: '2025-10-07',
+        },
+        notificationTime: 30,
+      };
+
+      await act(async () => {
+        await result.current.saveEvent(dailyEvent);
+      });
+
+      expect(result.current.events).toHaveLength(4);
+      expect(result.current.events[0].date).toBe('2025-10-01');
+      expect(result.current.events[1].date).toBe('2025-10-03');
+      expect(result.current.events[2].date).toBe('2025-10-05');
+      expect(result.current.events[3].date).toBe('2025-10-07');
+    });
+
+    it('3주 간격으로 반복되는 일정을 생성할 수 있다', async () => {
+      setupMockHandlerCreation();
+
+      const { result } = renderHook(() => useEventOperations(false));
+
+      await act(() => Promise.resolve(null));
+
+      const weeklyEvent: Event = {
+        id: '1',
+        title: '3주 간격 회의',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '3주 간격으로 반복되는 회의',
+        location: '회의실 A',
+        category: '업무',
+        repeat: {
+          type: 'weekly',
+          interval: 3,
+          endDate: '2025-11-12',
+        },
+        notificationTime: 30,
+      };
+
+      await act(async () => {
+        await result.current.saveEvent(weeklyEvent);
+      });
+
+      expect(result.current.events).toHaveLength(4);
+      expect(result.current.events[0].date).toBe('2025-10-01');
+      expect(result.current.events[1].date).toBe('2025-10-22');
+      expect(result.current.events[2].date).toBe('2025-11-12');
+    });
+
+    it('2개월 간격으로 반복되는 일정을 생성할 수 있다', async () => {
+      setupMockHandlerCreation();
+
+      const { result } = renderHook(() => useEventOperations(false));
+
+      await act(() => Promise.resolve(null));
+
+      const monthlyEvent: Event = {
+        id: '1',
+        title: '2개월 간격 회의',
+        date: '2025-01-31',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '2개월 간격으로 반복되는 회의',
+        location: '회의실 A',
+        category: '업무',
+        repeat: {
+          type: 'monthly',
+          interval: 2,
+          endDate: '2025-07-31',
+        },
+        notificationTime: 30,
+      };
+
+      await act(async () => {
+        await result.current.saveEvent(monthlyEvent);
+      });
+
+      expect(result.current.events).toHaveLength(4);
+      expect(result.current.events[0].date).toBe('2025-01-31');
+      expect(result.current.events[1].date).toBe('2025-03-31');
+      expect(result.current.events[2].date).toBe('2025-05-31');
+      expect(result.current.events[3].date).toBe('2025-07-31');
+    });
+
+    it('2년 간격으로 반복되는 일정을 생성할 수 있다', async () => {
+      setupMockHandlerCreation();
+
+      const { result } = renderHook(() => useEventOperations(false));
+
+      await act(() => Promise.resolve(null));
+
+      const yearlyEvent: Event = {
+        id: '1',
+        title: '2년 간격 회의',
+        date: '2024-02-29',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '2년 간격으로 반복되는 회의',
+        location: '회의실 A',
+        category: '업무',
+        repeat: {
+          type: 'yearly',
+          interval: 2,
+          endDate: '2028-02-29',
+        },
+        notificationTime: 30,
+      };
+
+      await act(async () => {
+        await result.current.saveEvent(yearlyEvent);
+      });
+
+      expect(result.current.events).toHaveLength(3);
+      expect(result.current.events[0].date).toBe('2024-02-29'); // 윤년
+      expect(result.current.events[1].date).toBe('2026-02-28'); // 평년
+      expect(result.current.events[2].date).toBe('2028-02-29'); // 윤년
+    });
+
+    it('반복 간격이 0이하인 경우 에러를 발생시킨다', async () => {
+      const { result } = renderHook(() => useEventOperations(false));
+
+      await act(() => Promise.resolve(null));
+
+      const invalidEvent: Event = {
+        id: '1',
+        title: '잘못된 간격 회의',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '잘못된 간격의 회의',
+        location: '회의실 A',
+        category: '업무',
+        repeat: {
+          type: 'daily',
+          interval: 0,
+          endDate: '2025-10-07',
+        },
+        notificationTime: 30,
+      };
+
+      await act(async () => {
+        await result.current.saveEvent(invalidEvent);
+      });
+
+      expect(toastFn).toHaveBeenCalledWith({
+        duration: 3000,
+        isClosable: true,
+        title: '일정 저장 실패',
+        status: 'error',
+      });
+    });
+  });
 });
