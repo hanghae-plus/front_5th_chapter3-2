@@ -139,7 +139,7 @@ function expandRepeatingEvent(event: Event, repeatId: string): Event[] {
   while (currentDate <= endDate) {
     let adjustedDate = new Date(currentDate);
 
-    // ✅ 윤년 처리 (yearly, 2월 29일 → 2월 28일)
+    // ✅ 윤년 처리 (2월 29일 → 2월 28일)
     if (
       repeat.type === 'yearly' &&
       startDate.getMonth() === 1 &&
@@ -149,15 +149,15 @@ function expandRepeatingEvent(event: Event, repeatId: string): Event[] {
       adjustedDate = new Date(currentDate.getFullYear(), 1, 28);
     }
 
-    // ✅ 월별 반복일인데 31일이 없는 달
+    // ✅ 31일 → 존재하지 않는 달의 마지막 날짜로 보정
     if (repeat.type === 'monthly' || repeat.type === 'yearly') {
       const daysInMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
+        adjustedDate.getFullYear(),
+        adjustedDate.getMonth() + 1,
         0
       ).getDate();
-      const correctedDay = Math.min(originalDay, daysInMonth); // ex: 31 → 30 or 28/29
-      adjustedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), correctedDay);
+      const correctedDay = Math.min(originalDay, daysInMonth);
+      adjustedDate = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth(), correctedDay);
     }
 
     result.push({
@@ -170,6 +170,9 @@ function expandRepeatingEvent(event: Event, repeatId: string): Event[] {
       },
     });
 
+    // 🔁 다음 반복 날짜 계산
+    const temp = new Date(currentDate); // backup
+
     switch (repeat.type) {
       case 'daily':
         currentDate.setDate(currentDate.getDate() + interval);
@@ -178,7 +181,8 @@ function expandRepeatingEvent(event: Event, repeatId: string): Event[] {
         currentDate.setDate(currentDate.getDate() + 7 * interval);
         break;
       case 'monthly':
-        currentDate.setDate(1);
+        currentDate = new Date(temp); // 원래 날짜 기준
+        currentDate.setDate(1); // overflow 방지
         currentDate.setMonth(currentDate.getMonth() + interval);
         break;
       case 'yearly':
