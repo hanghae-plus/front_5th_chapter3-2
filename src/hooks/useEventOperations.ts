@@ -15,7 +15,6 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       }
       const { events } = await response.json();
       setEvents(events);
-      console.log('🚀 ~ fetchEvents ~ events:', events);
     } catch (error) {
       console.error('Error fetching events:', error);
       toast({
@@ -54,16 +53,12 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           body: JSON.stringify(eventData),
         });
       } else {
-        console.log('🚀 ~ saveEvent ~ eventData:그냥 저장로직', eventData);
         response = await fetch('/api/events', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),
         });
       }
-
-      const newEvents = await response.json();
-      console.log('🌀 반복일정 응답 데이터:', newEvents);
 
       if (!response.ok) {
         throw new Error('Failed to save event');
@@ -88,9 +83,12 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const deleteEvent = async (id: string) => {
+  const deleteEvent = async (id: string, repeatType?: string) => {
     try {
-      const response = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      const isRepeat = repeatType && repeatType !== 'none';
+      const endpoint = isRepeat ? `/api/events-list/${id}` : `/api/events/${id}`;
+
+      const response = await fetch(endpoint, { method: 'DELETE' });
 
       if (!response.ok) {
         throw new Error('Failed to delete event');

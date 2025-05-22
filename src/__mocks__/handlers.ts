@@ -6,7 +6,6 @@ import { Event } from '../types';
 
 export const handlers = [
   http.get('/api/events', () => {
-    console.log('🚀 handlers "getEvents"');
     return HttpResponse.json({ events });
   }),
 

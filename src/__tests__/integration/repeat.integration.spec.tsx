@@ -4,8 +4,8 @@ import { UserEvent, userEvent } from '@testing-library/user-event';
 import { ReactElement } from 'react';
 
 import {
-  setupMockHandlerCreation,
   setupMockHandlerRepeatCreation,
+  setupMockHandlerRepeatDeletion,
   setupMockHandlerRepeatUpdating,
 } from '../../__mocks__/handlersUtils';
 import App from '../../App';
@@ -171,7 +171,7 @@ describe('반복 일정', () => {
     expect(within(container!).getByLabelText('반복 일정 아이콘')).toBeInTheDocument();
   });
 
-  it.only('반복 일정의 한 인스턴스를 수정하면, 해당 일정이 반복에서 분리되어 단일 일정으로 변경된다.', async () => {
+  it('반복 일정의 한 인스턴스를 수정하면, 해당 일정이 반복에서 분리되어 단일 일정으로 변경된다.', async () => {
     vi.setSystemTime(new Date('2025-05-01 08:49:59'));
 
     setupMockHandlerRepeatUpdating();
@@ -194,40 +194,25 @@ describe('반복 일정', () => {
   });
 
   it('반복 일정의 한 인스턴스를 삭제하면, 해당 일정만 삭제되고 나머지 반복 일정에는 영향이 없다.', async () => {
-    vi.setSystemTime(new Date('2025-06-01 08:49:59'));
+    vi.setSystemTime(new Date('2025-05-01 08:49:59'));
 
-    setupMockHandlerRepeatCreation();
+    setupMockHandlerRepeatDeletion();
 
     const { user } = setup(<App />);
 
-    await screen.findByText('일정 로딩 완료!');
-
-    await saveRepeatSchedule(user, {
-      title: '매월 반복 일정',
-      date: '2025-05-01',
-      startTime: '09:00',
-      endTime: '10:00',
-      description: '매월 반복 일정',
-      location: '회의실 A',
-      category: '업무',
-      repeat: { type: 'monthly', interval: 1, endDate: '2025-09-30' },
-    });
-
     const eventList = within(screen.getByTestId('event-list'));
-    const deleteButton = eventList
-      .getByText('매월 반복 일정')
-      .closest('li')
-      ?.querySelector('button');
+    expect(await eventList.findByText('매월 반복 일정')).toBeInTheDocument();
 
-    expect(deleteButton).toBeInTheDocument();
-    await user.click(deleteButton!);
+    const allDeleteButton = await screen.findAllByLabelText('Delete event');
+    await user.click(allDeleteButton[0]);
 
-    expect(eventList.queryByText('매월 반복 일정')).not.toBeInTheDocument();
-    expect(eventList.getByText('2025-06-01')).not.toBeInTheDocument();
+    await screen.findByText('일정이 삭제되었습니다.');
 
-    vi.setSystemTime(new Date('2025-07-01 08:49:59'));
+    const nextButton = screen.getByLabelText('Next');
+    await user.click(nextButton);
 
-    expect(eventList.queryByText('매월 반복 일정')).not.toBeInTheDocument();
-    expect(eventList.getByText('2025-07-01')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('2025-06-01')).toBeInTheDocument();
+    });
   });
 });

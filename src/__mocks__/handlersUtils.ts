@@ -107,7 +107,6 @@ export const setupMockHandlerRepeatCreation = (initEvents = [] as Event[]) => {
       const repeatId = uuidv4();
       const newEvents = expandRepeatingEvent(event, repeatId);
 
-      console.log('생성된 반복 일정 in setupMockHandlerRepeatCreation:', newEvents);
       mockEvents.push(...newEvents);
 
       return HttpResponse.json(newEvents, { status: 201 });
@@ -161,7 +160,6 @@ export const setupMockHandlerRepeatUpdating = () => {
     http.put('/api/events-list/:id', async ({ params, request }) => {
       const { id } = params;
       const updatedEvent = (await request.json()) as Event;
-      console.log('🚀 ~ http.put ~ id:', id);
       const index = mockEvents.findIndex((event) => event.id === id);
 
       if (index === -1) {
@@ -175,6 +173,56 @@ export const setupMockHandlerRepeatUpdating = () => {
       };
 
       return HttpResponse.json(mockEvents[index]);
+    })
+  );
+};
+export const setupMockHandlerRepeatDeletion = () => {
+  let mockEvents: Event[] = [
+    {
+      id: 'repeat-1',
+      title: '매월 반복 일정',
+      date: '2025-05-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복되는 일정입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        endDate: '2025-09-30',
+        id: 'repeat-group-id-123',
+      },
+      notificationTime: 10,
+    },
+    {
+      id: 'repeat-2',
+      title: '매월 반복 일정',
+      date: '2025-06-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복되는 일정입니다.',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        endDate: '2025-09-30',
+        id: 'repeat-group-id-123',
+      },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+
+    http.delete('/api/events-list/:id', ({ params }) => {
+      const { id } = params;
+      mockEvents = mockEvents.filter((event) => event.id !== id);
+      return HttpResponse.json({ success: true });
     })
   );
 };

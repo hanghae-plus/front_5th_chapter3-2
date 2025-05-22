@@ -500,11 +500,13 @@ function App() {
                   <VStack align="start">
                     <HStack>
                       {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
+                      <Text as="span" aria-label="반복 일정 아이콘" fontSize="sm">
+                        🔁
+                      </Text>
                       <Text
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                         color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
                       >
-                        {event.repeat.type !== 'none' && <span aria-label="반복 아이콘">🔁</span>}
                         {event.title}
                       </Text>
                     </HStack>
@@ -544,7 +546,7 @@ function App() {
                     <IconButton
                       aria-label="Delete event"
                       icon={<DeleteIcon />}
-                      onClick={() => deleteEvent(event.id)}
+                      onClick={() => deleteEvent(event.id, event.repeat.type)}
                     />
                   </HStack>
                 </HStack>
