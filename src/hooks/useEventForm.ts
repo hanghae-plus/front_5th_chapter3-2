@@ -65,6 +65,8 @@ export const useEventForm = (initialEvent?: Event) => {
     setNotificationTime(10);
     setRepeatEndOption('none'); // 폼 초기화 시 반복 종료 옵션도 초기화
     setRepeatCount(1); // 폼 초기화 시 반복 횟수도 초기화
+    setEditingEvent(null); // 리셋 시 editingEvent도 null로 설정
+    setTimeError({ startTimeError: null, endTimeError: null });
   };
 
   const editEvent = (event: Event) => {
@@ -81,16 +83,35 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatInterval(event.repeat.interval);
     setRepeatEndDate(event.repeat.endDate || '');
     setNotificationTime(event.notificationTime);
-    if (event.repeat.endDate) {
-      setRepeatEndOption('untilDate');
-      setRepeatEndDate(event.repeat.endDate);
-    } else if (event.repeat.count) {
-      setRepeatEndOption('count');
-      setRepeatCount(event.repeat.count);
+
+    const eventRepeat = event.repeat;
+    if (eventRepeat && eventRepeat.type !== 'none') {
+      setIsRepeating(true);
+      setRepeatType(eventRepeat.type);
+      setRepeatInterval(eventRepeat.interval);
+
+      if (eventRepeat.endDate) {
+        setRepeatEndOption('untilDate');
+        setRepeatEndDate(eventRepeat.endDate);
+        setRepeatCount(1); // endDate가 있으면 count는 1로 초기화 (중복 방지)
+      } else if (eventRepeat.count) {
+        setRepeatEndOption('count');
+        setRepeatCount(eventRepeat.count);
+        setRepeatEndDate(''); // count가 있으면 endDate는 빈 문자열로 초기화 (중복 방지)
+      } else {
+        // type이 'none'은 아니지만 endDate/count가 없는 경우 (예: '종료 없음'으로 저장된 반복)
+        setRepeatEndOption('none');
+        setRepeatEndDate('');
+        setRepeatCount(1);
+      }
     } else {
+      // 단일 이벤트인 경우
+      setIsRepeating(false);
+      setRepeatType('daily'); // 기본값으로 설정
+      setRepeatInterval(1); // 기본값으로 설정
+      setRepeatEndDate('');
       setRepeatEndOption('none');
-      setRepeatEndDate(''); // 혹시 모를 잔여 값 초기화
-      setRepeatCount(1); // 혹시 모를 잔여 값 초기화
+      setRepeatCount(1);
     }
   };
 
