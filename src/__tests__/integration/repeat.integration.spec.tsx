@@ -116,7 +116,7 @@ describe('반복 일정', () => {
     expect(eventList.getByText('반복 간격 일정')).toBeInTheDocument();
   });
 
-  it.only("반복 종료 조건이 '2025-09-30까지'로 설정된 경우, 해당 날짜 이후에는 반복 일정이 생성되지 않는다.", async () => {
+  it("반복 종료 조건이 '2025-09-30까지'로 설정된 경우, 해당 날짜 이후에는 반복 일정이 생성되지 않는다.", async () => {
     vi.setSystemTime(new Date('2025-10-01 08:49:59'));
 
     setupMockHandlerRepeatCreation();
@@ -141,10 +141,10 @@ describe('반복 일정', () => {
     expect(eventList.queryByText('반복 종료 일정')).toBeNull();
   });
 
-  it('캘린더 뷰에서 반복 일정에 반복 아이콘 또는 태그가 표시된다.', async () => {
+  it.only('캘린더 뷰에서 반복 일정에 반복 아이콘 또는 태그가 표시된다.', async () => {
     vi.setSystemTime(new Date('2025-05-01 08:49:59'));
 
-    setupMockHandlerCreation();
+    setupMockHandlerRepeatCreation();
 
     const { user } = setup(<App />);
 
@@ -161,17 +161,18 @@ describe('반복 일정', () => {
       repeat: { type: 'monthly', interval: 1, endDate: '2025-09-30' },
     });
 
-    const monthView = within(screen.getByTestId('month-view'));
+    const eventList = within(screen.getByTestId('event-list'));
 
-    const eventItem = monthView.getByText('매월 반복 일정');
+    const repeatIcon = eventList.getByLabelText('반복 아이콘');
 
-    expect(within(eventItem.parentElement!).getByText('🔁')).toBeInTheDocument();
+    expect(repeatIcon).toBeInTheDocument();
+    expect(repeatIcon.closest('p')).toHaveTextContent('매월 반복 일정');
   });
 
   it('반복 일정의 한 인스턴스를 수정하면, 해당 일정이 반복에서 분리되어 단일 일정으로 변경된다.', async () => {
     vi.setSystemTime(new Date('2025-06-01 08:49:59'));
 
-    setupMockHandlerCreation();
+    setupMockHandlerRepeatCreation();
 
     const { user } = setup(<App />);
 
@@ -207,7 +208,7 @@ describe('반복 일정', () => {
   it('반복 일정의 한 인스턴스를 삭제하면, 해당 일정만 삭제되고 나머지 반복 일정에는 영향이 없다.', async () => {
     vi.setSystemTime(new Date('2025-06-01 08:49:59'));
 
-    setupMockHandlerCreation();
+    setupMockHandlerRepeatCreation();
 
     const { user } = setup(<App />);
 

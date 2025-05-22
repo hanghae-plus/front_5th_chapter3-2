@@ -497,6 +497,7 @@ function App() {
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                         color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
                       >
+                        {event.repeat.type !== 'none' && <span aria-label="반복 아이콘">🔁</span>}
                         {event.title}
                       </Text>
                     </HStack>
