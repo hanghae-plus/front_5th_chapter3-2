@@ -104,8 +104,14 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent, saveRepeatedEvents, deleteAllRepeatedEvents } =
-    useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
+  const {
+    events,
+    saveEvent,
+    deleteEvent,
+    saveRepeatedEvents,
+    deleteAllRepeatedEvents,
+    deleteAllEvents,
+  } = useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
@@ -429,6 +435,16 @@ function App() {
 
           <Button data-testid="event-submit-button" onClick={addOrUpdateEvent} colorScheme="blue">
             {editingEvent ? '일정 수정' : '일정 추가'}
+          </Button>
+
+          <Button
+            data-testid="delete-all-events"
+            onClick={() => {
+              deleteAllEvents();
+            }}
+            colorScheme="red"
+          >
+            모든 일정 삭제
           </Button>
         </VStack>
 
