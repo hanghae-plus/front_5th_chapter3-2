@@ -103,9 +103,8 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
-  );
+  const { events, saveEvent, deleteEvent, saveRepeatEvent, deleteRepeatedEvents } =
+    useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
   const { view, setView, currentDate, holidays, navigate } = useCalendarView();
@@ -117,6 +116,7 @@ function App() {
 
   const toast = useToast();
 
+  //
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
       toast({
@@ -160,8 +160,21 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      if (isRepeating) {
+        console.log('뭘 보내는데?', eventData);
+        await saveRepeatEvent(eventData);
+      } else {
+        await saveEvent(eventData); //
+      }
       resetForm();
+    }
+  };
+
+  const handleClickDelete = (event: Event) => {
+    if (event.repeat.type === 'none') {
+      deleteEvent(event.id);
+    } else {
+      deleteRepeatedEvents([event.id]);
     }
   };
 
@@ -201,6 +214,9 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {event.repeat.type !== 'none' && (
+                              <Text data-testid="repeat-icon">🔄</Text>
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -270,6 +286,9 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && (
+                                    <Text data-testid="repeat-icon">🔄</Text>
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -507,7 +526,7 @@ function App() {
                     <IconButton
                       aria-label="Delete event"
                       icon={<DeleteIcon />}
-                      onClick={() => deleteEvent(event.id)}
+                      onClick={() => handleClickDelete(event)}
                     />
                   </HStack>
                 </HStack>
