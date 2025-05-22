@@ -2,6 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import { createRepeatEvents } from '../utils/eventUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -27,30 +28,25 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   };
 
   const saveEvent = async (eventData: Event | EventForm) => {
+    if (editing) await updateSingleEvent(eventData as Event);
+    else await saveSingleEvent(eventData as Event);
+  };
+
+  const saveSingleEvent = async (eventData: Event) => {
     try {
-      let response;
-      if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
-      } else {
-        response = await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
-      }
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
 
       if (!response.ok) {
         throw new Error('Failed to save event');
       }
-
       await fetchEvents();
       onSave?.();
       toast({
-        title: editing ? '일정이 수정되었습니다.' : '일정이 추가되었습니다.',
+        title: '일정이 추가되었습니다.',
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -92,6 +88,76 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  const saveRepeatEvents = async (eventData: EventForm) => {
+    if (editing) await updateSingleEvent(eventData as Event);
+    else await addRepeatEvents(eventData as EventForm);
+  };
+
+  const updateSingleEvent = async (eventData: Event) => {
+    try {
+      const response = await fetch(`/api/events/${(eventData as Event).id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save event');
+      }
+
+      await fetchEvents();
+      onSave?.();
+      toast({
+        title: '일정이 수정되었습니다.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error saving event:', error);
+      toast({
+        title: '일정 저장 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const addRepeatEvents = async (eventData: EventForm) => {
+    try {
+      const newEvents = createRepeatEvents(eventData as Event);
+
+      const response = await fetch('/api/events-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: newEvents }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save Repeat events');
+      }
+
+      await fetchEvents();
+      onSave?.();
+      toast({
+        title: '반복 일정이 추가되었습니다.',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error saving Repeat events:', error);
+      toast({
+        title: '반복 일정 추가에 실패했습니다.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      await fetchEvents();
+    }
+  };
+
   async function init() {
     await fetchEvents();
     toast({
@@ -106,5 +172,11 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent };
+  return {
+    events,
+    fetchEvents,
+    saveEvent,
+    deleteEvent,
+    saveRepeatEvents,
+  };
 };

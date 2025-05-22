@@ -40,6 +40,12 @@ const saveSchedule = async (
   await user.click(screen.getByTestId('event-submit-button'));
 };
 
+const getDateCellByDay = (container: HTMLElement, day: string) => {
+  return Array.from(container.querySelectorAll('td')).find((td) =>
+    td.textContent?.trim().startsWith(day)
+  );
+};
+
 describe('일정 CRUD 및 기본 기능', () => {
   it('입력한 새로운 일정 정보에 맞춰 모든 필드가 이벤트 리스트에 정확히 저장된다.', async () => {
     setupMockHandlerCreation();
@@ -323,4 +329,161 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('일정 반복 기능', () => {
+  describe('반복 유형', () => {
+    it('반복 유형을 설정하지 않으면 기본값으로 "daily"이 설정되어야 한다', () => {
+      setup(<App />);
+
+      const repeatSelect = screen.getByLabelText('repeat-type');
+
+      expect(repeatSelect).toHaveValue('daily');
+    });
+
+    it('반복 유형을 설정하면 해당 값이 저장되어야 한다', async () => {
+      const { user } = setup(<App />);
+
+      const repeatSelect = screen.getByLabelText('repeat-type');
+
+      await user.selectOptions(repeatSelect, 'weekly');
+
+      expect(repeatSelect).toHaveValue('weekly');
+    });
+  });
+
+  describe('반복 간격', () => {
+    it('반복 간격을 설정하지 않으면 기본값으로 1이 설정되어야 한다.', () => {
+      setup(<App />);
+
+      const repeatInterval = screen.getByLabelText('repeat-interval');
+      expect(repeatInterval).toHaveValue(1);
+    });
+
+    it('반복 간격이 1 미만이라면, 경고 메시지가 표시되어야 한다. (복사 붙여넣기 동작)', async () => {
+      const { user } = setup(<App />);
+      const repeatInterval = screen.getByLabelText('repeat-interval');
+
+      await user.clear(repeatInterval);
+      await user.type(repeatInterval, '0');
+      await saveSchedule(user, {
+        title: '새 회의',
+        date: '2025-10-15',
+        startTime: '14:00',
+        endTime: '15:00',
+        description: '프로젝트 진행 상황 논의',
+        location: '회의실 A',
+        category: '업무',
+      });
+
+      expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
+    });
+
+    it('반복 간격이 12 초과라면 경고 메시지가 표시되어야 한다. (복사 붙여넣기 동작)', async () => {
+      const { user } = setup(<App />);
+      const repeatInterval = screen.getByLabelText('repeat-interval');
+
+      await user.clear(repeatInterval);
+      await user.type(repeatInterval, '13');
+      await saveSchedule(user, {
+        title: '새 회의',
+        date: '2025-10-15',
+        startTime: '14:00',
+        endTime: '15:00',
+        description: '프로젝트 진행 상황 논의',
+        location: '회의실 A',
+        category: '업무',
+      });
+
+      expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
+    });
+
+    it('반복 간격이 유효한 숫자가 아니라면 경고 메시지가 표시되어야 한다.', async () => {
+      const { user } = setup(<App />);
+      const repeatInterval = screen.getByLabelText('repeat-interval');
+
+      await user.clear(repeatInterval);
+      await user.type(repeatInterval, '0');
+      await user.type(repeatInterval, '222');
+      await saveSchedule(user, {
+        title: '새 회의',
+        date: '2025-10-15',
+        startTime: '14:00',
+        endTime: '15:00',
+        description: '프로젝트 진행 상황 논의',
+        location: '회의실 A',
+        category: '업무',
+      });
+
+      expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
+    });
+
+    it('반복 간격 옆의 정보 아이콘을 호버하면, 반복 간격에 대한 설명이 표시되어야 한다', async () => {
+      const { user } = setup(<App />);
+      const infoIcon = screen.getByLabelText('repeat-interval-info');
+
+      await user.hover(infoIcon);
+
+      expect(
+        screen.getByText('반복 간격상 유효하지 않은 날짜인 경우, 해당 월의 마지막 날로 설정됩니다.')
+      ).toBeInTheDocument();
+    });
+  });
+});
+
+describe('일정 알림 기능', () => {
+  it('사용자가 알림 시간을 선택할 수 있다 (1분, 10분, 1시간, 1일 전)', async () => {
+    setup(<App />);
+
+    const notificationSelect = screen.getByLabelText('알림 설정') as HTMLSelectElement;
+
+    const testCases = [
+      { label: '1분 전', value: '1' },
+      { label: '10분 전', value: '10' },
+      { label: '1시간 전', value: '60' },
+      { label: '1일 전', value: '1440' },
+    ];
+
+    for (const { value } of testCases) {
+      await userEvent.selectOptions(notificationSelect, value);
+      expect(notificationSelect.value).toBe(value);
+    }
+  });
+
+  it('알림 시간에 도달하면 캘린더에 아이콘이 추가되고 색상이 변경되어 표시된다.', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-05-05T13:22:00'));
+
+    const mockEvent: Event = {
+      id: 'event-1',
+      title: '어린이날 대운동회',
+      date: '2025-05-05',
+      startTime: '13:30',
+      endTime: '16:00',
+      description: '초등학교 운동회',
+      location: '운동장',
+      category: '가족',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    };
+
+    setupMockHandlerCreation([mockEvent]);
+    setup(<App />);
+
+    // 알림 체크 타이머가 돌아가게 함 (최소 1초 이상)
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    const monthView = screen.getByTestId('month-view');
+    const cell = getDateCellByDay(monthView, '5');
+    expect(cell).toBeDefined();
+
+    // 아이콘이 실제로 나타날 때까지 기다림
+    const icon = await within(cell!).findByTestId('bell-icon');
+    expect(icon).toBeInTheDocument();
+
+    // 이벤트 텍스트도 확인
+    expect(within(cell!).getByText(/어린이날 대운동회/)).toBeInTheDocument();
+  });
 });
