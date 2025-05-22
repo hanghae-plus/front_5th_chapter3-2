@@ -1,7 +1,8 @@
 import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
-import { Event, EventForm } from '../types';
+import { Event, EventForm, RepeatType } from '../types';
+import { saveRepeatingSchedule } from '../utils/eventUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -101,10 +102,30 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     });
   }
 
+  const saveRepeatingEvent = async (
+    baseEvent: Omit<EventForm, 'repeat'>,
+    repeat: {
+      type: RepeatType;
+      interval: number;
+      endDate: string;
+      count?: number;
+    }
+  ) => {
+    await saveRepeatingSchedule(baseEvent, repeat);
+    await fetchEvents();
+
+    toast({
+      title: '반복 일정이 추가되었습니다.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
   useEffect(() => {
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent };
+  return { events, fetchEvents, saveEvent, deleteEvent, saveRepeatingEvent };
 };

@@ -92,3 +92,13 @@ export const setupMockHandlerDeletion = () => {
     })
   );
 };
+
+export function setupMockHandlerRepeatingCreation(events: Event[] = []) {
+  server.use(
+    http.post('/api/events-list', async ({ request }) => {
+      const body = (await request.json()) as { events: Event[] };
+
+      return HttpResponse.json(body.events || events);
+    })
+  );
+}

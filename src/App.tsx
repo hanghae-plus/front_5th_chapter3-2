@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -38,7 +39,7 @@ import {
   useToast,
   VStack,
 } from '@chakra-ui/react';
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
@@ -93,6 +94,8 @@ function App() {
     setRepeatEndDate,
     notificationTime,
     setNotificationTime,
+    repeatCount,
+    setRepeatCount,
     startTimeError,
     endTimeError,
     editingEvent,
@@ -103,8 +106,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent, saveRepeatingEvent } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -147,11 +151,14 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat: editingEvent
+        ? { type: 'none', interval: 0 }
+        : {
+            type: repeatType,
+            interval: repeatInterval,
+            endDate: repeatEndDate || undefined,
+            count: repeatCount,
+          },
       notificationTime,
     };
 
@@ -160,7 +167,16 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      if (eventData.repeat.type !== 'none') {
+        await saveRepeatingEvent(eventData, {
+          type: eventData.repeat.type as 'daily' | 'weekly' | 'monthly' | 'yearly',
+          interval: repeatInterval,
+          endDate: repeatEndDate,
+          count: repeatCount,
+        });
+      } else {
+        await saveEvent(eventData);
+      }
       resetForm();
     }
   };
@@ -201,6 +217,9 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
+                            {event.repeat.type !== 'none' && (
+                              <RepeatIcon data-testid="repeat-icon" color="gray.500" />
+                            )}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -270,6 +289,9 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && (
+                                    <RepeatIcon data-testid="repeat-icon" color="gray.500" />
+                                  )}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -298,12 +320,19 @@ function App() {
 
           <FormControl>
             <FormLabel>제목</FormLabel>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input
+              value={title}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
+            />
           </FormControl>
 
           <FormControl>
             <FormLabel>날짜</FormLabel>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input
+              type="date"
+              value={date}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDate(e.target.value)}
+            />
           </FormControl>
 
           <HStack width="100%">
@@ -335,17 +364,26 @@ function App() {
 
           <FormControl>
             <FormLabel>설명</FormLabel>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Input
+              value={description}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
+            />
           </FormControl>
 
           <FormControl>
             <FormLabel>위치</FormLabel>
-            <Input value={location} onChange={(e) => setLocation(e.target.value)} />
+            <Input
+              value={location}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLocation(e.target.value)}
+            />
           </FormControl>
 
           <FormControl>
             <FormLabel>카테고리</FormLabel>
-            <Select value={category} onChange={(e) => setCategory(e.target.value)}>
+            <Select
+              value={category}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCategory(e.target.value)}
+            >
               <option value="">카테고리 선택</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
@@ -357,7 +395,13 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              isChecked={isRepeating}
+              onChange={(e) => {
+                setIsRepeating(e.target.checked);
+                setRepeatType('daily');
+              }}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
@@ -409,6 +453,15 @@ function App() {
                   />
                 </FormControl>
               </HStack>
+              <FormControl>
+                <FormLabel>반복 횟수</FormLabel>
+                <Input
+                  type="number"
+                  value={repeatCount}
+                  onChange={(e) => setRepeatCount(Number(e.target.value))}
+                  min={0}
+                />
+              </FormControl>
             </VStack>
           )}
 
@@ -497,6 +550,7 @@ function App() {
                         )?.label
                       }
                     </Text>
+                    {event.repeat.type !== 'none' && <Text>반복 횟수: {event.repeat.count}</Text>}
                   </VStack>
                   <HStack>
                     <IconButton
