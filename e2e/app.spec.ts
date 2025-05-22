@@ -1,5 +1,60 @@
 import { test, expect } from '@playwright/test';
 
+test.describe('일정 추가/삭제 테스트', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+
+    // 기존 일정 모두 삭제
+    const deleteButtons = page.locator('button[aria-label="Delete event"]');
+    while (await deleteButtons.count()) {
+      await deleteButtons.first().click();
+      await page.waitForTimeout(100);
+    }
+  });
+
+  test('일정 추가 및 삭제', async ({ page }) => {
+    // 일정 추가 폼 열기
+    await page.getByRole('button', { name: '일정 추가' }).click();
+    await page.getByLabel('제목').fill('운동');
+    await page.getByLabel('날짜').fill('2025-05-22');
+    await page.getByLabel('시작 시간').fill('18:00');
+    await page.getByLabel('종료 시간').fill('19:00');
+
+    // ✅ 반복 설정 체크되어 있으면 해제 (기본값은 비반복이어야 함)
+    const repeatCheckbox = page.getByRole('checkbox', { name: /반복 일정/ });
+    if (await repeatCheckbox.isChecked()) {
+      const box = repeatCheckbox.locator('..');
+      await box.click({ force: true }); // 체크 해제
+    }
+
+    // 일정 추가 실행
+    await page.getByRole('button', { name: '일정 추가' }).click();
+
+    // ✅ 일정 렌더링까지 기다림 (영향 최소화를 위해 timeout만 설정)
+    const addedEvent = page.locator('td', { hasText: '운동' });
+    await expect(addedEvent).toHaveCount(1, { timeout: 7000 });
+
+    // ✅ 삭제 버튼 클릭
+    const deleteButton = page.locator('button[aria-label="Delete event"]').first();
+    await deleteButton.click();
+
+    // ✅ 반복/비반복 조건에 따라 적절한 삭제 버튼 클릭
+    const onlyDelete = page.getByRole('button', { name: 'Delete this event only' });
+    if (await onlyDelete.isVisible()) {
+      await onlyDelete.click();
+    } else {
+      const confirmDelete = page.getByRole('button', { name: '일정 삭제' });
+      if (await confirmDelete.isVisible()) {
+        await confirmDelete.click();
+      }
+    }
+
+    // ✅ 삭제 확인
+    const deletedEvent = page.locator('td', { hasText: '운동' });
+    await expect(deletedEvent).toHaveCount(0, { timeout: 5000 });
+  });
+});
+
 test.describe('반복 일정 단일 수정/삭제 테스트', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
