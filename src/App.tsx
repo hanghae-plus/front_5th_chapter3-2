@@ -116,7 +116,6 @@ function App() {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const toast = useToast();
-
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
       toast({
@@ -385,6 +384,7 @@ function App() {
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
+                  <option value="none">없음</option>
                   <option value="daily">매일</option>
                   <option value="weekly">매주</option>
                   <option value="monthly">매월</option>
