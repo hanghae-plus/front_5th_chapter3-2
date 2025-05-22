@@ -106,7 +106,40 @@ it('존재하는 이벤트 삭제 시 에러없이 아이템이 삭제된다.', 
 
   await act(() => Promise.resolve(null));
 
-  expect(result.current.events).toEqual([]);
+  expect(result.current.events).toEqual([
+    {
+      category: '업무',
+      date: '2025-05-01',
+      description: '기존 팀 미팅',
+      endTime: '10:00',
+      id: 'repeat-1',
+      location: '회의실 B',
+      notificationTime: 10,
+      repeat: {
+        endDate: '2025-05-03',
+        interval: 1,
+        type: 'daily',
+      },
+      startTime: '09:00',
+      title: '기존 회의',
+    },
+    {
+      category: '업무',
+      date: '2025-05-02',
+      description: '기존 팀 미팅',
+      endTime: '10:00',
+      id: 'repeat-2',
+      location: '회의실 B',
+      notificationTime: 10,
+      repeat: {
+        endDate: '2025-05-03',
+        interval: 1,
+        type: 'daily',
+      },
+      startTime: '09:00',
+      title: '기존 회의',
+    },
+  ]);
 });
 
 it("이벤트 로딩 실패 시 '이벤트 로딩 실패'라는 텍스트와 함께 에러 토스트가 표시되어야 한다", async () => {

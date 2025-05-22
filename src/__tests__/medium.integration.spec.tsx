@@ -85,9 +85,20 @@ describe('일정 CRUD 및 기본 기능', () => {
   });
 
   it('일정을 삭제하고 더 이상 조회되지 않는지 확인한다', async () => {
-    setupMockHandlerDeletion();
+    setupMockHandlerCreation();
 
     const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '삭제할 이벤트',
+      date: '2025-10-15',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '프로젝트 진행 상황 논의',
+      location: '회의실 A',
+      category: '업무',
+    });
+    setupMockHandlerDeletion();
     const eventList = within(screen.getByTestId('event-list'));
     expect(await eventList.findByText('삭제할 이벤트')).toBeInTheDocument();
 

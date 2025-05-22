@@ -125,11 +125,21 @@ describe('반복 일정 CRUD', () => {
   it('일정 수정 시 반복 일정이 정상적으로 수정된다.', async () => {
     vi.setSystemTime(new Date('2025-05-01'));
     const { user } = setup(<App />);
+    setupMockHandlerCreation();
     await act(() => Promise.resolve(null));
-
+    await saveSchedule(user, {
+      title: '반복 일정 테스트',
+      date: '2025-05-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-05-03' },
+    });
     setupMockHandlerUpdating([
       {
-        id: '1',
+        id: 'repeat-1',
         title: '기존 회의',
         date: '2025-05-01',
         startTime: '09:00',
@@ -142,14 +152,14 @@ describe('반복 일정 CRUD', () => {
       },
     ]);
 
-    await user.click(await screen.findByLabelText('Edit event'));
+    const eventList = within(screen.getByTestId('event-list'));
+    const editButtons = await eventList.findAllByLabelText('Edit event');
+    await user.click(editButtons[0]);
     await user.clear(screen.getByLabelText('제목'));
     await user.type(screen.getByLabelText('제목'), '기존 회의 UPDATE');
     await user.click(screen.getByLabelText('반복 일정'));
 
     await user.click(screen.getByTestId('event-submit-button'));
-
-    const eventList = within(screen.getByTestId('event-list'));
 
     expect(eventList.queryByTestId('repeat-info')).not.toBeInTheDocument();
   });
