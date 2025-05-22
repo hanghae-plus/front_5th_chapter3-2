@@ -1192,3 +1192,143 @@ describe('반복 일정 단일 수정 통합 테스트', () => {
     expect(updatedEventPayload?.repeat.type).toBe('none');
   });
 });
+
+describe('반복 일정 단일 삭제 통합 테스트', () => {
+  const repeatingEventToDeleteId = 'repeat-event-to-delete-id';
+  const anotherInstanceOfSameRepeatId = 'repeat-event-instance-another-id';
+  const commonRepeatGroupId = 'delete-group-abc';
+
+  let initialEventsForDeletionTest: Event[];
+
+  beforeEach(() => {
+    // 각 테스트 전에 초기 이벤트 목록 설정 (깊은 복사)
+    initialEventsForDeletionTest = [
+      {
+        id: repeatingEventToDeleteId,
+        title: '주간 삭제 대상 회의',
+        date: '2025-11-03', // 월요일
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '이 인스턴스만 삭제될 예정',
+        location: '회의실 A',
+        category: '업무',
+        repeat: {
+          type: 'weekly',
+          interval: 1,
+          id: commonRepeatGroupId,
+          endDate: '2025-11-17',
+        },
+        notificationTime: 10,
+      },
+      {
+        id: anotherInstanceOfSameRepeatId,
+        title: '주간 삭제 대상 회의', // 동일한 제목
+        date: '2025-11-10', // 다음 주 월요일
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '이 인스턴스는 남아있어야 함',
+        location: '회의실 A',
+        category: '업무',
+        repeat: {
+          type: 'weekly',
+          interval: 1,
+          id: commonRepeatGroupId, // 동일한 반복 그룹 ID
+          endDate: '2025-11-17',
+        },
+        notificationTime: 10,
+      },
+      {
+        id: 'some-other-event-id',
+        title: '다른 일반 회의',
+        date: '2025-11-03',
+        startTime: '14:00',
+        endTime: '15:00',
+        description: '다른 회의입니다.',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'none', interval: 1 },
+        notificationTime: 10,
+      },
+    ];
+
+    // MSW 핸들러 설정
+    server.use(
+      http.get('/api/events', () => {
+        return HttpResponse.json({ events: initialEventsForDeletionTest });
+      }),
+      http.delete('/api/events/:id', ({ params }) => {
+        const eventId = params.id as string;
+        initialEventsForDeletionTest = initialEventsForDeletionTest.filter(
+          (event) => event.id !== eventId
+        );
+        // 실제 애플리케이션에서는 서버가 성공적으로 삭제했음을 알리고,
+        // 클라이언트는 fetchEvents를 다시 호출하여 목록을 갱신합니다.
+        return new HttpResponse(null, { status: 204 }); // No Content
+      })
+    );
+  });
+
+  afterEach(() => {
+    server.resetHandlers();
+  });
+
+  it('반복 일정의 특정 인스턴스를 삭제하면 해당 인스턴스만 목록에서 사라지고 다른 인스턴스는 유지되어야 한다', async () => {
+    const { user } = setup(<App />);
+    // 테스트를 위한 현재 날짜 설정 (11월 첫째 주로 설정하여 테스트 이벤트들이 보이도록)
+    vi.setSystemTime(new Date('2025-11-01'));
+
+    await screen.findByText('일정 로딩 완료!'); // 초기 데이터 로딩 대기
+
+    const eventList = screen.getByTestId('event-list');
+
+    // 삭제 전: 삭제 대상 이벤트와 다른 반복 인스턴스가 모두 존재하는지 확인
+    const eventsToDeleteName = '주간 삭제 대상 회의';
+    let targetEventElements = within(eventList).getAllByText(eventsToDeleteName);
+    expect(targetEventElements).toHaveLength(2); // '2025-11-03'과 '2025-11-10' 두 인스턴스
+
+    const eventToDeleteContainer = within(eventList).getByTestId(
+      `event-${repeatingEventToDeleteId}`
+    );
+    expect(eventToDeleteContainer).toBeInTheDocument();
+    expect(within(eventToDeleteContainer).getByText('2025-11-03')).toBeInTheDocument();
+
+    const anotherInstanceContainer = within(eventList).getByTestId(
+      `event-${anotherInstanceOfSameRepeatId}`
+    );
+    expect(anotherInstanceContainer).toBeInTheDocument();
+    expect(within(anotherInstanceContainer).getByText('2025-11-10')).toBeInTheDocument();
+
+    // 삭제할 특정 인스턴스의 삭제 버튼 클릭
+    const deleteButton = within(eventToDeleteContainer).getByLabelText('Delete event');
+    await act(async () => {
+      await user.click(deleteButton);
+    });
+
+    // 삭제 확인 토스트 메시지 확인 (useEventOperations 훅에서 기본적으로 info 레벨로 설정되어 있음)
+    await screen.findByText('일정이 삭제되었습니다.');
+
+    // 삭제 후:
+    // 1. 삭제된 인스턴스는 더 이상 목록에 없어야 함
+    expect(
+      within(eventList).queryByTestId(`event-${repeatingEventToDeleteId}`)
+    ).not.toBeInTheDocument();
+
+    // 2. 동일한 반복 그룹의 다른 인스턴스는 여전히 목록에 있어야 함
+    const remainingInstanceContainer = within(eventList).queryByTestId(
+      `event-${anotherInstanceOfSameRepeatId}`
+    );
+    expect(remainingInstanceContainer).toBeInTheDocument();
+    if (remainingInstanceContainer) {
+      // 타입스크립트 null 체크
+      expect(within(remainingInstanceContainer).getByText(eventsToDeleteName)).toBeInTheDocument();
+      expect(within(remainingInstanceContainer).getByText('2025-11-10')).toBeInTheDocument();
+    }
+
+    // 3. '주간 삭제 대상 회의'라는 제목의 이벤트가 이제 하나만 남아있는지 확인
+    targetEventElements = within(eventList).getAllByText(eventsToDeleteName);
+    expect(targetEventElements).toHaveLength(1);
+
+    // 4. 전혀 다른 이벤트는 영향을 받지 않았는지 확인
+    expect(screen.getByText('다른 일반 회의')).toBeInTheDocument();
+  });
+});
