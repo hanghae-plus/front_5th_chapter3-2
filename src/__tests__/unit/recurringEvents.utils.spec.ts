@@ -1,5 +1,5 @@
 import { Event } from '../../types';
-import { generateRecurringEvents } from '../../utils/recurringEventOperations';
+import { generateRecurringEvents } from '../../utils/recurringEventUtils';
 
 describe('반복 일정 유틸리티 함수 테스트', () => {
   // Base event for testing

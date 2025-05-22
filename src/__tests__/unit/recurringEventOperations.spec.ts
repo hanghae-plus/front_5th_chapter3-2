@@ -5,7 +5,7 @@ import { Event } from '../../types';
     saveRecurringEvents,
     updateRecurringEvents,
     deleteRecurringEvents,
-  } from '../../utils/recurringEventOperations';
+  } from '../../utils/recurringEventUtils';
 
 global.fetch = vi.fn();
 
