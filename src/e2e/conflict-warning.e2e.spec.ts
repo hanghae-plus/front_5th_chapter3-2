@@ -6,7 +6,6 @@ test.beforeEach(async ({ request, page }) => {
 });
 
 test('동일 시간대에 중복 일정 추가 시 충돌 경고 메시지가 표시되어야 한다', async ({ page }) => {
-  // ⚠️ 운동 일정과 동일한 시간에 새로운 일정 추가 시도
   await page.getByRole('textbox', { name: '제목' }).fill('충돌 테스트');
   await page.getByRole('textbox', { name: '날짜' }).fill('2025-05-22');
   await page.getByRole('textbox', { name: '시작 시간' }).fill('18:00');
