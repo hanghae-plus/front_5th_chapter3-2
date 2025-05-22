@@ -123,7 +123,7 @@ describe('반복 일정 등록 테스트(endDate 등록 X / 반복 간격 1)', (
   });
 });
 
-describe('반복 일정 등록 시 반복 종료를 입력할 때', () => {
+describe('반복 일정 등록 시 반복 종료를 날짜로 입력할 때', () => {
   it('매일 반복 이벤트를 등록 시 반복 종료 일정을 반영한 이벤트를 생성한다. (endDate: "2025-05-31")', () => {
     const event: Event = {
       id: '1',
@@ -137,6 +137,7 @@ describe('반복 일정 등록 시 반복 종료를 입력할 때', () => {
       repeat: {
         type: 'daily',
         interval: 1,
+        endType: 'date',
         endDate: '2025-05-31',
       },
       notificationTime: 10,
@@ -168,6 +169,7 @@ describe('반복 일정 등록 시 반복 종료를 입력할 때', () => {
       repeat: {
         type: 'yearly',
         interval: 1,
+        endType: 'date',
         endDate: '2027-07-06',
       },
       notificationTime: 10,
@@ -186,6 +188,134 @@ describe('반복 일정 등록 시 반복 종료를 입력할 때', () => {
     expect(repeatEvents[2].repeat.id).toBe('repeat-1');
   });
 
+  describe('반복 일정 등록 시 반복 종료를 횟수로 입력할 때', () => {
+    it('매일 반복 이벤트를 등록 시 설정한 횟수만큼 반복 일정을 생성한다.', () => {
+      const event: Event = {
+        id: '1',
+        title: '매일 회고',
+        date: '2025-09-21',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: 'test',
+        location: 'test',
+        category: 'test',
+        repeat: {
+          type: 'daily',
+          interval: 1,
+          endType: 'count',
+          endCount: 3,
+        },
+        notificationTime: 10,
+      };
+
+      const repeatEvents = createRepeatEvents(event);
+
+      expect(repeatEvents).toBeDefined();
+      expect(repeatEvents.length).toBe(3);
+      expect(repeatEvents[0].date).toBe('2025-09-21');
+      expect(repeatEvents[1].date).toBe('2025-09-22');
+      expect(repeatEvents[2].date).toBe('2025-09-23');
+
+      // repeat id 동일성 검증
+      expect(repeatEvents[0].repeat.id).toBe('repeat-1');
+      expect(repeatEvents[2].repeat.id).toBe('repeat-1');
+    });
+
+    it('매주 반복 이벤트를 등록 시 설정한 횟수만큼 반복 일정을 생성한다.', () => {
+      const event: Event = {
+        id: '1',
+        title: '주간 회의',
+        date: '2025-09-10',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: 'test',
+        location: 'test',
+        category: 'test',
+        repeat: {
+          type: 'weekly',
+          interval: 1,
+          endType: 'count',
+          endCount: 2,
+        },
+        notificationTime: 10,
+      };
+
+      const repeatEvents = createRepeatEvents(event);
+
+      expect(repeatEvents).toBeDefined();
+      expect(repeatEvents.length).toBe(2);
+      expect(repeatEvents[0].date).toBe('2025-09-10');
+      expect(repeatEvents[1].date).toBe('2025-09-17');
+
+      // repeat id 동일성 검증
+      expect(repeatEvents[0].repeat.id).toBe('repeat-1');
+      expect(repeatEvents[1].repeat.id).toBe('repeat-1');
+    });
+
+    it('매월 반복 이벤트를 등록 시 설정한 횟수만큼 반복 일정을 생성한다.', () => {
+      const event: Event = {
+        id: '1',
+        title: '관리비 납부',
+        date: '2025-08-25',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: 'test',
+        location: 'test',
+        category: 'test',
+        repeat: {
+          type: 'monthly',
+          interval: 1,
+          endType: 'count',
+          endCount: 2,
+        },
+        notificationTime: 10,
+      };
+
+      const repeatEvents = createRepeatEvents(event);
+
+      expect(repeatEvents).toBeDefined();
+      expect(repeatEvents.length).toBe(2);
+      expect(repeatEvents[0].date).toBe('2025-08-25');
+      expect(repeatEvents[1].date).toBe('2025-09-25');
+
+      // repeat id 동일성 검증
+      expect(repeatEvents[0].repeat.id).toBe('repeat-1');
+      expect(repeatEvents[1].repeat.id).toBe('repeat-1');
+    });
+
+    it('매년 반복 이벤트를 등록 시 설정한 횟수만큼 반복 일정을 생성한다.', () => {
+      const event: Event = {
+        id: '1',
+        title: '생일',
+        date: '2023-07-06',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '생일',
+        location: 'test',
+        category: 'test',
+        repeat: {
+          type: 'yearly',
+          interval: 1,
+          endType: 'count',
+          endCount: 3,
+        },
+        notificationTime: 10,
+      };
+
+      const repeatEvents = createRepeatEvents(event);
+
+      expect(repeatEvents).toBeDefined();
+      expect(repeatEvents.length).toBe(3);
+      expect(repeatEvents[0].date).toBe('2023-07-06');
+      expect(repeatEvents[1].date).toBe('2024-07-06');
+      expect(repeatEvents[2].date).toBe('2025-07-06');
+
+      // repeat id 동일성 검증
+      expect(repeatEvents[0].repeat.id).toBe('repeat-1');
+      expect(repeatEvents[2].repeat.id).toBe('repeat-1');
+    });
+  });
+
   it('매년 반복 이벤트를 등록 시 반복 종료 날짜를 최대 날짜보다 뒤로 설정해도 최대 날짜까지의 반복 일정을 생성한다.', () => {
     const event: Event = {
       id: '1',
@@ -199,6 +329,7 @@ describe('반복 일정 등록 시 반복 종료를 입력할 때', () => {
       repeat: {
         type: 'yearly',
         interval: 1,
+        endType: 'date',
         endDate: '2027-07-06',
       },
       notificationTime: 10,
