@@ -75,11 +75,11 @@ function expandEvents(events, startDate, endDate) {
       const dateStr = current.toISOString().slice(0, 10);
       // 예외 날짜에 포함되어 있으면 skip
       if (current >= startDate && !(event.exceptions && event.exceptions.includes(dateStr))) {
-        expanded.push({ 
-          ...event, 
+        expanded.push({
+          ...event,
           id: `${event.id}-${dateStr}`, // 날짜를 포함한 고유 ID 생성
           parentId: event.id, // 원래 이벤트의 ID를 참조
-          date: dateStr 
+          date: dateStr
         });
       }
       switch (event.repeat.type) {
@@ -159,7 +159,7 @@ function App() {
       });
       return;
     }
-  
+
     if (startTimeError || endTimeError) {
       toast({
         title: '시간 설정을 확인해주세요.',
@@ -186,7 +186,7 @@ function App() {
       },
       notificationTime,
     };
-  
+
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
@@ -267,7 +267,7 @@ function App() {
         : currentDate;
     // 반복일정까지 포함
     const expandedEvents = expandEvents(filteredEvents, firstDay, lastDay);
-  
+
     return (
       <VStack data-testid="month-view" align="stretch" w="full" spacing={4}>
         <Heading size="md">{formatMonth(currentDate)}</Heading>
@@ -288,14 +288,14 @@ function App() {
                   const dateObj = day
                     ? new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
                     : null;
-  
+
                   // Use local date string instead of UTC
                   const dateString = dateObj
                     ? `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(
                         dateObj.getDate()
                       ).padStart(2, '0')}`
                     : '';
-  
+
                   const holiday = holidays[dateString];
                   return (
                     <Td
@@ -511,7 +511,7 @@ function App() {
                 </FormControl>
               </HStack>
             </VStack>
-          )}  
+          )}
 
           <Button data-testid="event-submit-button" onClick={addOrUpdateEvent} colorScheme="blue">
             {editingEvent ? '일정 수정' : '일정 추가'}
