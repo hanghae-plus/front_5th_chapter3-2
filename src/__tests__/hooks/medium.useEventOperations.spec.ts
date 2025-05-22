@@ -232,7 +232,7 @@ describe('반복 일정', () => {
       const newEvent: Event = {
         id: '1',
         title: '새 반복 일정',
-        date: '2025-10-1',
+        date: '2025-10-01',
         startTime: '11:00',
         endTime: '12:00',
         description: '새로운 반복 팀 미팅',
@@ -262,7 +262,7 @@ describe('반복 일정', () => {
       const newEvent: Event = {
         id: '1',
         title: '새 반복 일정',
-        date: '2025-05-1',
+        date: '2025-05-01',
         startTime: '11:00',
         endTime: '12:00',
         description: '새로운 반복 팀 미팅',
@@ -283,7 +283,7 @@ describe('반복 일정', () => {
     });
 
     it('윤년 29일에 반복 일정 설정하면 윤년 29일에만 표시를 한다.', async () => {
-      setupMockHandlerCreation();
+      setupMockRepeatHandlerCreateion();
 
       const { result } = renderHook(() => useEventOperations(false));
 
@@ -298,14 +298,15 @@ describe('반복 일정', () => {
         description: '새로운 반복 팀 미팅',
         location: '회의실 A',
         category: '업무',
-        repeat: { type: 'yearly', interval: 1, endDate: '2025-10-18' },
+        repeat: { type: 'yearly', interval: 1, endDate: '2029-10-18' },
         notificationTime: 5,
       };
 
       await act(async () => {
-        await result.current.saveEvent(newEvent);
+        await result.current.saveRepeatEvent(newEvent);
       });
 
+      console.log(result.current.events);
       expect(result.current.events[0].date).toBe('2024-02-29');
       expect(result.current.events[1].date).toBe('2028-02-29');
     });
