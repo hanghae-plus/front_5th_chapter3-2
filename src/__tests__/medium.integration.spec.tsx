@@ -40,6 +40,28 @@ const saveSchedule = async (
   await user.click(screen.getByTestId('event-submit-button'));
 };
 
+const saveRepeatSchedule = async (
+  user: UserEvent,
+  form: Omit<Event, 'id' | 'notificationTime'>
+) => {
+  const { title, date, startTime, endTime, location, description, category, repeat } = form;
+
+  await user.click(screen.getAllByText('일정 추가')[0]);
+
+  await user.type(screen.getByLabelText('제목'), title);
+  await user.type(screen.getByLabelText('날짜'), date);
+  await user.type(screen.getByLabelText('시작 시간'), startTime);
+  await user.type(screen.getByLabelText('종료 시간'), endTime);
+  await user.type(screen.getByLabelText('설명'), description);
+  await user.type(screen.getByLabelText('위치'), location);
+  await user.selectOptions(screen.getByLabelText('카테고리'), category);
+  await user.selectOptions(screen.getByLabelText('repeat-type'), repeat.type);
+  await user.type(screen.getByLabelText('repeat-interval'), repeat.interval.toString());
+  await user.type(screen.getByLabelText('repeat-end-date'), repeat.endDate || 'none');
+
+  await user.click(screen.getByTestId('event-submit-button'));
+};
+
 describe('일정 CRUD 및 기본 기능', () => {
   it('입력한 새로운 일정 정보에 맞춰 모든 필드가 이벤트 리스트에 정확히 저장된다.', async () => {
     setupMockHandlerCreation();
@@ -346,17 +368,15 @@ describe('일정 반복 기능', () => {
     });
   });
 
-  describe('반복 주기', () => {
-    it('반복 주기를 설정하지 않으면 기본값으로 1이 설정되어야 한다.', () => {
+  describe('반복 간격', () => {
+    it('반복 간격을 설정하지 않으면 기본값으로 1이 설정되어야 한다.', () => {
       setup(<App />);
 
       const repeatInterval = screen.getByLabelText('repeat-interval');
       expect(repeatInterval).toHaveValue(1);
     });
 
-    it('반복 주기가 1 미만인 경우 경고 메시지가 표시되어야 한다', async () => {
-      setupMockHandlerCreation();
-
+    it('반복 간격이 1 미만이라면, 경고 메시지가 표시되어야 한다. (복사 붙여넣기 동작)', async () => {
       const { user } = setup(<App />);
       const repeatInterval = screen.getByLabelText('repeat-interval');
 
@@ -375,9 +395,7 @@ describe('일정 반복 기능', () => {
       expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
     });
 
-    it('반복 주기가 12 초과인 경우 경고 메시지가 표시되어야 한다', async () => {
-      setupMockHandlerCreation();
-
+    it('반복 간격이 12 초과라면 경고 메시지가 표시되어야 한다. (복사 붙여넣기 동작)', async () => {
       const { user } = setup(<App />);
       const repeatInterval = screen.getByLabelText('repeat-interval');
 
@@ -396,14 +414,13 @@ describe('일정 반복 기능', () => {
       expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
     });
 
-    it('반복 주기가 정수가 아닌 경우 경고 메시지가 표시되어야 한다', async () => {
-      setupMockHandlerCreation();
-
+    it('반복 간격이 유효한 숫자가 아니라면 경고 메시지가 표시되어야 한다.', async () => {
       const { user } = setup(<App />);
       const repeatInterval = screen.getByLabelText('repeat-interval');
 
       await user.clear(repeatInterval);
-      await user.type(repeatInterval, '1ggg3');
+      await user.type(repeatInterval, '0');
+      await user.type(repeatInterval, '222');
       await saveSchedule(user, {
         title: '새 회의',
         date: '2025-10-15',
@@ -417,7 +434,7 @@ describe('일정 반복 기능', () => {
       expect(screen.getByText('반복 간격은 1에서 12 사이의 숫자여야 합니다.')).toBeInTheDocument();
     });
 
-    it('반복 간격 옆의 정보 아이콘을 호버하면, 반복 주기에 대한 설명이 표시되어야 한다', async () => {
+    it('반복 간격 옆의 정보 아이콘을 호버하면, 반복 간격에 대한 설명이 표시되어야 한다', async () => {
       const { user } = setup(<App />);
       const infoIcon = screen.getByLabelText('repeat-interval-info');
 
@@ -427,11 +444,5 @@ describe('일정 반복 기능', () => {
         screen.getByText('반복 간격상 유효하지 않은 날짜인 경우, 해당 월의 마지막 날로 설정됩니다.')
       ).toBeInTheDocument();
     });
-  });
-
-  describe('윤년 29일에 또는 31일에 매월 또는 매년 반복일정을 설정한 경우', () => {
-    it('선택한 날짜가 존재하지 않는 달에는 해당 월의 마지막 날에 일정이 생성된다는 알림이 등장해야 한다.', () => {});
-
-    it('선해당 월의 마지막 날에 일정이 생성되어야 한다.', () => {});
   });
 });
