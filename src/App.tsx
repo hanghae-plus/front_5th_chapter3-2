@@ -485,8 +485,10 @@ function App() {
           {isRepeating && (
             <VStack width="100%">
               <FormControl>
-                <FormLabel>반복 유형</FormLabel>
+                <FormLabel htmlFor="repeat-type">반복 유형</FormLabel>
                 <Select
+                  id="repeat-type"
+                  data-testid="repeat-type"
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
