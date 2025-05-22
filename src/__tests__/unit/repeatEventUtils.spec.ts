@@ -3,7 +3,7 @@ import { generateRecurringEvents } from '../../utils/repeatEventUtils';
 
 describe('repeatEventUtils', () => {
   const event: Event = {
-    id: '1',
+    id: undefined,
     title: '매일 반복 이벤트',
     date: '2025-05-20',
     startTime: '10:00',
@@ -24,7 +24,7 @@ describe('repeatEventUtils', () => {
   describe('반복 유형별 테스트', () => {
     it('매일 반복일정을 생성한다.', () => {
       const dailyEvent: Event = {
-        id: '1',
+        id: undefined,
         title: '매일 반복 이벤트',
         date: '2025-05-20',
         startTime: '10:00',
@@ -67,7 +67,7 @@ describe('repeatEventUtils', () => {
 
     it('매주 반복일정을 생성한다.', () => {
       const weeklyEvent: Event = {
-        id: '1',
+        id: undefined,
         title: '매주 반복 이벤트',
         date: '2025-05-20',
         startTime: '10:00',
@@ -102,7 +102,7 @@ describe('repeatEventUtils', () => {
 
     it('매월 반복일정을 생성한다.', () => {
       const monthlyEvent: Event = {
-        id: '1',
+        id: undefined,
         title: '매주 반복 이벤트',
         date: '2025-05-20',
         startTime: '10:00',
@@ -137,7 +137,7 @@ describe('repeatEventUtils', () => {
 
     it('매년 반복일정을 생성한다.', () => {
       const yearlyEvent: Event = {
-        id: '1',
+        id: undefined,
         title: '매년 반복 이벤트',
         date: '2025-05-20',
         startTime: '10:00',
