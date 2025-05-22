@@ -216,12 +216,32 @@ describe('반복 일정 기능', () => {
       });
 
       expect(result.current.events).toEqual([
-        { ...weeklyEvent, id: '1', date: '2025-10-01' },
-        { ...weeklyEvent, id: '2', date: '2025-10-08' },
-        { ...weeklyEvent, id: '3', date: '2025-10-15' },
+        {
+          ...weeklyEvent,
+          id: '1',
+          date: '2025-10-01',
+          repeat: { ...weeklyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...weeklyEvent,
+          id: '2',
+          date: '2025-10-08',
+          repeat: { ...weeklyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...weeklyEvent,
+          id: '3',
+          date: '2025-10-15',
+          repeat: { ...weeklyEvent.repeat, id: 'repeat-1' },
+        },
       ]);
     });
   });
+
+  // 반복 유형 선택
+  //   - 일정 생성 또는 수정 시 반복 유형을 선택할 수 있다.
+  //   - 반복 유형은 다음과 같다: 매일, 매주, 매월, 매년
+  //       - 만약, 윤년 29일에 또는 31일에 매월 또는 매년 반복일정을 설정한다면 어떻게 처리할까요? 다른 서비스를 참고해보시고 자유롭게 작성해보세요.
 
   describe('반복 유형 선택', () => {
     it('매일 반복 일정을 생성할 수 있다', async () => {
@@ -421,11 +441,139 @@ describe('반복 일정 기능', () => {
       ]);
     });
   });
-});
 
-// 반복 간격
-//- 각 반복 유형에 대해 간격을 설정할 수 있다.
-// - 예: 2일마다, 3주마다, 2개월마다 등
+  // 반복 간격
+  //- 각 반복 유형에 대해 간격을 설정할 수 있다.
+  // - 예: 2일마다, 3주마다, 2개월마다 등
+
+  describe('반복 간격', () => {
+    it('2일 간격으로 반복 일정을 생성할 수 있다', async () => {
+      setupMockHandlerCreation();
+      const { result } = renderHook(() => useEventOperations(false));
+      await act(() => Promise.resolve(null));
+
+      const dailyEvent: Event = {
+        id: '1',
+        title: '매일 회의',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '매일 반복되는 회의',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 2, endDate: '2025-10-03' },
+        notificationTime: 5,
+      };
+
+      await act(async () => {
+        await result.current.saveRepeatEvent(dailyEvent);
+      });
+
+      await act(async () => {
+        await result.current.fetchEvents();
+      });
+
+      expect(result.current.events).toEqual([
+        {
+          ...dailyEvent,
+          id: '1',
+          date: '2025-10-01',
+          repeat: { ...dailyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...dailyEvent,
+          id: '2',
+          date: '2025-10-03',
+          repeat: { ...dailyEvent.repeat, id: 'repeat-1' },
+        },
+      ]);
+    });
+
+    it('3주 간격으로 반복 일정을 생성할 수 있다', async () => {
+      setupMockHandlerCreation();
+      const { result } = renderHook(() => useEventOperations(false));
+      await act(() => Promise.resolve(null));
+
+      const weeklyEvent: Event = {
+        id: '1',
+        title: '매주 회의',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '매주 반복되는 회의',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 3, endDate: '2025-10-30' },
+        notificationTime: 5,
+      };
+
+      await act(async () => {
+        await result.current.saveRepeatEvent(weeklyEvent);
+      });
+
+      await act(async () => {
+        await result.current.fetchEvents();
+      });
+
+      expect(result.current.events).toEqual([
+        {
+          ...weeklyEvent,
+          id: '1',
+          date: '2025-10-01',
+          repeat: { ...weeklyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...weeklyEvent,
+          id: '2',
+          date: '2025-10-22',
+          repeat: { ...weeklyEvent.repeat, id: 'repeat-1' },
+        },
+      ]);
+    });
+
+    it('2개월 간격으로 반복 일정을 생성할 수 있다', async () => {
+      setupMockHandlerCreation();
+      const { result } = renderHook(() => useEventOperations(false));
+      await act(() => Promise.resolve(null));
+
+      const monthlyEvent: Event = {
+        id: '1',
+        title: '매월 회의',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '매월 반복되는 회의',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-31' },
+        notificationTime: 5,
+      };
+
+      await act(async () => {
+        await result.current.saveRepeatEvent(monthlyEvent);
+      });
+
+      await act(async () => {
+        await result.current.fetchEvents();
+      });
+
+      expect(result.current.events).toEqual([
+        {
+          ...monthlyEvent,
+          id: '1',
+          date: '2025-10-01',
+          repeat: { ...monthlyEvent.repeat, id: 'repeat-1' },
+        },
+        {
+          ...monthlyEvent,
+          id: '2',
+          date: '2025-12-01',
+          repeat: { ...monthlyEvent.repeat, id: 'repeat-1' },
+        },
+      ]);
+    });
+  });
+});
 
 // 반복 일정 - 통합 테스트로 확인
 // -캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표시한다.
