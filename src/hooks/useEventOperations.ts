@@ -88,6 +88,8 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           currentDate.setFullYear(currentDate.getFullYear() + interval);
           break;
       }
+      if (currentDate > end) break;
+
       newEvents.push({ ...eventData, date: formatDate(currentDate) });
     }
 
@@ -99,10 +101,10 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       let response: Response;
 
       if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
+        response = await fetch('/api/events-list', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
+          body: JSON.stringify({ events: [eventData] }),
         });
       } else {
         const repeatedEvents = getRepeatEvents(eventData as EventForm);

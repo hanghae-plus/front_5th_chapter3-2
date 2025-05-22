@@ -112,6 +112,50 @@ export const setupMockRepeatHandlerCreateion = (initEvents = [] as Event[]) => {
   );
 };
 
-export const setupMockRepeatHandlerUpdation = () => {};
+export const setupMockRepeatHandlerUpdation = () => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '기존 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '기존 팀 미팅',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    },
+    {
+      id: '2',
+      title: '기존 회의2',
+      date: '2025-10-15',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '기존 팀 미팅 2',
+      location: '회의실 C',
+      category: '업무 회의',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 5,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.put('/api/events-list', async ({ request }) => {
+      const { events: newEvents } = (await request.json()) as { events: Event[] };
+      newEvents.forEach((event) => {
+        const eventIndex = mockEvents.findIndex((target) => target.id === event.id);
+        if (eventIndex > -1) {
+          mockEvents[eventIndex] = { ...mockEvents[eventIndex], ...event };
+        }
+      });
+
+      return HttpResponse.json(mockEvents);
+    })
+  );
+};
 
 export const setupMockRepeatHandlerDeletion = () => {};
