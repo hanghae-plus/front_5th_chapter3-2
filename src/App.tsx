@@ -255,7 +255,13 @@ function App() {
                                 key={event.id}
                                 p={1}
                                 my={1}
-                                bg={isNotified ? 'red.100' : 'gray.100'}
+                                bg={
+                                  event.repeat.type !== 'none'
+                                    ? 'blue.100'
+                                    : isNotified
+                                      ? 'red.100'
+                                      : 'gray.100'
+                                }
                                 borderRadius="md"
                                 fontWeight={isNotified ? 'bold' : 'normal'}
                                 color={isNotified ? 'red.500' : 'inherit'}
@@ -281,7 +287,7 @@ function App() {
       </VStack>
     );
   };
-
+  console.log(isRepeating, repeatType);
   return (
     <Box w="full" h="100vh" m="auto" p={5}>
       <Flex gap={6} h="full">
