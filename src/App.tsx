@@ -99,8 +99,6 @@ function App() {
     endTimeError,
     editingEvent,
     setEditingEvent,
-    repeatCount,
-    setRepeatCount,
     handleStartTimeChange,
     handleEndTimeChange,
     resetForm,
