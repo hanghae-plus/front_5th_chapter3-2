@@ -13,7 +13,6 @@ app.use(express.json());
 
 const getEvents = async () => {
   const data = await readFile(`${__dirname}/src/__mocks__/response/realEvents.json`, 'utf8');
-
   return JSON.parse(data);
 };
 
