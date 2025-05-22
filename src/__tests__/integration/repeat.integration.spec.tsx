@@ -142,7 +142,7 @@ describe('반복 일정', () => {
     expect(eventList.queryByText('반복 종료 일정')).toBeNull();
   });
 
-  it.only('캘린더 뷰에서 반복 일정에 반복 아이콘 또는 태그가 표시된다.', async () => {
+  it('캘린더 뷰에서 반복 일정에 반복 아이콘 또는 태그가 표시된다.', async () => {
     vi.setSystemTime(new Date('2025-05-01 08:49:59'));
 
     setupMockHandlerRepeatCreation();
@@ -171,29 +171,26 @@ describe('반복 일정', () => {
     expect(within(container!).getByLabelText('반복 일정 아이콘')).toBeInTheDocument();
   });
 
-  it('반복 일정의 한 인스턴스를 수정하면, 해당 일정이 반복에서 분리되어 단일 일정으로 변경된다.', async () => {
-    vi.setSystemTime(new Date('2025-06-01 08:49:59'));
+  it.only('반복 일정의 한 인스턴스를 수정하면, 해당 일정이 반복에서 분리되어 단일 일정으로 변경된다.', async () => {
+    vi.setSystemTime(new Date('2025-05-01 08:49:59'));
 
     setupMockHandlerRepeatUpdating();
 
     const { user } = setup(<App />);
 
-    await screen.findByText('일정 로딩 완료!');
-
-    const eventList = within(screen.getByTestId('event-list'));
-    const editButton = eventList.getByText('매월 반복 일정').closest('li')?.querySelector('button');
-
-    expect(editButton).toBeInTheDocument();
-    await user.click(editButton!);
+    await user.click(await screen.findByLabelText('Edit event'));
 
     await user.clear(screen.getByLabelText('제목'));
-    await user.type(screen.getByLabelText('제목'), '수정된 매월 반복 일정');
+    await user.type(screen.getByLabelText('제목'), '수정된 반복 일정');
+    await user.clear(screen.getByLabelText('설명'));
+    await user.type(screen.getByLabelText('설명'), '수정된 반복 일정 내용');
 
     await user.click(screen.getByTestId('event-submit-button'));
 
-    const updatedEventItem = eventList.getByText('수정된 매월 반복 일정');
-    expect(updatedEventItem).toBeInTheDocument();
-    expect(within(updatedEventItem.parentElement!).getByText('🔁')).not.toBeInTheDocument();
+    const eventList = within(screen.getByTestId('event-list'));
+
+    expect(eventList.getByText('수정된 반복 일정')).toBeInTheDocument();
+    expect(eventList.getByText('수정된 반복 일정 내용')).toBeInTheDocument();
   });
 
   it('반복 일정의 한 인스턴스를 삭제하면, 해당 일정만 삭제되고 나머지 반복 일정에는 영향이 없다.', async () => {

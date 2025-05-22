@@ -158,9 +158,10 @@ export const setupMockHandlerRepeatUpdating = () => {
       return HttpResponse.json({ events: mockEvents });
     }),
 
-    http.put('/api/events/:id', async ({ params, request }) => {
+    http.put('/api/events-list/:id', async ({ params, request }) => {
       const { id } = params;
       const updatedEvent = (await request.json()) as Event;
+      console.log('🚀 ~ http.put ~ id:', id);
       const index = mockEvents.findIndex((event) => event.id === id);
 
       if (index === -1) {
