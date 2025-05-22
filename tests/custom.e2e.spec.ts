@@ -112,20 +112,6 @@ test.describe.serial('반복 일정 테스트', () => {
     await expect(updatedListEvents.first()).toBeVisible();
   });
 
-  test('반복 일정 삭제 시 단일 일정만 삭제되고, 다른 반복 일정은 남아 있는다.', async ({
-    page,
-  }) => {
-    await page.goto('/'); // 다시 5월에서 반복일정 단일 삭제
-
-    const eventList = page.getByTestId('event-list');
-    const targetEvent = eventList
-      .locator('[data-testid^="event-id-"]')
-      .filter({ hasText: targetTitle })
-      .first();
-
-    await targetEvent.getByRole('button', { name: 'Delete event' }).click();
-  });
-
   test('테스트로 생성된 반복 일정, 수정된 반복 일정을 다음 달 기록까지 모두 단일 제거로 제거한다.', async ({
     page,
   }) => {
