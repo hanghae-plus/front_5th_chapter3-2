@@ -107,11 +107,14 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
       const response = await fetch(endpoint, options);
 
+      console.log(endpoint, options, id);
+
       if (!response.ok) {
         throw new Error('Failed to delete event');
       }
 
       await fetchEvents();
+      console.log('[test]!!', events);
       toast({
         title: '일정이 삭제되었습니다.',
         status: 'info',

@@ -43,7 +43,11 @@ function expandRepeatingEvents(events: Event[], rangeStart: Date, rangeEnd: Date
     } else if (!('originalRepeatId' in event)) {
       const { type, interval, endDate } = event.repeat;
 
+      const maxRepeatEnd = new Date('2025-09-30');
       const repeatEnd = stripTime(isValidDate(endDate) ? new Date(endDate!) : rangeEnd);
+      if (repeatEnd > maxRepeatEnd) {
+        repeatEnd.setTime(maxRepeatEnd.getTime());
+      }
       const start = stripTime(new Date(event.date));
 
       let current = new Date(start);
