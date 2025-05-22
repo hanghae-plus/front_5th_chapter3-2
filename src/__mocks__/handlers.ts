@@ -36,4 +36,22 @@ export const handlers = [
 
     return new HttpResponse(null, { status: 404 });
   }),
+
+  http.post('/api/events-list', async ({ request }) => {
+    const newEvent = (await request.json()) as Event;
+    newEvent.id = String(events.length + 1);
+    return HttpResponse.json(newEvent, { status: 201 });
+  }),
+
+  http.put('/api/events-list/:id', async ({ params, request }) => {
+    const { id } = params;
+    const updatedEvent = (await request.json()) as Event;
+    const index = events.findIndex((event) => event.id === id);
+
+    if (index !== -1) {
+      return HttpResponse.json({ ...events[index], ...updatedEvent });
+    }
+
+    return new HttpResponse(null, { status: 404 });
+  }),
 ];
