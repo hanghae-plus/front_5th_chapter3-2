@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -103,8 +104,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent, saveRepeatEvent } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -138,6 +140,12 @@ function App() {
       return;
     }
 
+    const repeatEventData = {
+      type: editingEvent ? 'none' : isRepeating ? repeatType : 'none',
+      interval: editingEvent ? 0 : repeatInterval,
+      endDate: editingEvent ? undefined : repeatEndDate || undefined,
+    };
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -147,11 +155,7 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat: repeatEventData,
       notificationTime,
     };
 
@@ -160,7 +164,11 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      if (eventData.repeat.type !== 'none') {
+        await saveRepeatEvent(eventData);
+      } else {
+        await saveEvent(eventData);
+      }
       resetForm();
     }
   };
@@ -204,6 +212,9 @@ function App() {
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
+                            {event.repeat.type !== 'none' && (
+                              <RepeatIcon aria-label="repeat-icon" />
+                            )}
                           </HStack>
                         </Box>
                       );
@@ -273,6 +284,9 @@ function App() {
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
+                                  {event.repeat.type !== 'none' && (
+                                    <RepeatIcon aria-label="repeat-icon" />
+                                  )}
                                 </HStack>
                               </Box>
                             );
@@ -357,7 +371,13 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              isChecked={isRepeating}
+              onChange={(e) => {
+                e.target.checked && setRepeatType('daily');
+                setIsRepeating(e.target.checked);
+              }}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
@@ -479,7 +499,7 @@ function App() {
                     <Text>{event.location}</Text>
                     <Text>카테고리: {event.category}</Text>
                     {event.repeat.type !== 'none' && (
-                      <Text>
+                      <Text data-testid="repeat-text">
                         반복: {event.repeat.interval}
                         {event.repeat.type === 'daily' && '일'}
                         {event.repeat.type === 'weekly' && '주'}
