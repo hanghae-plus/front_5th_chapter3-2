@@ -55,8 +55,6 @@ describe('일정 CRUD 및 기본 기능', () => {
       location: '회의실 A',
       category: '업무',
     });
-    const eventListDOM = screen.getByTestId('event-list');
-    screen.debug(eventListDOM);
 
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getByText('새 회의')).toBeInTheDocument();

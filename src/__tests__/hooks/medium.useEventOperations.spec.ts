@@ -311,8 +311,8 @@ describe('반복 일정', () => {
       expect(result.current.events[1].date).toBe('2028-02-29');
     });
 
-    it('매월 반복 일정을 31일로 설정한다면, 31일이 없는 달은 마지막 날에 일정을 표시를 한다.', async () => {
-      setupMockHandlerCreation();
+    it('매월 반복 일정을 31일로 설정한다면, 31일이 없는 달은 표시하지 않는다.', async () => {
+      setupMockRepeatHandlerCreateion();
 
       const { result } = renderHook(() => useEventOperations(false));
 
@@ -321,7 +321,7 @@ describe('반복 일정', () => {
       const newEvent: Event = {
         id: '1',
         title: '새 반복 일정',
-        date: '2024-05-31',
+        date: '2025-05-31',
         startTime: '11:00',
         endTime: '12:00',
         description: '새로운 반복 팀 미팅',
@@ -332,13 +332,12 @@ describe('반복 일정', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(newEvent);
+        await result.current.saveRepeatEvent(newEvent);
       });
 
-      expect(result.current.events).toHaveLength(3);
+      expect(result.current.events).toHaveLength(2);
       expect(result.current.events[0].date).toBe('2025-05-31');
-      expect(result.current.events[1].date).toBe('2025-06-30');
-      expect(result.current.events[2].date).toBe('2025-07-31');
+      expect(result.current.events[1].date).toBe('2025-07-31');
     });
   });
 
