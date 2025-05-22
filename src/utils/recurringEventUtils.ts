@@ -2,45 +2,6 @@ import { isBefore, addDays, addMonths, addYears, isSameDay } from 'date-fns';
 
 import { Event } from '../types';
 
-export const generateRecurringEvents = (event: Omit<Event, 'id'>): Event[] => {
-  if (!event.repeat || event.repeat.type === 'none') {
-    return [];
-  }
-
-  const events: Event[] = [];
-  const startDate = new Date(event.date);
-  const endDate = event.repeat.endDate ? new Date(event.repeat.endDate) : new Date();
-
-  let currentDate = new Date(startDate);
-  while (currentDate <= endDate) {
-    events.push({
-      ...event,
-      id: `event-${Date.now()}-${events.length}`,
-      date: currentDate.toISOString().split('T')[0],
-      repeat: {
-        ...event.repeat,
-      },
-    });
-
-    switch (event.repeat.type) {
-      case 'daily':
-        currentDate.setDate(currentDate.getDate() + event.repeat.interval);
-        break;
-      case 'weekly':
-        currentDate.setDate(currentDate.getDate() + 7 * event.repeat.interval);
-        break;
-      case 'monthly':
-        currentDate.setMonth(currentDate.getMonth() + event.repeat.interval);
-        break;
-      case 'yearly':
-        currentDate.setFullYear(currentDate.getFullYear() + event.repeat.interval);
-        break;
-    }
-  }
-
-  return events;
-};
-
 /**
  * form에서 작성한 event를 기반으로 반복 이벤트 리스트 생성
  * @param event 반복 일정으로 설정된 이벤트
@@ -54,50 +15,50 @@ export const createRecurringEvents = (event: Event) => {
   let startDate = new Date(rest.date);
   const endDate = formEndDate ? new Date(formEndDate) : new Date('2025-09-25');
 
-  console.log('startDate, endDate, type, interval', startDate, endDate, type, interval);
+  switch (type) {
+    case 'daily':
+      while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
+        events.push({
+          ...event,
+          date: startDate.toISOString(),
+          repeat: { ...repeat, id: repeat.id },
+        });
+        startDate = addDays(startDate, interval);
+      }
+      break;
 
-  if (type === 'daily') {
-    while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
-      events.push({
-        ...event,
-        date: startDate.toISOString(),
-        repeat: { ...repeat, id: repeat.id },
-      });
-      startDate = addDays(startDate, interval);
-    }
-  }
+    case 'weekly':
+      while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
+        events.push({
+          ...event,
+          date: startDate.toISOString(),
+          repeat: { ...repeat, id: repeat.id },
+        });
+        startDate = addDays(startDate, interval * 7);
+      }
+      break;
 
-  if (type === 'weekly') {
-    while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
-      events.push({
-        ...event,
-        date: startDate.toISOString(),
-        repeat: { ...repeat, id: repeat.id },
-      });
-      startDate = addDays(startDate, interval * 7);
-    }
-  }
+    case 'monthly':
+      while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
+        events.push({
+          ...event,
+          date: startDate.toISOString(),
+          repeat: { ...repeat, id: repeat.id },
+        });
+        startDate = addMonths(startDate, interval);
+      }
+      break;
 
-  if (type === 'monthly') {
-    while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
-      events.push({
-        ...event,
-        date: startDate.toISOString(),
-        repeat: { ...repeat, id: repeat.id },
-      });
-      startDate = addMonths(startDate, interval);
-    }
-  }
-
-  if (type === 'yearly') {
-    while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
-      events.push({
-        ...event,
-        date: startDate.toISOString(),
-        repeat: { ...repeat, id: repeat.id },
-      });
-      startDate = addYears(startDate, interval);
-    }
+    case 'yearly':
+      while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
+        events.push({
+          ...event,
+          date: startDate.toISOString(),
+          repeat: { ...repeat, id: repeat.id },
+        });
+        startDate = addYears(startDate, interval);
+      }
+      break;
   }
 
   return events;

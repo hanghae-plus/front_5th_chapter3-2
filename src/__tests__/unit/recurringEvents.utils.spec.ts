@@ -1,9 +1,10 @@
-import { Event } from '../../types';
-import { generateRecurringEvents } from '../../utils/recurringEventUtils';
+import { Event, RepeatType } from '../../types';
+import { createRecurringEvents } from '../../utils/recurringEventUtils';
 
 describe('반복 일정 유틸리티 함수 테스트', () => {
   // Base event for testing
-  const baseEvent: Omit<Event, 'id'> = {
+  const baseEvent: Event = {
+    id: '1',
     title: '반복 회의',
     date: '2025-10-01',
     startTime: '10:00',
@@ -12,6 +13,7 @@ describe('반복 일정 유틸리티 함수 테스트', () => {
     location: '회의실 A',
     category: '업무',
     repeat: {
+      id: '1',
       type: 'none',
       interval: 0,
     },
@@ -20,9 +22,9 @@ describe('반복 일정 유틸리티 함수 테스트', () => {
 
   // 실패 테스트: 반복 일정 생성 불가
   it('반복 일정 생성 함수가 정의되지 않았다 (실패 테스트)', () => {
-    // generateRecurringEvents 함수가 아직 정의되지 않았거나 올바르게 동작하지 않을 경우
+    // createRecurringEvents 함수가 아직 정의되지 않았거나 올바르게 동작하지 않을 경우
     expect(() =>
-      generateRecurringEvents({
+      createRecurringEvents({
         ...baseEvent,
         repeat: {
           type: 'daily',
@@ -37,14 +39,16 @@ describe('반복 일정 유틸리티 함수 테스트', () => {
   it('매일 반복 일정을 올바르게 생성한다', () => {
     const dailyEvent = {
       ...baseEvent,
+      id: '1',
       repeat: {
-        type: 'daily',
+        id: '1',
+        type: 'daily' as RepeatType,
         interval: 1,
         endDate: '2025-10-05',
       },
     };
 
-    const events = generateRecurringEvents(dailyEvent);
+    const events = createRecurringEvents(dailyEvent);
 
     // 시작일(10/1)부터 종료일(10/5)까지 총 5개의 이벤트가 생성되어야 함
     expect(events.length).toBe(5);
@@ -71,13 +75,13 @@ describe('반복 일정 유틸리티 함수 테스트', () => {
     const everyOtherDayEvent = {
       ...baseEvent,
       repeat: {
-        type: 'daily',
+        type: 'daily' as RepeatType,
         interval: 2,
         endDate: '2025-10-09',
       },
     };
 
-    const events = generateRecurringEvents(everyOtherDayEvent);
+    const events = createRecurringEvents(everyOtherDayEvent);
 
     // 10/1, 10/3, 10/5, 10/7, 10/9 총 5개의 이벤트가 생성되어야 함
     expect(events.length).toBe(5);
@@ -94,13 +98,13 @@ describe('반복 일정 유틸리티 함수 테스트', () => {
     const weeklyEvent = {
       ...baseEvent,
       repeat: {
-        type: 'weekly',
+        type: 'weekly' as RepeatType,
         interval: 1,
         endDate: '2025-10-29',
       },
     };
 
-    const events = generateRecurringEvents(weeklyEvent);
+    const events = createRecurringEvents(weeklyEvent);
 
     // 10/1, 10/8, 10/15, 10/22, 10/29 총 5개의 이벤트가 생성되어야 함
     expect(events.length).toBe(5);
@@ -117,13 +121,13 @@ describe('반복 일정 유틸리티 함수 테스트', () => {
     const biweeklyEvent = {
       ...baseEvent,
       repeat: {
-        type: 'weekly',
+        type: 'weekly' as RepeatType,
         interval: 2,
         endDate: '2025-10-29',
       },
     };
 
-    const events = generateRecurringEvents(biweeklyEvent);
+    const events = createRecurringEvents(biweeklyEvent);
 
     // 10/1, 10/15, 10/29 총 3개의 이벤트가 생성되어야 함
     expect(events.length).toBe(3);
@@ -139,13 +143,13 @@ describe('반복 일정 유틸리티 함수 테스트', () => {
       ...baseEvent,
       date: '2025-08-15', // 시작 날짜를 8월 15일로 설정
       repeat: {
-        type: 'monthly',
+        type: 'monthly' as RepeatType,
         interval: 1,
         endDate: '2025-12-15',
       },
     };
 
-    const events = generateRecurringEvents(monthlyEvent);
+    const events = createRecurringEvents(monthlyEvent);
 
     // 8/15, 9/15, 10/15, 11/15, 12/15 총 5개의 이벤트가 생성되어야 함
     expect(events.length).toBe(5);
@@ -163,13 +167,13 @@ describe('반복 일정 유틸리티 함수 테스트', () => {
       ...baseEvent,
       date: '2025-10-10', // 시작 날짜를 2025년 10월 10일로 설정
       repeat: {
-        type: 'yearly',
+        type: 'yearly' as RepeatType,
         interval: 1,
         endDate: '2027-10-10',
       },
     };
 
-    const events = generateRecurringEvents(yearlyEvent);
+    const events = createRecurringEvents(yearlyEvent);
 
     // 2025/10/10, 2026/10/10, 2027/10/10 총 3개의 이벤트가 생성되어야 함
     expect(events.length).toBe(3);
@@ -185,13 +189,13 @@ describe('반복 일정 유틸리티 함수 테스트', () => {
       ...baseEvent,
       date: '2024-02-29', // 2024년은 윤년으로 2월 29일이 존재함
       repeat: {
-        type: 'monthly',
+        type: 'monthly' as RepeatType,
         interval: 1,
         endDate: '2024-06-30',
       },
     };
 
-    const events = generateRecurringEvents(leapYearEvent);
+    const events = createRecurringEvents(leapYearEvent);
 
     // 2/29, 3/29, 4/29, 5/29 총 4개의 이벤트가 생성되어야 함
     expect(events.length).toBe(4);
@@ -208,13 +212,13 @@ describe('반복 일정 유틸리티 함수 테스트', () => {
       ...baseEvent,
       date: '2025-01-31', // 1월 31일로 시작
       repeat: {
-        type: 'monthly',
+        type: 'monthly' as RepeatType,
         interval: 1,
         endDate: '2025-05-31',
       },
     };
 
-    const events = generateRecurringEvents(thirtyFirstDayEvent);
+    const events = createRecurringEvents(thirtyFirstDayEvent);
 
     // 1/31, 2/28, 3/31, 4/30, 5/31 총 5개의 이벤트가 생성되어야 함
     expect(events.length).toBe(5);
