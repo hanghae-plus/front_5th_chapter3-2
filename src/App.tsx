@@ -55,7 +55,6 @@ import {
   getWeeksAtMonth,
 } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
-import { generateRepeatDates } from './utils/repeatUtils';
 import { getTimeErrorMessage } from './utils/timeValidation';
 const categories = ['업무', '개인', '가족', '기타'];
 
@@ -103,7 +102,7 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, setEvents, saveEvent, deleteEvent } = useEventOperations(
+  const { events, setEvents, saveEvent, deleteEvent, saveRepeatEvents } = useEventOperations(
     Boolean(editingEvent),
     () => setEditingEvent(null)
   );
@@ -161,9 +160,10 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      const events = generateRepeatDates(eventData);
-      for (const event of events) {
-        await saveEvent({ ...eventData, date: event });
+      if (isRepeating) {
+        await saveRepeatEvents(eventData);
+      } else {
+        await saveEvent(eventData);
       }
       resetForm();
     }
