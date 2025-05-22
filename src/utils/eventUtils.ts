@@ -48,3 +48,26 @@ export function getFilteredEvents(
 
   return searchedEvents;
 }
+
+export const isRecurringEvent = (event: Event): boolean => {
+  return event.repeat?.type !== 'none';
+};
+
+export const getRecurringEventIcon = (event: Event) => {
+  if (!isRecurringEvent(event)) {
+    return null;
+  }
+
+  switch (event.repeat.type) {
+    case 'daily':
+      return '🔄 매일';
+    case 'weekly':
+      return '🔄 매주';
+    case 'monthly':
+      return '🔄 매월';
+    case 'yearly':
+      return '🔄 매년';
+    default:
+      return '🔄';
+  }
+};
