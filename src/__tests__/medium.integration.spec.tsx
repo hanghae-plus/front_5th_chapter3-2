@@ -6,12 +6,13 @@ import { ReactElement } from 'react';
 
 import {
   setupMockHandlerCreation,
+  setupMockHandlerCreationList,
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
-import { Event } from '../types';
+import { Event, EventForm } from '../types';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
@@ -24,7 +25,11 @@ const setup = (element: ReactElement) => {
 const saveSchedule = async (
   user: UserEvent,
   form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> & {
-    repeat?: { type: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly'; interval: number };
+    repeat?: {
+      type: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+      interval: number;
+      endDate?: string;
+    };
   }
 ) => {
   const { title, date, startTime, endTime, location, description, category, repeat } = form;
@@ -39,8 +44,15 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
 
-  if (repeat) {
+  if (repeat && repeat.type !== 'none') {
     await user.selectOptions(screen.getByLabelText('반복 유형'), repeat.type);
+
+    await user.clear(screen.getByLabelText('반복 간격'));
+    await user.type(screen.getByLabelText('반복 간격'), repeat.interval.toString());
+
+    if (repeat.endDate) {
+      await user.type(screen.getByLabelText('반복 종료일'), repeat.endDate);
+    }
   }
 
   await user.click(screen.getByTestId('event-submit-button'));
@@ -329,4 +341,32 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('반복 일정 추가', () => {
+  it('반복 일정을 추가하면 해당 일정들이 달력에 표시된다.', async () => {
+    vi.setSystemTime(new Date('2025-05-20'));
+    setupMockHandlerCreationList();
+
+    const { user } = setup(<App />);
+
+    const data: EventForm = {
+      title: '반복 회의',
+      date: '2025-05-21',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복 회의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-05-31' },
+      notificationTime: 10,
+    };
+
+    await saveSchedule(user, data);
+
+    const monthView = within(screen.getByTestId('month-view'));
+
+    // 반복 아이콘이 반복 일정수만큼 있는가
+    expect(monthView.getAllByLabelText('repeat-icon')).toHaveLength(11);
+  });
 });
