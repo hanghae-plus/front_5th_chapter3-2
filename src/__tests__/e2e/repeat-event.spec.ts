@@ -55,7 +55,7 @@ test.describe('반복일정 추가', () => {
 
     const duplicateWarn = page.getByText('일정 겹침 경고');
     if (await duplicateWarn.isVisible()) {
-      await page.getByRole('button', { name: '"continue-button"' }).click();
+      await page.getByRole('button', { name: 'continue-button' }).click();
       await page.waitForSelector('text=일정이 추가되었습니다');
     }
 
@@ -93,7 +93,7 @@ test.describe('반복일정 수정', () => {
 
     const duplicateWarn = page.getByText('일정 겹침 경고');
     if (await duplicateWarn.isVisible()) {
-      await page.getByRole('button', { name: '"continue-button"' }).click();
+      await page.getByRole('button', { name: 'continue-button' }).click();
       await page.waitForSelector('text=일정이 추가되었습니다');
     }
   });
@@ -109,7 +109,7 @@ test.describe('반복일정 수정', () => {
 
     const duplicateWarn = page.getByText('일정 겹침 경고');
     if (await duplicateWarn.isVisible()) {
-      await page.getByRole('button', { name: '"continue-button"' }).click();
+      await page.getByRole('button', { name: 'continue-button' }).click();
       await page.waitForSelector('text=일정이 수정되었습니다');
     }
 
