@@ -9,7 +9,10 @@
       "description": "주간 팀 미팅",
       "location": "회의실 A",
       "category": "업무",
-      "repeat": { "type": "none", "interval": 0 },
+      "repeat": {
+        "type": "none",
+        "interval": 0
+      },
       "notificationTime": 1
     },
     {
@@ -21,7 +24,10 @@
       "description": "동료와 점심 식사",
       "location": "회사 근처 식당",
       "category": "개인",
-      "repeat": { "type": "none", "interval": 0 },
+      "repeat": {
+        "type": "none",
+        "interval": 0
+      },
       "notificationTime": 1
     },
     {
@@ -33,7 +39,10 @@
       "description": "분기별 프로젝트 마감",
       "location": "사무실",
       "category": "업무",
-      "repeat": { "type": "none", "interval": 0 },
+      "repeat": {
+        "type": "none",
+        "interval": 0
+      },
       "notificationTime": 1
     },
     {
@@ -45,7 +54,10 @@
       "description": "친구 생일 축하",
       "location": "친구 집",
       "category": "개인",
-      "repeat": { "type": "none", "interval": 0 },
+      "repeat": {
+        "type": "none",
+        "interval": 0
+      },
       "notificationTime": 1
     },
     {
@@ -57,7 +69,58 @@
       "description": "주간 운동",
       "location": "헬스장",
       "category": "개인",
-      "repeat": { "type": "none", "interval": 0 },
+      "repeat": {
+        "type": "none",
+        "interval": 0
+      },
+      "notificationTime": 1
+    },
+    {
+      "id": "72ac39d3-9bee-441e-886a-0b23db94b1de",
+      "title": "ㅇㅇㅇㅇ",
+      "date": "2025-05-20",
+      "startTime": "01:37",
+      "endTime": "02:37",
+      "description": "ㅇㅇㅇ",
+      "location": "ㅇㅇㅇ",
+      "category": "개인",
+      "repeat": {
+        "type": "weekly",
+        "interval": 3,
+        "endDate": "2025-05-20"
+      },
+      "notificationTime": 10
+    },
+    {
+      "id": "0de358c3-bcb5-475a-98cf-648ee6962373",
+      "title": "푸쉬업100개",
+      "date": "2025-05-20",
+      "startTime": "03:38",
+      "endTime": "04:38",
+      "description": "ㅇㅇㅇ",
+      "location": "ㅇㅇㅇ",
+      "category": "업무",
+      "repeat": {
+        "type": "none",
+        "interval": 1,
+        "endDate": "2025-05-23"
+      },
+      "notificationTime": 10
+    },
+    {
+      "id": "049eebca-323c-4f33-a5d5-a2205ab5a1ca",
+      "title": "fffff",
+      "date": "2025-05-22",
+      "startTime": "00:49",
+      "endTime": "00:50",
+      "description": "ddd",
+      "location": "ddd",
+      "category": "",
+      "repeat": {
+        "type": "none",
+        "interval": 1,
+        "endDate": "2025-05-26"
+      },
       "notificationTime": 1
     }
   ]

@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 import { http, HttpResponse } from 'msw';
 
 import { events } from '../__mocks__/response/events.json' assert { type: 'json' };
@@ -35,5 +37,52 @@ export const handlers = [
     }
 
     return new HttpResponse(null, { status: 404 });
+  }),
+
+  http.post('/api/events-list', async ({ request }) => {
+    const { events: newEvents } = (await request.json()) as { events: Event[] };
+    const repeatId = randomUUID();
+
+    const createdEvents = newEvents.map((event) => ({
+      ...event,
+      id: randomUUID(),
+      description: event.description || '',
+      location: event.location || '',
+      category: event.category || '',
+      notificationTime: event.notificationTime || 10,
+      repeat: {
+        ...event.repeat,
+        id: event.repeat.type !== 'none' ? repeatId : undefined,
+      },
+    }));
+
+    events.push(...createdEvents);
+    return HttpResponse.json(createdEvents, { status: 201 });
+  }),
+
+  http.put('/api/events-list', async ({ request }) => {
+    const { events: updatedEvents } = (await request.json()) as { events: Event[] };
+    let isUpdated = false;
+
+    updatedEvents.forEach((updatedEvent: Event) => {
+      const index = events.findIndex((event) => event.id === updatedEvent.id);
+      if (index !== -1) {
+        isUpdated = true;
+        events[index] = { ...events[index], ...updatedEvent };
+      }
+    });
+
+    if (isUpdated) {
+      return HttpResponse.json(events);
+    }
+    return new HttpResponse(null, { status: 404 });
+  }),
+
+  http.delete('/api/events-list', async ({ request }) => {
+    const { eventIds } = (await request.json()) as { eventIds: string[] };
+    const remainingEvents = events.filter((event) => !eventIds.includes(event.id));
+    events.length = 0;
+    events.push(...remainingEvents);
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

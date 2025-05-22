@@ -3,8 +3,8 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DeleteIcon,
-  EditIcon,
-} from '@chakra-ui/icons';
+  EditIcon, RepeatIcon
+} from "@chakra-ui/icons";
 import {
   Alert,
   AlertDialog,
@@ -36,37 +36,38 @@ import {
   Tooltip,
   Tr,
   useToast,
-  VStack,
-} from '@chakra-ui/react';
-import { useRef, useState } from 'react';
+  VStack
+} from "@chakra-ui/react";
+import { useRef, useState } from "react";
 
-import { useCalendarView } from './hooks/useCalendarView.ts';
-import { useEventForm } from './hooks/useEventForm.ts';
-import { useEventOperations } from './hooks/useEventOperations.ts';
-import { useNotifications } from './hooks/useNotifications.ts';
-import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { useCalendarView } from "./hooks/useCalendarView.ts";
+import { useEventForm } from "./hooks/useEventForm.ts";
+import { useEventOperations } from "./hooks/useEventOperations.ts";
+import { useNotifications } from "./hooks/useNotifications.ts";
+import { useSearch } from "./hooks/useSearch.ts";
+import { Event, EventForm, RepeatType } from "./types";
 import {
   formatDate,
   formatMonth,
   formatWeek,
   getEventsForDay,
   getWeekDates,
-  getWeeksAtMonth,
-} from './utils/dateUtils';
-import { findOverlappingEvents } from './utils/eventOverlap';
-import { getTimeErrorMessage } from './utils/timeValidation';
+  getWeeksAtMonth
+} from "./utils/dateUtils";
+import { findOverlappingEvents } from "./utils/eventOverlap";
+import { getTimeErrorMessage } from "./utils/timeValidation";
+import { RepeatSchedule } from "./components/RepeatSchedule.tsx";
 
-const categories = ['업무', '개인', '가족', '기타'];
+const categories = ["업무", "개인", "가족", "기타"];
 
-const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
 
 const notificationOptions = [
-  { value: 1, label: '1분 전' },
-  { value: 10, label: '10분 전' },
-  { value: 60, label: '1시간 전' },
-  { value: 120, label: '2시간 전' },
-  { value: 1440, label: '1일 전' },
+  { value: 1, label: "1분 전" },
+  { value: 10, label: "10분 전" },
+  { value: 60, label: "1시간 전" },
+  { value: 120, label: "2시간 전" },
+  { value: 1440, label: "1일 전" }
 ];
 
 function App() {
@@ -100,10 +101,17 @@ function App() {
     handleStartTimeChange,
     handleEndTimeChange,
     resetForm,
-    editEvent,
+    editEvent
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
+  const {
+    events,
+    saveEvent,
+    deleteEvent,
+    createRepeatEvent,
+    updateRepeatEvents,
+    deleteRepeatEvents
+  } = useEventOperations(Boolean(editingEvent), () =>
     setEditingEvent(null)
   );
 
@@ -120,20 +128,20 @@ function App() {
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
       toast({
-        title: '필수 정보를 모두 입력해주세요.',
-        status: 'error',
+        title: "필수 정보를 모두 입력해주세요.",
+        status: "error",
         duration: 3000,
-        isClosable: true,
+        isClosable: true
       });
       return;
     }
 
     if (startTimeError || endTimeError) {
       toast({
-        title: '시간 설정을 확인해주세요.',
-        status: 'error',
+        title: "시간 설정을 확인해주세요.",
+        status: "error",
         duration: 3000,
-        isClosable: true,
+        isClosable: true
       });
       return;
     }
@@ -148,22 +156,35 @@ function App() {
       location,
       category,
       repeat: {
-        type: isRepeating ? repeatType : 'none',
+        type: isRepeating ? repeatType : "none",
         interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
+        endDate: repeatEndDate || undefined
       },
-      notificationTime,
+      notificationTime
     };
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
-    } else {
-      await saveEvent(eventData);
-      resetForm();
+      return;
     }
+
+    if (eventData.repeat.type !== "none") {
+      // 수정 중(editingEvent)이면 PUT, 아니면 POST
+      if (editingEvent) {
+        await updateRepeatEvents([eventData as Event]);
+      } else {
+        await createRepeatEvent([eventData as EventForm]);
+      }
+      resetForm();
+      return;
+    }
+
+    await saveEvent(eventData);
+    resetForm();
   };
+
 
   const renderWeekView = () => {
     const weekDates = getWeekDates(currentDate);
@@ -189,15 +210,21 @@ function App() {
                     .filter((event) => new Date(event.date).toDateString() === date.toDateString())
                     .map((event) => {
                       const isNotified = notifiedEvents.includes(event.id);
+
+                      // 반복 일정인 경우
+                      if (event.repeat.type !== "none") {
+                        return <RepeatSchedule key={event.id} event={event} />;
+                      }
+
                       return (
                         <Box
                           key={event.id}
                           p={1}
                           my={1}
-                          bg={isNotified ? 'red.100' : 'gray.100'}
+                          bg={isNotified ? "red.100" : "gray.100"}
                           borderRadius="md"
-                          fontWeight={isNotified ? 'bold' : 'normal'}
-                          color={isNotified ? 'red.500' : 'inherit'}
+                          fontWeight={isNotified ? "bold" : "normal"}
+                          color={isNotified ? "red.500" : "inherit"}
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
@@ -237,7 +264,7 @@ function App() {
             {weeks.map((week, weekIndex) => (
               <Tr key={weekIndex}>
                 {week.map((day, dayIndex) => {
-                  const dateString = day ? formatDate(currentDate, day) : '';
+                  const dateString = day ? formatDate(currentDate, day) : "";
                   const holiday = holidays[dateString];
 
                   return (
@@ -258,15 +285,18 @@ function App() {
                           )}
                           {getEventsForDay(filteredEvents, day).map((event) => {
                             const isNotified = notifiedEvents.includes(event.id);
+                            if (event.repeat.type !== "none") {
+                              return <RepeatSchedule key={event.id} event={event} />;
+                            }
                             return (
                               <Box
                                 key={event.id}
                                 p={1}
                                 my={1}
-                                bg={isNotified ? 'red.100' : 'gray.100'}
+                                bg={isNotified ? "red.100" : "gray.100"}
                                 borderRadius="md"
-                                fontWeight={isNotified ? 'bold' : 'normal'}
-                                color={isNotified ? 'red.500' : 'inherit'}
+                                fontWeight={isNotified ? "bold" : "normal"}
+                                color={isNotified ? "red.500" : "inherit"}
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
@@ -294,7 +324,7 @@ function App() {
     <Box w="full" h="100vh" m="auto" p={5}>
       <Flex gap={6} h="full">
         <VStack w="400px" spacing={5} align="stretch">
-          <Heading>{editingEvent ? '일정 수정' : '일정 추가'}</Heading>
+          <Heading>{editingEvent ? "일정 수정" : "일정 추가"}</Heading>
 
           <FormControl>
             <FormLabel>제목</FormLabel>
@@ -413,7 +443,7 @@ function App() {
           )}
 
           <Button data-testid="event-submit-button" onClick={addOrUpdateEvent} colorScheme="blue">
-            {editingEvent ? '일정 수정' : '일정 추가'}
+            {editingEvent ? "일정 수정" : "일정 추가"}
           </Button>
         </VStack>
 
@@ -424,12 +454,12 @@ function App() {
             <IconButton
               aria-label="Previous"
               icon={<ChevronLeftIcon />}
-              onClick={() => navigate('prev')}
+              onClick={() => navigate("prev")}
             />
             <Select
               aria-label="view"
               value={view}
-              onChange={(e) => setView(e.target.value as 'week' | 'month')}
+              onChange={(e) => setView(e.target.value as "week" | "month")}
             >
               <option value="week">Week</option>
               <option value="month">Month</option>
@@ -437,12 +467,12 @@ function App() {
             <IconButton
               aria-label="Next"
               icon={<ChevronRightIcon />}
-              onClick={() => navigate('next')}
+              onClick={() => navigate("next")}
             />
           </HStack>
 
-          {view === 'week' && renderWeekView()}
-          {view === 'month' && renderMonthView()}
+          {view === "week" && renderWeekView()}
+          {view === "month" && renderMonthView()}
         </VStack>
 
         <VStack data-testid="event-list" w="500px" h="full" overflowY="auto">
@@ -465,8 +495,8 @@ function App() {
                     <HStack>
                       {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
                       <Text
-                        fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
-                        color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
+                        fontWeight={notifiedEvents.includes(event.id) ? "bold" : "normal"}
+                        color={notifiedEvents.includes(event.id) ? "red.500" : "inherit"}
                       >
                         {event.title}
                       </Text>
@@ -478,19 +508,19 @@ function App() {
                     <Text>{event.description}</Text>
                     <Text>{event.location}</Text>
                     <Text>카테고리: {event.category}</Text>
-                    {event.repeat.type !== 'none' && (
-                      <Text>
+                    {event.repeat.type !== "none" && (
+                      <Text data-testid="repeat-text">
                         반복: {event.repeat.interval}
-                        {event.repeat.type === 'daily' && '일'}
-                        {event.repeat.type === 'weekly' && '주'}
-                        {event.repeat.type === 'monthly' && '월'}
-                        {event.repeat.type === 'yearly' && '년'}
+                        {event.repeat.type === "daily" && "일"}
+                        {event.repeat.type === "weekly" && "주"}
+                        {event.repeat.type === "monthly" && "월"}
+                        {event.repeat.type === "yearly" && "년"}
                         마다
                         {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
                       </Text>
                     )}
                     <Text>
-                      알림:{' '}
+                      알림:{" "}
                       {
                         notificationOptions.find(
                           (option) => option.value === event.notificationTime
@@ -556,11 +586,11 @@ function App() {
                     location,
                     category,
                     repeat: {
-                      type: isRepeating ? repeatType : 'none',
+                      type: isRepeating ? repeatType : "none",
                       interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
+                      endDate: repeatEndDate || undefined
                     },
-                    notificationTime,
+                    notificationTime
                   });
                 }}
                 ml={3}
