@@ -759,6 +759,7 @@ describe('반복 일정 단일 수정', () => {
     const updatedEvent: Event = {
       ...mockEvent,
       title: '수정된 단일 일정',
+      repeat: { type: 'none', interval: 0 },
     };
 
     await act(async () => {
