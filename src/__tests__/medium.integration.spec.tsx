@@ -11,7 +11,8 @@ import {
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
-import { Event } from '../types';
+import { Event, RepeatType } from '../types';
+import { desc } from 'framer-motion/client';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
@@ -23,7 +24,13 @@ const setup = (element: ReactElement) => {
 // ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'>
+  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> & {
+    isRepeating?: boolean;
+    repeatType?: Exclude<RepeatType, 'none'>;
+    repeatInterval?: number;
+    repeatEndDate?: string;
+    repeatCount?: number;
+  }
 ) => {
   const { title, date, startTime, endTime, location, description, category } = form;
 
@@ -36,6 +43,38 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
+  const isRepeatingCheckbox = screen.getByLabelText<HTMLInputElement>('반복 일정');
+
+  if (form.isRepeating) {
+    if (!isRepeatingCheckbox.checked) {
+      await user.click(isRepeatingCheckbox);
+    }
+
+    if (form.repeatType) {
+      await user.selectOptions(await screen.findByLabelText('반복 유형'), form.repeatType!);
+    }
+    if (form.repeatInterval) {
+      const intervalInput = await screen.findByLabelText('반복 간격');
+      await user.clear(intervalInput);
+      await user.type(intervalInput, form.repeatInterval!.toString());
+    }
+
+    if (form.repeatEndDate) {
+      const repeatEndArea = (await screen.findByText('반복 종료')).parentElement;
+      await user.click(within(repeatEndArea!).getByLabelText('날짜'));
+      await user.type(screen.getByLabelText('반복 종료일'), form.repeatEndDate);
+    } else if (form.repeatCount) {
+      const repeatEndArea = (await screen.findByText('반복 종료')).parentElement;
+      await user.click(within(repeatEndArea!).getByLabelText('횟수'));
+      const repeatCountInput = screen.getByLabelText('반복 횟수');
+      await user.clear(repeatCountInput);
+      await user.type(repeatCountInput, form.repeatCount.toString());
+    }
+  } else {
+    if (isRepeatingCheckbox.checked) {
+      await user.click(isRepeatingCheckbox);
+    }
+  }
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -323,4 +362,10 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('반복 일정이 캘린더 뷰에 정확히 표시되는지 확인한다', () => {
+  it('반복 일정이 정상적으로 생성된다.', () => {});
+  it('캘린더 뷰에서 해당 일정이 반복 일정 아이콘과 함께 표시된다.', () => {});
+  it('반복 일정의 모든 날짜에 동일한 아이콘이 표시된다.', () => {});
 });
