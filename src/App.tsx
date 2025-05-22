@@ -155,7 +155,7 @@ function App() {
       return;
     }
 
-    const finalRepeatInterval = getFinalRepeatInterval(repeatInterval);
+    const repeatInfoForSave = createRepeatInfo();
 
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
@@ -166,13 +166,7 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: finalRepeatInterval,
-        endDate: repeatEndDate || undefined,
-        // 수정 모드이고 반복 설정이 유지될 경우 repeat.id 보존
-        id: isRepeating && editingEvent?.repeat.id ? editingEvent.repeat.id : undefined,
-      },
+      repeat: repeatInfoForSave,
       notificationTime,
     };
 
@@ -189,33 +183,17 @@ function App() {
       // 중복이 없을 때도 saveEventWithRepeat 호출하여 로직 일원화
       await saveEventWithRepeat(eventData);
       resetForm();
+      setEditingEvent(null);
     }
   };
 
-  const saveEventWithRepeat = async (eventData: Event | EventForm) => {
-    // 반복 설정이 있고 새 이벤트 생성인 경우 saveRepeatingEvents 사용
-    if (isRepeating && !editingEvent) {
-      // repeat를 제외한 나머지 속성만 추출
-      const { repeat: _, ...baseEventData } = eventData;
-      // 반복 유형 정보 추출
-      const repeatInfo = createRepeatInfo();
-
-      // 반복 일정 저장 함수 호출
-      await saveRepeatingEvents(baseEventData, repeatInfo);
-    } else {
-      // 단일 일정이거나 편집 모드인 경우 기존 방식 사용
-      await saveEvent(eventData);
-    }
-  };
-
-  // 겹침 대화상자에서 계속 진행할 때 호출될 함수
   const proceedWithOverlap = async () => {
     setIsOverlapDialogOpen(false);
 
-    const finalRepeatInterval = getFinalRepeatInterval(repeatInterval);
+    const repeatInfoForSave = createRepeatInfo();
 
-    // 이벤트 기본 데이터 구성
-    const baseEventData = {
+    const eventData: Event | EventForm = {
+      id: editingEvent ? editingEvent.id : undefined,
       title,
       date,
       startTime,
@@ -223,25 +201,34 @@ function App() {
       description,
       location,
       category,
+      repeat: repeatInfoForSave,
       notificationTime,
-    };
-
-    // 반복 정보 구성
-    const repeatInfo = {
-      type: isRepeating ? repeatType : 'none',
-      interval: finalRepeatInterval,
-      endDate: repeatEndDate || undefined,
-    };
-
-    // 기존 이벤트 ID가 있는 경우 (수정 모드)
-    const eventData: Event | EventForm = {
-      ...(editingEvent ? { id: editingEvent.id } : {}),
-      ...baseEventData,
-      repeat: repeatInfo,
     };
 
     await saveEventWithRepeat(eventData);
     resetForm();
+    setEditingEvent(null);
+  };
+
+  const saveEventWithRepeat = async (eventDataToSave: Event | EventForm) => {
+    if (eventDataToSave.repeat.type !== 'none' && !editingEvent) {
+      const { ...baseEventData } = eventDataToSave as EventForm;
+
+      const baseEventFormForRepeating: Omit<EventForm, 'repeat'> = {
+        title: baseEventData.title,
+        date: baseEventData.date,
+        startTime: baseEventData.startTime,
+        endTime: baseEventData.endTime,
+        description: baseEventData.description,
+        location: baseEventData.location,
+        category: baseEventData.category,
+        notificationTime: baseEventData.notificationTime,
+      };
+      await saveRepeatingEvents(baseEventFormForRepeating, eventDataToSave.repeat);
+    } else {
+      // 단일 일정 저장 또는 기존 일정 수정 (반복->단일 포함)
+      await saveEvent(eventDataToSave);
+    }
   };
 
   const renderWeekView = () => {
@@ -608,7 +595,14 @@ function App() {
             <Text>검색 결과가 없습니다.</Text>
           ) : (
             filteredEvents.map((event) => (
-              <Box key={event.id} borderWidth={1} borderRadius="lg" p={3} width="100%">
+              <Box
+                key={event.id}
+                borderWidth={1}
+                borderRadius="lg"
+                p={3}
+                width="100%"
+                data-testid={`event-${event.id}`}
+              >
                 <HStack justifyContent="space-between">
                   <VStack align="start">
                     <HStack>

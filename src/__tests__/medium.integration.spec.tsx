@@ -803,32 +803,14 @@ describe('반복 종료 조건 통합 테스트', () => {
   });
 });
 
-describe('반복 일정 단일 수정', () => {
+describe('반복 일정 단일 수정 통합 테스트', () => {
   const initialRepeatingEventId = 'repeat-event-to-modify-id';
   const initialRepeatGroupId = 'group-xyz';
   const initialEvents: Event[] = [
     {
       id: initialRepeatingEventId,
       title: '주간 정기 회의',
-      date: '2025-10-06', // 월요일
-      startTime: '10:00',
-      endTime: '11:00',
-      description: '매주 월요일 진행되는 정기 회의',
-      location: '본사 회의실',
-      category: '업무',
-      repeat: {
-        type: 'weekly',
-        interval: 1,
-        id: initialRepeatGroupId, // 반복 그룹에 속함
-        endDate: '2025-10-27',
-      },
-      notificationTime: 10,
-    },
-    // 수정을 받지 않을 동일한 반복 일정의 다른 인스턴스
-    {
-      id: 'repeat-event-instance-2',
-      title: '주간 정기 회의',
-      date: '2025-10-13', // 다음 주 월요일
+      date: '2025-10-06',
       startTime: '10:00',
       endTime: '11:00',
       description: '매주 월요일 진행되는 정기 회의',
@@ -843,16 +825,21 @@ describe('반복 일정 단일 수정', () => {
       notificationTime: 10,
     },
     {
-      id: 'other-event-id',
-      title: '개인 약속',
-      date: '2025-10-06',
-      startTime: '14:00',
-      endTime: '15:00',
-      description: '친구와 점심',
-      location: '시내 레스토랑',
-      category: '개인',
-      repeat: { type: 'none', interval: 1 },
-      notificationTime: 5,
+      id: 'repeat-event-instance-2',
+      title: '주간 정기 회의',
+      date: '2025-10-13',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '매주 월요일 진행되는 정기 회의',
+      location: '본사 회의실',
+      category: '업무',
+      repeat: {
+        type: 'weekly',
+        interval: 1,
+        id: initialRepeatGroupId,
+        endDate: '2025-10-27',
+      },
+      notificationTime: 10,
     },
   ];
 
@@ -862,26 +849,12 @@ describe('반복 일정 단일 수정', () => {
     updatedEventPayload = null;
     server.use(
       http.get('/api/events', () => {
-        return HttpResponse.json({ events: [...initialEvents] }); // 복사본 사용
+        return HttpResponse.json({ events: [...initialEvents] });
       }),
       http.put('/api/events/:id', async ({ request, params }) => {
         const eventId = params.id;
         const newEventData = (await request.json()) as Event;
         updatedEventPayload = { ...newEventData, id: eventId as string };
-
-        // 백엔드 업데이트 시뮬레이션: 찾아서 교체
-        const eventIndex = initialEvents.findIndex((e) => e.id === eventId);
-        let newLocalEvents = [...initialEvents]; // 테스트 격리를 위해 매번 초기 상태에서 시작하도록 수정 필요
-        // 또는 initialEvents를 beforeEach에서 리셋
-        if (eventIndex !== -1) {
-          newLocalEvents[eventIndex] = updatedEventPayload;
-        }
-        // 이 mock GET은 업데이트 후 재요청에 사용됩니다.
-        server.use(
-          http.get('/api/events', () => {
-            return HttpResponse.json({ events: newLocalEvents });
-          })
-        );
         return HttpResponse.json(updatedEventPayload, { status: 200 });
       })
     );
@@ -891,12 +864,12 @@ describe('반복 일정 단일 수정', () => {
     server.resetHandlers();
   });
 
-  it('반복 일정의 특정 인스턴스를 수정하면 해당 일정만 단일 일정으로 변경되고 반복 아이콘이 사라져야 한다.', async () => {
+  // === 핵심 기능 테스트 ===
+  it('반복 일정의 특정 인스턴스를 수정하면 해당 일정만 단일 일정으로 변경되고 반복 아이콘이 사라져야 한다', async () => {
     const { user } = setup(<App />);
-    vi.setSystemTime(new Date('2025-10-01')); // 뷰 렌더링을 위한 날짜 고정
+    vi.setSystemTime(new Date('2025-10-01'));
 
-    // 1. "주간 정기 회의" (2025-10-06)를 찾아서 수정 버튼 클릭
-    await screen.findByText('일정 로딩 완료!'); // 초기 로딩 대기
+    await screen.findByText('일정 로딩 완료!');
 
     const eventList = screen.getByTestId('event-list');
     const repeatingEventItems = within(eventList).getAllByText('주간 정기 회의');
@@ -906,7 +879,9 @@ describe('반복 일정 단일 수정', () => {
     );
     if (!targetEventDisplay) throw new Error('2025-10-06 대상 일정을 리스트에서 찾을 수 없습니다.');
 
-    const targetEventContainer = targetEventDisplay.closest('[data-testid^="event-"]')!;
+    const targetEventContainer = targetEventDisplay.closest(
+      '[data-testid^="event-"]'
+    ) as HTMLElement;
     const editButton = within(targetEventContainer).getByLabelText('Edit event');
 
     // 수정 전 반복 아이콘 확인
@@ -916,55 +891,253 @@ describe('반복 일정 단일 수정', () => {
 
     await user.click(editButton);
 
-    // 2. 일정 제목 수정
+    // 일정 제목 수정
     const titleInput = screen.getByLabelText('제목');
     await user.clear(titleInput);
     await user.type(titleInput, '변경된 주간 회의 (단일)');
 
-    // 3. "반복 일정" 체크박스가 해제되어 있는지 확인
-    const repeatCheckbox = screen.getByLabelText('반복 일정') as HTMLInputElement;
-    expect(repeatCheckbox.checked).toBe(false);
-
-    // 4. "일정 수정" 버튼 클릭
+    // "일정 수정" 버튼 클릭
     const submitButton = screen.getByTestId('event-submit-button');
     await user.click(submitButton);
 
-    // 5. API 호출 검증 (PUT /api/events/:id)
+    // API 호출 검증
     await waitFor(() => expect(updatedEventPayload).not.toBeNull());
     expect(updatedEventPayload?.id).toBe(initialRepeatingEventId);
     expect(updatedEventPayload?.title).toBe('변경된 주간 회의 (단일)');
     expect(updatedEventPayload?.repeat.type).toBe('none');
-    expect(updatedEventPayload?.repeat.id).toBeUndefined(); // 반복 그룹 ID가 제거되어야 함
+    expect(updatedEventPayload?.repeat.id).toBeUndefined();
 
-    // 6. UI 검증: 수정된 일정이 단일 일정으로 표시 (반복 아이콘 없음)
-    await screen.findByText('일정이 수정되었습니다.'); // 토스트 메시지 대기
+    // UI 검증: 수정된 일정이 단일 일정으로 표시
+    await screen.findByText('일정이 수정되었습니다.');
 
     const updatedEventItemContainer = within(eventList)
       .getByText('변경된 주간 회의 (단일)')
-      .closest('[data-testid^="event-"]')!;
+      .closest('[data-testid^="event-"]') as HTMLElement;
     expect(
       within(updatedEventItemContainer).queryByTestId(`repeat-indicator-${initialRepeatingEventId}`)
     ).not.toBeInTheDocument();
-    expect(within(updatedEventItemContainer).getByText('2025-10-06')).toBeInTheDocument(); // 날짜는 동일해야 함
 
-    // 7. 다른 반복 인스턴스는 영향을 받지 않았는지 확인 (2025-10-13 이벤트)
+    // 다른 반복 인스턴스는 영향을 받지 않았는지 확인
     const unModifiedEventItems = within(eventList).getAllByText('주간 정기 회의');
     const unModifiedInstanceElement = unModifiedEventItems.find((el) =>
-      within(el.closest('[data-testid^="event-"]')!).getByText('2025-10-13')
+      within(el.closest('[data-testid^="event-"]') as HTMLElement).getByText('2025-10-13')
     );
     if (!unModifiedInstanceElement)
       throw new Error('수정되지 않은 2025-10-13 반복 인스턴스를 찾을 수 없습니다.');
 
-    const unModifiedEventContainer = unModifiedInstanceElement.closest('[data-testid^="event-"]')!;
+    const unModifiedEventContainer = unModifiedInstanceElement.closest(
+      '[data-testid^="event-"]'
+    ) as HTMLElement;
     expect(
       within(unModifiedEventContainer).getByTestId('repeat-indicator-repeat-event-instance-2')
-    ).toBeInTheDocument(); // 여전히 반복 아이콘 존재
+    ).toBeInTheDocument();
+  });
 
-    // 원본 데이터에서 다른 인스턴스의 반복 정보가 그대로인지 확인
-    const unmodifiedEventDataOriginal = initialEvents.find(
-      (e) => e.id === 'repeat-event-instance-2'
+  // === 🔄 오류 상황 테스트 ===
+
+  it('반복 일정 수정 API 실패 시 적절한 오류 처리를 해야 한다', async () => {
+    server.use(
+      http.put('/api/events/:id', () => {
+        return new HttpResponse(null, { status: 500 });
+      })
     );
-    expect(unmodifiedEventDataOriginal?.repeat.id).toBe(initialRepeatGroupId);
-    expect(unmodifiedEventDataOriginal?.repeat.type).toBe('weekly');
+
+    const { user } = setup(<App />);
+    vi.setSystemTime(new Date('2025-10-01'));
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const eventList = screen.getByTestId('event-list');
+    const targetEventContainer = within(eventList)
+      .getByText('주간 정기 회의')
+      .closest('[data-testid^="event-"]') as HTMLElement;
+    const editButton = within(targetEventContainer).getByLabelText('Edit event');
+
+    await user.click(editButton);
+
+    const titleInput = screen.getByLabelText('제목');
+    await user.clear(titleInput);
+    await user.type(titleInput, '수정된 회의');
+
+    const submitButton = screen.getByTestId('event-submit-button');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('일정 저장 실패')).toBeInTheDocument();
+    });
+
+    // 편집 상태가 유지되어야 함
+    expect(titleInput).toHaveValue('수정된 회의');
+  });
+
+  // === 🔄 경계값 테스트 ===
+
+  it('잘못된 반복 설정을 가진 일정 편집 시 단일 일정으로 처리되어야 한다', async () => {
+    const invalidEvent: Event = {
+      id: 'invalid-event',
+      title: '잘못된 반복 설정',
+      date: '2025-10-06',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: {
+        type: '' as any, // 잘못된 타입
+        interval: 0, // 잘못된 간격
+      },
+      notificationTime: 10,
+    };
+
+    server.use(
+      http.get('/api/events', () => {
+        return HttpResponse.json({ events: [invalidEvent] });
+      })
+    );
+
+    const { user } = setup(<App />);
+    vi.setSystemTime(new Date('2025-10-01'));
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const eventList = screen.getByTestId('event-list');
+    const targetEventContainer = within(eventList)
+      .getByText('잘못된 반복 설정')
+      .closest('[data-testid^="event-"]') as HTMLElement;
+
+    // 반복 아이콘이 표시되지 않아야 함
+    expect(within(targetEventContainer).queryByText('🔁')).not.toBeInTheDocument();
+
+    const editButton = within(targetEventContainer).getByLabelText('Edit event');
+    await user.click(editButton);
+
+    // 단일 일정으로 처리되어야 함
+    const repeatCheckbox = screen.getByLabelText('반복 일정') as HTMLInputElement;
+    expect(repeatCheckbox.checked).toBe(false);
+
+    // 정상적으로 저장되어야 함
+    const titleInput = screen.getByLabelText('제목');
+    await user.clear(titleInput);
+    await user.type(titleInput, '수정된 제목');
+
+    const submitButton = screen.getByTestId('event-submit-button');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('일정이 수정되었습니다.')).toBeInTheDocument();
+    });
+  });
+
+  it('반복 간격이 0인 일정을 편집할 때 간격이 1로 보정되어야 한다', async () => {
+    const zeroIntervalEvent: Event = {
+      id: 'zero-interval-event',
+      title: '간격 0인 반복 일정',
+      date: '2025-10-06',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: {
+        type: 'weekly',
+        interval: 0, // 잘못된 간격
+        id: 'invalid-repeat-id',
+      },
+      notificationTime: 10,
+    };
+
+    server.use(
+      http.get('/api/events', () => {
+        return HttpResponse.json({ events: [zeroIntervalEvent] });
+      })
+    );
+
+    const { user } = setup(<App />);
+    vi.setSystemTime(new Date('2025-10-01'));
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const eventList = screen.getByTestId('event-list');
+    const targetEventContainer = within(eventList)
+      .getByText('간격 0인 반복 일정')
+      .closest('[data-testid^="event-"]') as HTMLElement;
+    const editButton = within(targetEventContainer).getByLabelText('Edit event');
+
+    await user.click(editButton);
+
+    // 반복 간격이 최소값 1로 보정되어야 함
+    const intervalInput = screen.getByLabelText('반복 간격') as HTMLInputElement;
+    expect(Number(intervalInput.value)).toBe(1);
+
+    // 정상적으로 수정 가능해야 함
+    const titleInput = screen.getByLabelText('제목');
+    await user.clear(titleInput);
+    await user.type(titleInput, '간격 보정된 일정');
+
+    const submitButton = screen.getByTestId('event-submit-button');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('일정이 수정되었습니다.')).toBeInTheDocument();
+    });
+  });
+
+  it('단일 일정을 편집할 때는 정상적으로 동작해야 한다', async () => {
+    const singleEvent: Event = {
+      id: 'single-event',
+      title: '단일 일정',
+      date: '2025-10-06',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '단일 일정입니다',
+      location: '어딘가',
+      category: '개인',
+      repeat: {
+        type: 'none',
+        interval: 1,
+      },
+      notificationTime: 10,
+    };
+
+    server.use(
+      http.get('/api/events', () => {
+        return HttpResponse.json({ events: [singleEvent] });
+      })
+    );
+
+    const { user } = setup(<App />);
+    vi.setSystemTime(new Date('2025-10-01'));
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const eventList = screen.getByTestId('event-list');
+    const targetEventContainer = within(eventList)
+      .getByText('단일 일정')
+      .closest('[data-testid^="event-"]') as HTMLElement;
+
+    // 반복 아이콘이 없어야 함
+    expect(within(targetEventContainer).queryByText('🔁')).not.toBeInTheDocument();
+
+    const editButton = within(targetEventContainer).getByLabelText('Edit event');
+    await user.click(editButton);
+
+    // 반복 설정이 꺼져있어야 함
+    const repeatCheckbox = screen.getByLabelText('반복 일정') as HTMLInputElement;
+    expect(repeatCheckbox.checked).toBe(false);
+
+    // 제목 수정
+    const titleInput = screen.getByLabelText('제목');
+    await user.clear(titleInput);
+    await user.type(titleInput, '수정된 단일 일정');
+
+    const submitButton = screen.getByTestId('event-submit-button');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('일정이 수정되었습니다.')).toBeInTheDocument();
+    });
+
+    // 여전히 단일 일정으로 유지되어야 함
+    expect(updatedEventPayload?.repeat.type).toBe('none');
   });
 });

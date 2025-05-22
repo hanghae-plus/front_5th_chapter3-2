@@ -19,39 +19,51 @@ export const useEventForm = (initialEvent?: Event) => {
   const [description, setDescription] = useState(initialEvent?.description || '');
   const [location, setLocation] = useState(initialEvent?.location || '');
   const [category, setCategory] = useState(initialEvent?.category || '');
-  const [isRepeating, setIsRepeating] = useState(
-    initialEvent ? initialEvent.repeat.type !== 'none' : false
-  );
-  const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat.type || 'none');
-  const [repeatInterval, setRepeatIntervalState] = useState(initialEvent?.repeat.interval || 1);
-  const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
+
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
 
-  // 종료 조건 상태
+  // === 반복 관련 상태들 ===
+  const [isRepeating, setIsRepeating] = useState(
+    initialEvent ? isValidRepeatingEvent(initialEvent) : false
+  );
+  const [repeatType, setRepeatType] = useState<RepeatType>(
+    initialEvent && isValidRepeatingEvent(initialEvent) ? initialEvent.repeat.type : 'none'
+  );
+  const [repeatInterval, setRepeatIntervalState] = useState(initialEvent?.repeat.interval || 1);
+  const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
   const [repeatEndType, setRepeatEndType] = useState<RepeatEndType>(() => {
-    if (initialEvent) {
+    if (initialEvent && isValidRepeatingEvent(initialEvent)) {
       if (initialEvent.repeat.maxOccurrences) return 'count';
-      if (!initialEvent.repeat.endDate && initialEvent.repeat.type !== 'none') return 'never';
+      if (!initialEvent.repeat.endDate) return 'never';
     }
     return 'date';
   });
+  const [repeatMaxOccurrences, setRepeatMaxOccurrencesState] = useState<number | undefined>(
+    initialEvent?.repeat.maxOccurrences
+  );
 
-  const [repeatMaxOccurrences, setRepeatMaxOccurrencesState] = useState<number | undefined>(() => {
-    return initialEvent?.repeat.maxOccurrences;
-  });
-
+  // === 편집 관련 상태들 ===
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
+  // === 시간 검증 상태 ===
   const [{ startTimeError, endTimeError }, setTimeError] = useState<TimeErrorRecord>({
     startTimeError: null,
     endTimeError: null,
   });
 
-  // 반복일정을 편집 중인지 확인하는 함수
-  const isEditingRepeatingEvent = () => {
+  // === 유효성 검사 함수들 ===
+  function isValidRepeatingEvent(event: Event): boolean {
+    if (!event.repeat) return false;
+    if (!event.repeat.type || event.repeat.type === 'none') return false;
+    if (typeof event.repeat.type !== 'string') return false;
+    if (!['daily', 'weekly', 'monthly', 'yearly'].includes(event.repeat.type)) return false;
+    return true;
+  }
+
+  function isEditingRepeatingEvent(): boolean {
     const eventToCheck = editingEvent || initialEvent;
-    return eventToCheck && eventToCheck.repeat.type !== 'none';
-  };
+    return eventToCheck ? isValidRepeatingEvent(eventToCheck) : false;
+  }
 
   // 안전하게 repeatMaxOccurrences를 설정하는 함수
   const setRepeatMaxOccurrences = (value: number | string | undefined) => {
@@ -73,38 +85,16 @@ export const useEventForm = (initialEvent?: Event) => {
     setRepeatIntervalState(value);
   };
 
-  // 종료 유형이 변경될 때 관련 상태 초기화
-  useEffect(() => {
-    if (repeatEndType === 'date') {
-      setRepeatMaxOccurrences(undefined);
-    } else if (repeatEndType === 'count') {
-      setRepeatEndDate('');
-      if (!repeatMaxOccurrences) {
-        setRepeatMaxOccurrences(DEFAULT_MAX_OCCURRENCES);
-      }
-    } else if (repeatEndType === 'never') {
-      setRepeatEndDate('');
-      setRepeatMaxOccurrences(undefined);
-    }
-  }, [repeatEndType]);
-
-  useEffect(() => {
-    if (isRepeating) {
-      if (repeatType === 'none') setRepeatType('daily');
-    } else {
-      setRepeatType('none');
-    }
-  }, [isRepeating]);
-
-  useEffect(() => {
-    if (repeatType !== 'none' && !isRepeating) {
-      setIsRepeating(true);
-    }
-  }, [repeatType]);
-
   // RepeatInfo 객체 생성 함수
   const createRepeatInfo = (): RepeatInfo => {
     if (isEditingRepeatingEvent()) {
+      return {
+        type: 'none',
+        interval: 1,
+      };
+    }
+
+    if (!isRepeating || repeatType === 'none') {
       return {
         type: 'none',
         interval: 1,
@@ -174,30 +164,63 @@ export const useEventForm = (initialEvent?: Event) => {
     setDescription(event.description);
     setLocation(event.location);
     setCategory(event.category);
+    setNotificationTime(event.notificationTime);
 
-    setIsRepeating(event.repeat.type !== 'none');
-    setRepeatType(event.repeat.type);
-    setRepeatIntervalState(event.repeat?.interval !== undefined ? event.repeat.interval : 1);
+    // 반복 설정은 유효성 검사 후 설정
+    if (isValidRepeatingEvent(event)) {
+      setIsRepeating(true);
+      setRepeatType(event.repeat.type);
+      setRepeatIntervalState(event.repeat.interval || 1);
 
-    // 종료 조건 설정
-    if (event.repeat.maxOccurrences) {
-      setRepeatEndType('count');
-      setRepeatMaxOccurrences(event.repeat.maxOccurrences);
-      setRepeatEndDate('');
-    } else if (event.repeat.endDate && event.repeat.type !== 'none') {
-      setRepeatEndType('date');
-      setRepeatEndDate(event.repeat.endDate);
-      setRepeatMaxOccurrences(undefined);
-    } else if (event.repeat.type !== 'none') {
-      setRepeatEndType('never');
-      setRepeatEndDate('');
-      setRepeatMaxOccurrences(undefined);
+      // 종료 조건 설정
+      if (event.repeat.maxOccurrences) {
+        setRepeatEndType('count');
+        setRepeatMaxOccurrences(event.repeat.maxOccurrences);
+        setRepeatEndDate('');
+      } else if (event.repeat.endDate) {
+        setRepeatEndType('date');
+        setRepeatEndDate(event.repeat.endDate);
+        setRepeatMaxOccurrences(undefined);
+      } else {
+        setRepeatEndType('never');
+        setRepeatEndDate('');
+        setRepeatMaxOccurrences(undefined);
+      }
     } else {
+      setIsRepeating(false);
+      setRepeatType('none');
       setRepeatEndType('date');
     }
-
-    setNotificationTime(event.notificationTime);
   };
+
+  // 종료 유형이 변경될 때 관련 상태 초기화
+  useEffect(() => {
+    if (repeatEndType === 'date') {
+      setRepeatMaxOccurrences(undefined);
+    } else if (repeatEndType === 'count') {
+      setRepeatEndDate('');
+      if (!repeatMaxOccurrences) {
+        setRepeatMaxOccurrences(DEFAULT_MAX_OCCURRENCES);
+      }
+    } else if (repeatEndType === 'never') {
+      setRepeatEndDate('');
+      setRepeatMaxOccurrences(undefined);
+    }
+  }, [repeatEndType]);
+
+  useEffect(() => {
+    if (isRepeating) {
+      if (repeatType === 'none') setRepeatType('daily');
+    } else {
+      setRepeatType('none');
+    }
+  }, [isRepeating]);
+
+  useEffect(() => {
+    if (repeatType !== 'none' && !isRepeating) {
+      setIsRepeating(true);
+    }
+  }, [repeatType]);
 
   return {
     title,
