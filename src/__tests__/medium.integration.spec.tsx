@@ -7,6 +7,7 @@ import { ReactElement } from 'react';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
+  setupMockHandlerRepeat,
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
@@ -172,6 +173,34 @@ describe('일정 뷰', () => {
     // 1월 1일 셀 확인
     const januaryFirstCell = within(monthView).getByText('1').closest('td')!;
     expect(within(januaryFirstCell).getByText('신정')).toBeInTheDocument();
+  });
+
+  it('반복 이벤트의 경우 배경이 노란색이 되어야 한다', async () => {
+    setupMockHandlerRepeat([
+      {
+        id: '1',
+        title: '반복 이벤트',
+        date: '2025-10-15',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '반복 이벤트',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1 },
+        notificationTime: 10,
+      },
+    ]);
+    vi.setSystemTime(new Date('2025-10-15'));
+
+    const { user } = setup(<App />);
+
+    await user.selectOptions(screen.getByLabelText('view'), 'week');
+
+    const weekView = within(screen.getByTestId('week-view'));
+    expect(weekView.getByText('반복 이벤트')).toBeInTheDocument();
+    expect(weekView.getByText('반복 이벤트')).toHaveStyle(
+      'background-color: rgba(255, 255, 0, 0.5)'
+    );
   });
 });
 

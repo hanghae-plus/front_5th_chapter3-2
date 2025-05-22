@@ -165,6 +165,10 @@ function App() {
     }
   };
 
+  const getBackgroundColor = (event: Event) => {
+    return event.repeat.type !== 'none' ? 'rgba(255, 255, 0, 0.5)' : undefined;
+  };
+
   const renderWeekView = () => {
     const weekDates = getWeekDates(currentDate);
     return (
@@ -201,7 +205,11 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
-                            <Text fontSize="sm" noOfLines={1}>
+                            <Text
+                              fontSize="sm"
+                              noOfLines={1}
+                              style={{ backgroundColor: getBackgroundColor(event) }}
+                            >
                               {event.title}
                             </Text>
                           </HStack>
@@ -270,7 +278,11 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
-                                  <Text fontSize="sm" noOfLines={1}>
+                                  <Text
+                                    fontSize="sm"
+                                    noOfLines={1}
+                                    style={{ backgroundColor: getBackgroundColor(event) }}
+                                  >
                                     {event.title}
                                   </Text>
                                 </HStack>

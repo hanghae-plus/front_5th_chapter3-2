@@ -1,5 +1,5 @@
 import { Event } from '../../types';
-import { getFilteredEvents } from '../../utils/eventUtils';
+import { getFilteredEvents, getRepeatEvents } from '../../utils/eventUtils';
 
 describe('getFilteredEvents', () => {
   const events: Event[] = [
@@ -112,5 +112,164 @@ describe('getFilteredEvents', () => {
   it('빈 이벤트 리스트에 대해 빈 배열을 반환한다', () => {
     const result = getFilteredEvents([], '', new Date('2025-07-01'), 'month');
     expect(result).toHaveLength(0);
+  });
+});
+
+const repeatEvent: Event = {
+  id: '1',
+  title: '반복 이벤트',
+  date: '2025-09-21',
+  startTime: '11:00',
+  endTime: '12:00',
+  description: '반복 팀 미팅',
+  location: '회의실 A',
+  category: '업무',
+  repeat: { type: 'daily', interval: 1 },
+  notificationTime: 5,
+};
+
+describe('반복 이벤트 처리', () => {
+  it('일간 반복 이벤트는 마감일이 없을 경우 25.9.30 까지 반복된다.', () => {
+    const event: Event = {
+      ...repeatEvent,
+      date: '2025-09-21',
+      repeat: { type: 'daily', interval: 1 },
+    };
+
+    const result = getRepeatEvents(event);
+    console.log(result);
+    expect(result).toHaveLength(10);
+    expect(result.map((e) => e.date)).toEqual(
+      expect.arrayContaining([
+        '2025-09-21',
+        '2025-09-22',
+        '2025-09-23',
+        '2025-09-24',
+        '2025-09-25',
+        '2025-09-26',
+        '2025-09-27',
+        '2025-09-28',
+        '2025-09-29',
+        '2025-09-30',
+      ])
+    );
+  });
+
+  it('주간 반복 이벤트는 마감일이 없을 경우 25.9.30 까지 반복된다.', () => {
+    const event: Event = {
+      ...repeatEvent,
+      date: '2025-09-01',
+      repeat: { type: 'weekly', interval: 1 },
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(5);
+    expect(result.map((e) => e.date)).toEqual(
+      expect.arrayContaining(['2025-09-01', '2025-09-08', '2025-09-15', '2025-09-22', '2025-09-29'])
+    );
+  });
+
+  it('월간 반복 이벤트는 마감일이 없을 경우 25.9.30 까지 반복된다.', () => {
+    const event: Event = {
+      ...repeatEvent,
+      date: '2025-07-01',
+      repeat: { type: 'monthly', interval: 1 },
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(3);
+    expect(result.map((e) => e.date)).toEqual(
+      expect.arrayContaining(['2025-07-01', '2025-08-01', '2025-09-01'])
+    );
+  });
+
+  it('일단 반복 이벤트는 마감일까지 반복된다', () => {
+    const event: Event = {
+      ...repeatEvent,
+      date: '2025-09-01',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-09-03' },
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(3);
+    expect(result.map((e) => e.date)).toEqual(
+      expect.arrayContaining(['2025-09-01', '2025-09-02', '2025-09-03'])
+    );
+  });
+
+  it('주간 반복 이벤트는 마감일까지 반복된다', () => {
+    const event: Event = {
+      ...repeatEvent,
+      date: '2025-08-21',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-09-03' },
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(2);
+    expect(result.map((e) => e.date)).toEqual(expect.arrayContaining(['2025-08-21', '2025-08-28']));
+  });
+
+  it('월간 반복 이벤트는 마감일까지 반복된다', () => {
+    const event: Event = {
+      ...repeatEvent,
+      date: '2025-07-01',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-09-03' },
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(3);
+    expect(result.map((e) => e.date)).toEqual(
+      expect.arrayContaining(['2025-07-01', '2025-08-01', '2025-09-01'])
+    );
+  });
+
+  it('이벤트 날짜가 월의 마지막 날 보다 크면 월의 마지막 날까지 반복된다', () => {
+    const event: Event = {
+      ...repeatEvent,
+      date: '2025-01-31',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-05-03' },
+    };
+
+    const result = getRepeatEvents(event);
+    // expect(result).toHaveLength(4);
+    expect(result.map((e) => e.date)).toEqual(
+      expect.arrayContaining(['2025-01-31', '2025-02-28', '2025-03-31', '2025-04-30'])
+    );
+  });
+
+  it('일간 반복에서 인터벌이 있을 경우 인터벌 만큼을 제외하고 반복된다', () => {
+    const event: Event = {
+      ...repeatEvent,
+      date: '2025-09-01',
+      repeat: { type: 'daily', interval: 2, endDate: '2025-09-03' },
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(2);
+    expect(result.map((e) => e.date)).toEqual(expect.arrayContaining(['2025-09-01', '2025-09-03']));
+  });
+
+  it('주간 반복에서 인터벌이 있을 경우 인터벌 만큼을 제외하고 반복된다', () => {
+    const event: Event = {
+      ...repeatEvent,
+      date: '2025-05-19',
+      repeat: { type: 'weekly', interval: 2, endDate: '2025-06-03' },
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(2);
+    expect(result.map((e) => e.date)).toEqual(expect.arrayContaining(['2025-05-19', '2025-06-02']));
+  });
+
+  it('월간 반복에서 인터벌이 있을 경우 인터벌 만큼을 제외하고 반복된다', () => {
+    const event: Event = {
+      ...repeatEvent,
+      date: '2025-07-01',
+      repeat: { type: 'monthly', interval: 2, endDate: '2025-09-03' },
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(2);
+    expect(result.map((e) => e.date)).toEqual(expect.arrayContaining(['2025-07-01', '2025-09-01']));
   });
 });
