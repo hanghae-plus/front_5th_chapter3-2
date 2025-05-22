@@ -39,8 +39,6 @@ app.post('/api/events', async (req, res) => {
 app.put('/api/events/:id', async (req, res) => {
   const events = await getEvents();
   const id = req.params.id;
-  console.log(req.body, 'req.body');
-  console.log(req.params, 'req.params');
 
   const eventIndex = events.events.findIndex((event) => event.id === id);
   if (eventIndex > -1) {
