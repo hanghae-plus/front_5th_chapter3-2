@@ -104,8 +104,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent, saveRepeatEvent } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -139,6 +140,12 @@ function App() {
       return;
     }
 
+    const repeatEventData = {
+      type: editingEvent ? 'none' : isRepeating ? repeatType : 'none',
+      interval: editingEvent ? 0 : repeatInterval,
+      endDate: editingEvent ? undefined : repeatEndDate || undefined,
+    };
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -148,11 +155,7 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat: repeatEventData,
       notificationTime,
     };
 
@@ -161,7 +164,11 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      if (eventData.repeat.type !== 'none') {
+        await saveRepeatEvent(eventData);
+      } else {
+        await saveEvent(eventData);
+      }
       resetForm();
     }
   };
@@ -364,7 +371,13 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              isChecked={isRepeating}
+              onChange={(e) => {
+                e.target.checked && setRepeatType('daily');
+                setIsRepeating(e.target.checked);
+              }}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
