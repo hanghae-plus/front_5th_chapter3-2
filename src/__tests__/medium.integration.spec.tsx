@@ -433,15 +433,133 @@ describe('일정 반복', () => {
     expect(calendar.getAllByText('⏲️')).toHaveLength(1);
   });
 
-  it.skip('반복 일정 "매년"을 선택하여 특정한 일정이 매년 표시됩니다.', async () => {});
+  it('반복 일정 "매년"을 선택하여 특정한 일정이 매년 표시됩니다.', async () => {
+    setupMockRepeatHandlerCreateion();
 
-  it.skip('반복 간격을 "2일"로 설정하여 특정 일정이 2일마다 표시됩니다.', async () => {});
+    const { user } = setup(<App />);
 
-  it.skip('반복 간격을 "3달"로 설정하여 특정 일정이 3달마다 표시됩니다.'), async () => {};
+    await saveRepeatSchedule(user, {
+      title: '새로운 반복일정',
+      date: '2025-10-01',
+      startTime: '09:30',
+      endTime: '10:30',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'yearly',
+        interval: 1,
+        endDate: '2027-10-05',
+      },
+    });
 
-  it.skip('반복 일정의 종료날짜를 지정하여, 종료 날짜 이후에 일정이 반복되지 않도록 합니다.', async () => {});
+    const calendar = within(screen.getByTestId('month-view'));
 
-  it.skip('반복일정을 수정하면 단일 일정으로 표시됩니다.', async () => {});
+    expect(calendar.getByText('2025년 10월')).toBeInTheDocument();
+    expect(calendar.getAllByText('새로운 반복일정')).toHaveLength(1);
+    expect(calendar.getAllByText('⏲️')).toHaveLength(1);
 
-  it.skip('반복일정을 삭제하면 해당 일정만 삭제합니다..', async () => {});
+    // 1년 뒤로 이동
+    for (let month = 0; month < 12; month++) {
+      await user.click(screen.getByLabelText('Next'));
+    }
+
+    const nextYearCalendar = within(screen.getByTestId('month-view'));
+    expect(nextYearCalendar.getByText('2026년 10월')).toBeInTheDocument();
+    expect(nextYearCalendar.getAllByText('새로운 반복일정')).toHaveLength(1);
+    expect(nextYearCalendar.getAllByText('⏲️')).toHaveLength(1);
+  });
+
+  it('반복 간격을 "3달"로 설정하여 특정 일정이 3달마다 표시됩니다.', async () => {
+    setupMockRepeatHandlerCreateion();
+
+    const { user } = setup(<App />);
+
+    await saveRepeatSchedule(user, {
+      title: '새로운 반복일정',
+      date: '2025-10-01',
+      startTime: '09:30',
+      endTime: '10:30',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 3,
+        endDate: '2026-10-05',
+      },
+    });
+
+    const calendar = within(screen.getByTestId('month-view'));
+    expect(calendar.getAllByText('새로운 반복일정')).toHaveLength(1);
+    expect(calendar.getAllByText('⏲️')).toHaveLength(1);
+
+    //3달 이동
+    for (let month = 0; month < 3; month++) {
+      await user.click(screen.getByLabelText('Next'));
+    }
+
+    expect(calendar.getAllByText('새로운 반복일정')).toHaveLength(1);
+    expect(calendar.getAllByText('⏲️')).toHaveLength(1);
+  });
+
+  it('반복 일정의 종료날짜를 지정하여, 종료 날짜 이후에 일정이 반복되지 않도록 합니다.', async () => {
+    setupMockRepeatHandlerCreateion();
+
+    const { user } = setup(<App />);
+
+    await saveRepeatSchedule(user, {
+      title: '새로운 반복일정',
+      date: '2025-10-01',
+      startTime: '09:30',
+      endTime: '10:30',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        endDate: '2025-12-31',
+      },
+    });
+
+    const calendar = within(screen.getByTestId('month-view'));
+    expect(calendar.getAllByText('새로운 반복일정')).toHaveLength(1);
+    expect(calendar.getAllByText('⏲️')).toHaveLength(1);
+
+    //3달 이동
+    for (let month = 0; month < 4; month++) {
+      await user.click(screen.getByLabelText('Next'));
+    }
+
+    expect(calendar.queryByText('새로운 반복일정')).not.toBeInTheDocument();
+    expect(calendar.queryByText('⏲️')).not.toBeInTheDocument();
+  });
+
+  it('반복일정을 수정하면 단일 일정으로 표시됩니다.', async () => {
+    setupMockRepeatHandlerUpdation();
+
+    const { user } = setup(<App />);
+
+    const editButton = await screen.findAllByLabelText('Edit event');
+    await user.click(editButton[0]);
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), 'New');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const calendar = within(screen.getByTestId('month-view'));
+    expect(calendar.getByText('New')).toBeInTheDocument();
+  });
+
+  it('반복일정을 삭제하면 해당 일정만 삭제합니다..', async () => {
+    setupMockHandlerDeletion();
+    const { user } = setup(<App />);
+    const editButton = await screen.findByLabelText('Delete event');
+    await user.click(editButton);
+
+    const calendar = within(screen.getByTestId('month-view'));
+    expect(calendar.queryByText('삭제할 이벤트')).not.toBeInTheDocument();
+  });
 });

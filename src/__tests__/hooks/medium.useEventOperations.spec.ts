@@ -305,7 +305,6 @@ describe('반복 일정', () => {
         await result.current.saveRepeatEvent(newEvent);
       });
 
-      console.log(result.current.events);
       expect(result.current.events[0].date).toBe('2024-02-29');
       expect(result.current.events[1].date).toBe('2028-02-29');
     });
@@ -449,7 +448,6 @@ describe('반복 일정', () => {
     await act(async () => {
       await result.current.saveRepeatEvent(newEvent);
     });
-    console.log(result.current.events);
     expect(result.current.events[0].date).toBe('2025-05-01');
     expect(result.current.events[2].date).toBe('2025-05-03');
     expect(result.current.events.every((e) => e.date !== '2025-05-04')).toBe(true);
