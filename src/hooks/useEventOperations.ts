@@ -29,6 +29,18 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
 
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
+      if (eventData.repeat.type !== 'none' && eventData.repeat.interval <= 0) {
+        throw new Error('반복 간격은 1 이상이어야 합니다');
+      }
+      // 반복 횟수 검사
+      if (
+        eventData.repeat.type !== 'none' &&
+        eventData.repeat.endType === 'endcount' &&
+        (eventData.repeat.endCount || 0) < 1
+      ) {
+        throw new Error('반복 횟수는 1 이상이어야 합니다');
+      }
+
       let response;
       if (editing) {
         const editingEvent = {
