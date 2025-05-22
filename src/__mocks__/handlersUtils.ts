@@ -46,6 +46,30 @@ export const setupMockHandlerUpdating = () => {
       repeat: { type: 'none', interval: 0 },
       notificationTime: 5,
     },
+    {
+      id: '3',
+      title: 'PT',
+      date: '2025-10-15',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '헬스장 10분 전 도착하기',
+      location: '헬스장',
+      category: '개인',
+      repeat: { type: 'daily', interval: 0 },
+      notificationTime: 10,
+    },
+    {
+      id: '4',
+      title: '제발요',
+      date: '2025-09-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복된다 종료없이',
+      location: '집',
+      category: '개인',
+      repeat: { type: 'daily', interval: 1 },
+      notificationTime: 10,
+    },
   ];
 
   server.use(
