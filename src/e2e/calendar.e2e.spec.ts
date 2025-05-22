@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test.describe('캘린더 E2E', () => {
   test.beforeEach(async ({ request, page }) => {
