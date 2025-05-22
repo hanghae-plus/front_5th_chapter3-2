@@ -302,4 +302,34 @@ describe('getRepeatEvents', () => {
     expect(result[4].date).toBe('2028-02-29');
     expect(result[5].date).toBe('2029-02-28');
   });
+
+  it('월말 처리(30일) 테스트', () => {
+    const event: EventForm = {
+      title: '이벤트 1',
+      date: '2025-01-30',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '',
+      location: '',
+      category: '',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-12-31' },
+      notificationTime: 0,
+    };
+
+    const result = getRepeatEvents(event);
+    expect(result).toHaveLength(12);
+
+    expect(result[0].date).toBe('2025-01-30');
+    expect(result[1].date).toBe('2025-02-28');
+    expect(result[2].date).toBe('2025-03-30');
+    expect(result[3].date).toBe('2025-04-30');
+    expect(result[4].date).toBe('2025-05-30');
+    expect(result[5].date).toBe('2025-06-30');
+    expect(result[6].date).toBe('2025-07-30');
+    expect(result[7].date).toBe('2025-08-30');
+    expect(result[8].date).toBe('2025-09-30');
+    expect(result[9].date).toBe('2025-10-30');
+    expect(result[10].date).toBe('2025-11-30');
+    expect(result[11].date).toBe('2025-12-30');
+  });
 });
