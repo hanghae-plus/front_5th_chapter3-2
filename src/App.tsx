@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -103,8 +104,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent, saveRepeatEvents } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -155,13 +157,18 @@ function App() {
       notificationTime,
     };
 
-    const overlapping = findOverlappingEvents(eventData, events);
-    if (overlapping.length > 0) {
-      setOverlappingEvents(overlapping);
-      setIsOverlapDialogOpen(true);
-    } else {
-      await saveEvent(eventData);
+    if (isRepeating && !editingEvent) {
+      await saveRepeatEvents(eventData);
       resetForm();
+    } else {
+      const overlapping = findOverlappingEvents(eventData, events);
+      if (overlapping.length > 0) {
+        setOverlappingEvents(overlapping);
+        setIsOverlapDialogOpen(true);
+      } else {
+        await saveEvent(eventData);
+        resetForm();
+      }
     }
   };
 
@@ -204,6 +211,11 @@ function App() {
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
+                            {event?.repeat?.type !== 'none' ? (
+                              <RepeatIcon data-testid="repeat-icon" />
+                            ) : (
+                              ''
+                            )}
                           </HStack>
                         </Box>
                       );
@@ -273,6 +285,11 @@ function App() {
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
+                                  {event?.repeat?.type !== 'none' ? (
+                                    <RepeatIcon data-testid="repeat-icon" />
+                                  ) : (
+                                    ''
+                                  )}
                                 </HStack>
                               </Box>
                             );
@@ -377,7 +394,7 @@ function App() {
           </FormControl>
 
           {isRepeating && (
-            <VStack width="100%">
+            <VStack data-testid="repeat-info" width="100%">
               <FormControl>
                 <FormLabel>반복 유형</FormLabel>
                 <Select

@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 
 import {
   setupMockHandlerCreation,
+  setupMockHandlerCreationForEventList,
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
 } from '../../__mocks__/handlersUtils.ts';
@@ -183,4 +184,57 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
   });
 
   expect(result.current.events).toHaveLength(1);
+});
+
+it('repeat 옵션이 설정된 event에 대해 반복 일정이 저장이 된다.', async () => {
+  setupMockHandlerCreationForEventList();
+
+  const { result } = renderHook(() => useEventOperations(false));
+
+  await act(() => Promise.resolve(null));
+
+  const newEvent: Event = {
+    id: '1',
+    title: '새 회의',
+    date: '2025-10-16',
+    startTime: '11:00',
+    endTime: '12:00',
+    description: '새로운 팀 미팅',
+    location: '회의실 A',
+    category: '업무',
+    repeat: { type: 'daily', interval: 2, endDate: '2025-10-20' },
+    notificationTime: 5,
+  };
+
+  await act(async () => {
+    await result.current.saveRepeatEvents(newEvent);
+  });
+
+  expect(result.current.events).toEqual([
+    { ...newEvent },
+    {
+      id: '2',
+      title: '새 회의',
+      date: '2025-10-18',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 2, endDate: '2025-10-20' },
+      notificationTime: 5,
+    },
+    {
+      id: '3',
+      title: '새 회의',
+      date: '2025-10-20',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 2, endDate: '2025-10-20' },
+      notificationTime: 5,
+    },
+  ]);
 });
