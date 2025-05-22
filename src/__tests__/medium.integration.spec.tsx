@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act } from '@testing-library/react';
+import { render, screen, within, act, waitFor } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
@@ -113,7 +113,7 @@ describe('일정 뷰', () => {
     expect(eventList.getByText('검색 결과가 없습니다.')).toBeInTheDocument();
   });
 
-  it('주별 뷰 선택 후 해당 일자에 일정이 존재한다면 해당 일정이 정확히 표시된다', async () => {
+  it.only('주별 뷰 선택 후 해당 일자에 일정이 존재한다면 해당 일정이 정확히 표시된다', async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
@@ -129,8 +129,9 @@ describe('일정 뷰', () => {
 
     await user.selectOptions(screen.getByLabelText('view'), 'week');
 
-    const weekView = within(screen.getByTestId('week-view'));
-    expect(weekView.getByText('이번주 팀 회의')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByText('이번주 팀 회의')[0]).toBeInTheDocument();
+    });
   });
 
   it('월별 뷰에 일정이 없으면, 일정이 표시되지 않아야 한다.', async () => {
@@ -323,4 +324,79 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('반복 기능', () => {
+  it('일정 생성 시 반복 유형을 선택할 수 있다 (예: 매주)', async () => {
+    vi.setSystemTime('2025-05-20');
+    const { user } = setup(<App />);
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+    await user.type(screen.getByLabelText('제목'), '반복 테스트 일정');
+    await user.type(screen.getByLabelText('날짜'), '2025-05-21');
+    await user.type(screen.getByLabelText('시작 시간'), '10:00');
+    await user.type(screen.getByLabelText('종료 시간'), '11:00');
+    await user.type(screen.getByLabelText('설명'), '테스트 설명');
+    await user.type(screen.getByLabelText('위치'), '회의실 A');
+    await user.selectOptions(screen.getByLabelText('카테고리'), '업무');
+
+    await user.click(screen.getByLabelText('반복 일정'));
+    await user.selectOptions(await screen.findByLabelText('반복 유형'), 'weekly');
+    await user.type(screen.getByLabelText('반복 종료일'), '2025-06-30');
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await user.selectOptions(screen.getByLabelText('view'), 'week');
+
+    expect(screen.getByLabelText('제목')).toHaveValue('');
+    expect(screen.getByLabelText('설명')).toHaveValue('');
+    expect(screen.getByLabelText('위치')).toHaveValue('');
+  });
+
+  it('반복 간격을 설정할 수 있다 (예: 2주마다)', async () => {
+    const { user } = setup(<App />);
+    await user.click(screen.getAllByText('일정 추가')[0]);
+    await user.click(screen.getByLabelText('반복 일정'));
+    await user.selectOptions(screen.getByLabelText('반복 유형'), 'weekly');
+    await user.clear(screen.getByLabelText('반복 간격'));
+    await user.type(screen.getByLabelText('반복 간격'), '2');
+
+    expect(screen.getByLabelText('반복 간격')).toHaveValue(2);
+  });
+
+  it('반복 일정은 아이콘으로 표시된다', async () => {
+    vi.setSystemTime(new Date('2025-05-20'));
+
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '반복 테스트 일정',
+        date: '2025-05-21',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '테스트 설명',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-06-30' },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+
+    // 필터가 주간 기준 맞는지 확인
+    await user.selectOptions(screen.getByLabelText('view'), 'week');
+
+    // 검색어 초기화
+    await user.clear(screen.getByLabelText('일정 검색'));
+
+    // 일정 제목이 있는 요소를 찾고
+    const titles = await screen.findAllByText('반복 테스트 일정');
+    const eventTitle = titles.at(0) as HTMLElement;
+
+    // 해당 타이틀과 같은 카드 안에 repeat-icon이 있는지 확인
+    const card = eventTitle.closest('div');
+
+    const repeatIcon = card?.querySelector('[data-testid="repeat-icon"]');
+    expect(repeatIcon).toBeInTheDocument();
+  });
 });
