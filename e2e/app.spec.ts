@@ -18,17 +18,11 @@ async function addEvent({ page, event }) {
   await page.getByRole('textbox', { name: '제목' }).fill(event.title);
   await page.getByRole('textbox', { name: '날짜' }).fill(event.date);
   await page.getByRole('textbox', { name: '시작 시간' }).click();
-  await page.getByRole('textbox', { name: '시작 시간' }).click();
-  await page.getByRole('textbox', { name: '시작 시간' }).press('ArrowDown');
-  await page.getByRole('textbox', { name: '시작 시간' }).press('Tab');
   await page.getByRole('textbox', { name: '시작 시간' }).fill('20:00');
   await page.getByRole('textbox', { name: '종료 시간' }).click();
-  await page.getByRole('textbox', { name: '종료 시간' }).press('ArrowDown');
-  await page.getByRole('textbox', { name: '종료 시간' }).press('Tab');
   await page.getByRole('textbox', { name: '종료 시간' }).fill('21:00');
   await page.getByRole('textbox', { name: '설명' }).click();
   await page.getByRole('textbox', { name: '설명' }).fill('코어 타임');
-  await page.getByRole('textbox', { name: '설명' }).press('Tab');
   await page.getByRole('textbox', { name: '위치' }).fill('잽');
   await page.getByLabel('카테고리').selectOption('개인');
   await page.getByTestId('event-submit-button').click();
