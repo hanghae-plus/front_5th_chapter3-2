@@ -45,6 +45,8 @@ const EventForm: FC<EventFormProps> = ({
   setRepeatType,
   repeatInterval,
   setRepeatInterval,
+  repeatCount,
+  setRepeatCount,
   repeatEndDate,
   setRepeatEndDate,
   notificationTime,
@@ -191,6 +193,8 @@ const EventForm: FC<EventFormProps> = ({
           setRepeatType={setRepeatType}
           repeatInterval={repeatInterval}
           setRepeatInterval={setRepeatInterval}
+          repeatCount={repeatCount}
+          setRepeatCount={setRepeatCount}
           repeatEndDate={repeatEndDate}
           setRepeatEndDate={setRepeatEndDate}
         />

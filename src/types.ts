@@ -10,6 +10,18 @@ export interface RepeatInfo {
   count?: number;
 }
 
+// RepeatForm props 타입 정의
+export interface RepeatFormProps {
+  repeatType: RepeatType;
+  setRepeatType: (repeatType: RepeatType) => void;
+  repeatInterval: number;
+  setRepeatInterval: (repeatInterval: number) => void;
+  repeatEndDate: string;
+  setRepeatEndDate: (repeatEndDate: string) => void;
+  repeatCount: number;
+  setRepeatCount: (repeatCount: number) => void;
+}
+
 export interface EventForm {
   title: string;
   date: string;
@@ -46,6 +58,8 @@ export interface EventFormProps {
   setRepeatType: (repeatType: RepeatType) => void;
   repeatInterval: number;
   setRepeatInterval: (repeatInterval: number) => void;
+  repeatCount: number;
+  setRepeatCount: (repeatCount: number) => void;
   repeatEndDate: string;
   setRepeatEndDate: (repeatEndDate: string) => void;
   notificationTime: number;
