@@ -94,6 +94,8 @@ export default function App() {
     setRepeatType,
     repeatInterval,
     setRepeatInterval,
+    repeatCount,
+    setRepeatCount,
     repeatEndDate,
     setRepeatEndDate,
     notificationTime,
@@ -156,6 +158,7 @@ export default function App() {
         type: isRepeating ? repeatType : 'none',
         interval: repeatInterval,
         endDate: repeatEndDate || undefined,
+        count: repeatCount || 0,
       },
       notificationTime,
     };
@@ -426,6 +429,16 @@ export default function App() {
                     onChange={(e) => setRepeatEndDate(e.target.value)}
                   />
                 </FormControl>
+                <FormControl>
+                  <FormLabel>반복 횟수</FormLabel>
+                  <Input
+                    data-testid="repeat-count-input"
+                    type="number"
+                    value={repeatCount}
+                    onChange={(e) => setRepeatCount(Number(e.target.value))}
+                    min={0}
+                  />
+                </FormControl>
               </HStack>
             </VStack>
           )}
@@ -510,6 +523,7 @@ export default function App() {
                           {event.repeat.type === 'yearly' && '년'}
                           마다
                           {event.repeat.endDate && ` (종료: ${event.repeat.endDate})`}
+                          {event.repeat.count && ` (횟수: ${event.repeat.count})`}
                         </Text>
                       )}
                       <Text>
@@ -582,8 +596,9 @@ export default function App() {
                     category,
                     repeat: {
                       type: isRepeating ? repeatType : 'none',
-                      interval: repeatInterval,
-                      endDate: repeatEndDate || undefined,
+                      interval: isRepeating ? repeatInterval : 0,
+                      endDate: isRepeating ? repeatEndDate : undefined,
+                      count: isRepeating ? repeatCount : 0,
                     },
                     notificationTime,
                   });
