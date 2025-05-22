@@ -150,10 +150,13 @@ test.describe('반복일정 삭제', () => {
   });
 
   test('반복일정을 삭제할 수 있다', async ({ page }) => {
+    const prevEventCount = await page.getByTestId('event-card').count();
     const lastEvent = page.getByTestId('event-card').last();
-    await lastEvent.getByRole('button', { name: 'Delete event' }).click();
 
+    await lastEvent.getByRole('button', { name: 'Delete event' }).click();
     await page.waitForSelector('text=일정이 삭제되었습니다');
-    await expect(page.getByText(title)).not.toBeVisible();
+
+    const currentEventCount = await page.getByTestId('event-card').count();
+    expect(currentEventCount).toBe(prevEventCount - 1);
   });
 });
