@@ -6,7 +6,7 @@ import { ReactElement } from 'react';
 
 import {
   setupMockHandlerCreation,
-  setupMockHandlerCreationList,
+  setupMockListHandler,
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
@@ -343,14 +343,14 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
 
-describe('반복 일정 추가', () => {
+describe('반복 일정 추가, 수정, 삭제', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
 
   it('반복 일정을 추가하면 해당 일정들이 달력에 표시된다.', async () => {
     vi.setSystemTime(new Date('2025-05-20'));
-    setupMockHandlerCreationList();
+    setupMockListHandler();
 
     const { user } = setup(<App />);
 
@@ -404,6 +404,54 @@ describe('반복 일정 추가', () => {
     const deleteButton = (await screen.findAllByLabelText('Delete event'))[1];
     await user.click(deleteButton);
 
+    // 이벤트 목록에서 사라짐
     expect(eventList.queryByText('2025-05-22')).not.toBeInTheDocument();
+
+    // 달력에서도 사라짐
+    expect(monthView.getAllByLabelText('repeat-icon')).toHaveLength(5);
+  });
+
+  it('반복 일정 등록 후 이벤트 수정시 그 일정 하나만 수정된다.', async () => {
+    vi.setSystemTime(new Date('2025-05-20'));
+    setupMockListHandler();
+
+    const { user } = setup(<App />);
+
+    const data: EventForm = {
+      title: '반복 회의',
+      date: '2025-05-21',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '반복 회의',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-05-26' },
+      notificationTime: 10,
+    };
+
+    await saveSchedule(user, data);
+
+    const monthView = within(screen.getByTestId('month-view'));
+
+    expect(monthView.getAllByLabelText('repeat-icon')).toHaveLength(6);
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.getByText('2025-05-22')).toBeInTheDocument();
+
+    const editButton = (await screen.findAllByLabelText('Edit event'))[1];
+    await user.click(editButton);
+
+    await user.click(screen.getAllByText('일정 수정')[0]);
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 회의');
+
+    await user.click(screen.getByLabelText('반복 설정'));
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    expect(eventList.getByText('수정된 회의')).toBeInTheDocument();
+
+    expect(monthView.getAllByLabelText('repeat-icon')).toHaveLength(5);
   });
 });
