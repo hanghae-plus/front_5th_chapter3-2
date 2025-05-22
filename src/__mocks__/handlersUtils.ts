@@ -93,7 +93,7 @@ export const setupMockHandlerDeletion = () => {
   );
 };
 
-export const setupRecurringMockHandlerCreation = (initEvents = [] as Event[]) => {
+export const setupRepeatMockHandlerCreation = (initEvents = [] as Event[]) => {
   const mockEvents: Event[] = [...initEvents];
 
   server.use(
@@ -106,10 +106,52 @@ export const setupRecurringMockHandlerCreation = (initEvents = [] as Event[]) =>
       mockEvents.push(newEvent);
       return HttpResponse.json(newEvent, { status: 201 });
     }),
+    http.delete('/api/events/:id', ({ params }) => {
+      const { id } = params;
+      const index = mockEvents.findIndex((event) => event.id === id);
+
+      mockEvents.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
+    }),
     http.post('/api/events-list', async ({ request }) => {
-      const newEvent = (await request.json()) as Event[];
-      mockEvents.push(...newEvent);
-      return HttpResponse.json(newEvent, { status: 201 });
+      const requestBody = (await request.json()) as { events: Event[] };
+      const eventsArray = requestBody.events || [];
+      const repeatId = 'repeat-' + Date.now();
+
+      const newEvents = eventsArray.map((event) => {
+        const isRepeatEvent = event.repeat.type !== 'none';
+        return {
+          ...event,
+          id: String(mockEvents.length + Math.floor(Math.random() * 1000)), // 임의의 ID 생성
+          repeat: {
+            ...event.repeat,
+            id: isRepeatEvent ? repeatId : undefined,
+          },
+        };
+      });
+
+      mockEvents.push(...newEvents);
+      return HttpResponse.json(newEvents, { status: 201 });
+    }),
+
+    http.put('/api/events-list', async ({ request }) => {
+      const requestBody = (await request.json()) as { events: Event[] };
+      const eventsToUpdate = requestBody?.events || [];
+      let isUpdated = false;
+
+      eventsToUpdate.forEach((updateEvent) => {
+        const eventIndex = mockEvents.findIndex((event) => event.id === updateEvent.id);
+        if (eventIndex > -1) {
+          isUpdated = true;
+          mockEvents[eventIndex] = { ...mockEvents[eventIndex], ...updateEvent };
+        }
+      });
+
+      if (isUpdated) {
+        return HttpResponse.json(mockEvents, { status: 200 });
+      } else {
+        return new HttpResponse('Event not found', { status: 404 });
+      }
     })
   );
 };

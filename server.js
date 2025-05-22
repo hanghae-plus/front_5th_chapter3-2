@@ -105,7 +105,7 @@ app.put('/api/events-list', async (req, res) => {
     const eventIndex = events.events.findIndex((target) => target.id === event.id);
     if (eventIndex > -1) {
       isUpdated = true;
-      newEvents[eventIndex] = { ...events.events[eventIndex], ...event };
+      newEvents[eventIndex] = { ...events.events[eventIndex], ...event, isUpdated: true };
     }
   });
 

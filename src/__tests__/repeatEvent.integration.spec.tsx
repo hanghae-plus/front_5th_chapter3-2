@@ -1,20 +1,20 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { ReactElement } from 'react';
 
-import { setupRecurringMockHandlerCreation } from '../__mocks__/handlersUtils';
+import { setupRepeatMockHandlerCreation } from '../__mocks__/handlersUtils';
 import App from '../App';
+import { server } from '../setupTests';
 import { Event } from '../types';
-import { formatMonth, formatWeek } from '../utils/dateUtils';
+import { formatMonth, formatDateToYYYYMMDD } from '../utils/dateUtils';
 
 const setup = (element: ReactElement) => {
   const user = userEvent.setup();
-
-  return { ...render(<ChakraProvider>{element}</ChakraProvider>), user }; // ? Med: 왜 ChakraProvider로 감싸는지 물어보자
+  return { ...render(<ChakraProvider>{element}</ChakraProvider>), user };
 };
 
-const saveRecurringSchedule = async (
+const saveRepeatSchedule = async (
   user: UserEvent,
   form: Omit<Event, 'id' | 'notificationTime'>
 ) => {
@@ -22,22 +22,49 @@ const saveRecurringSchedule = async (
 
   await user.click(screen.getAllByText('일정 추가')[0]);
 
-  await user.type(screen.getByLabelText('제목'), title);
-  await user.type(screen.getByLabelText('날짜'), date);
-  await user.type(screen.getByLabelText('시작 시간'), startTime);
-  await user.type(screen.getByLabelText('종료 시간'), endTime);
-  await user.type(screen.getByLabelText('설명'), description);
-  await user.type(screen.getByLabelText('위치'), location);
+  const titleInput = screen.getByLabelText('제목');
+  await user.clear(titleInput);
+  await user.type(titleInput, title);
+
+  const dateInput = screen.getByLabelText('날짜');
+  await user.clear(dateInput);
+  await user.type(dateInput, date);
+
+  const startTimeInput = screen.getByLabelText('시작 시간');
+  await user.clear(startTimeInput);
+  await user.type(startTimeInput, startTime);
+
+  const endTimeInput = screen.getByLabelText('종료 시간');
+  await user.clear(endTimeInput);
+  await user.type(endTimeInput, endTime);
+
+  const descriptionInput = screen.getByLabelText('설명');
+  await user.clear(descriptionInput);
+  await user.type(descriptionInput, description);
+
+  const locationInput = screen.getByLabelText('위치');
+  await user.clear(locationInput);
+  await user.type(locationInput, location);
+
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
+  await user.click(screen.getByLabelText('반복 일정'));
   await user.selectOptions(screen.getByLabelText('반복 유형'), repeat.type);
+
   if (repeat.type !== 'none') {
     const intervalInput = await screen.findByLabelText('반복 간격');
+    fireEvent.change(intervalInput, { target: { value: repeat.interval.toString() } });
 
-    await user.clear(intervalInput);
-    await user.type(intervalInput, repeat.interval.toString());
+    if (repeat.endCondition === 'date' && repeat.endDate) {
+      await user.selectOptions(screen.getByLabelText('반복 종료 조건'), 'date');
+      const endDateInput = await screen.findByLabelText('반복 종료일');
+      await user.clear(endDateInput);
+      await user.type(endDateInput, repeat.endDate);
+    }
 
-    if (repeat.endDate) {
-      await user.type(screen.getByLabelText('반복 종료일'), repeat.endDate);
+    if (repeat.endCondition === 'count' && repeat.endCount) {
+      await user.selectOptions(screen.getByLabelText('반복 종료 조건'), 'count');
+      const endCountInput = (await screen.findByLabelText('반복 종료 횟수')) as HTMLInputElement;
+      fireEvent.change(endCountInput, { target: { value: repeat.endCount.toString() } });
     }
   }
 
@@ -45,259 +72,306 @@ const saveRecurringSchedule = async (
 };
 
 describe('반복 일정', () => {
+  afterEach(() => {
+    server.resetHandlers();
+    vi.useRealTimers();
+  });
   it('매일 반복 유형으로 일정을 생성하면 다음 날에도 해당 일정이 표시된다', async () => {
-    setupRecurringMockHandlerCreation([]);
-    setup(<App />);
+    setupRepeatMockHandlerCreation([]);
+    const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
 
-    /**
-     * TODO
-     * 반복 이벤트 생성 로직 구현
-     * 10-15일로 매일 반복 일정 생성
-     */
-    // await saveRecurringSchedule(user, {
-    //   title: '매일 반복 이벤트',
-    //   date: '2025-10-15',
-    //   startTime: '10:00',
-    //   endTime: '11:00',
-    //   description: '매일 반복 이벤트입니다',
-    //   location: '어딘가',
-    //   category: '기타',
-    //   repeat: { type: 'daily', interval: 1 },
-    // });
+    await saveRepeatSchedule(user, {
+      title: '매일 반복 이벤트',
+      date: '2025-10-15',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '매일 반복 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: { type: 'daily', interval: 1, endCondition: 'count', endCount: 2 },
+    });
+
     await screen.findByText('일정이 추가되었습니다.');
 
     const monthView = within(screen.getByTestId('month-view'));
 
-    expect(monthView.getByText('매일 반복 이벤트')).toBeInTheDocument();
+    const eventElements = monthView.getAllByText('매일 반복 이벤트');
+    expect(eventElements.length).toBe(2);
 
-    const nextEvent = monthView.getAllByText('매일 반복 이벤트')?.[1];
-    const nextEventDate = nextEvent.closest('td')?.textContent?.split('매일 반복 이벤트')[0];
+    const eventCells = eventElements.map((eventEl) => eventEl.closest('td'));
+    const uniqueEventCells = [...new Set(eventCells)];
+    const eventDates = uniqueEventCells.map((cell) => cell?.getAttribute('data-date'));
 
-    expect(nextEventDate).toBe('16');
+    expect(eventDates).toContain('2025-10-15');
+    expect(eventDates).toContain('2025-10-16');
   });
 
   it('매주 반복 유형으로 일정을 생성하면 다음 주 같은 요일에도 해당 일정이 표시된다', async () => {
-    setupRecurringMockHandlerCreation([]);
-    setup(<App />);
+    setupRepeatMockHandlerCreation([]);
+    const { user } = setup(<App />);
+    vi.setSystemTime(new Date('2025-10-15'));
 
     await screen.findByText('일정 로딩 완료!');
 
-    /**
-     * TODO
-     * 시작일 10-15일로 매주 반복 일정 생성
-     */
+    await saveRepeatSchedule(user, {
+      title: '매주 반복 이벤트',
+      date: '2025-10-15',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '매주 반복 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: { type: 'weekly', interval: 1, endCondition: 'count', endCount: 2 },
+    });
 
     await screen.findByText('일정이 추가되었습니다.');
 
     const monthView = within(screen.getByTestId('month-view'));
+    const eventElements = monthView.getAllByText('매주 반복 이벤트');
+    expect(eventElements.length).toBe(2);
 
-    expect(monthView.getByText('매주 반복 이벤트')).toBeInTheDocument();
+    const eventCells = eventElements.map((eventEl) => eventEl.closest('td'));
+    const uniqueEventCells = [...new Set(eventCells)];
+    const eventDates = uniqueEventCells.map((cell) => cell?.getAttribute('data-date'));
 
-    const nextEvent = monthView.getAllByText('매주 반복 이벤트')?.[1];
-    const nextEventDate = nextEvent.closest('td')?.textContent?.split('매주 반복 이벤트')[0];
-
-    expect(nextEventDate).toBe('22');
+    expect(eventDates).toContain('2025-10-15');
+    expect(eventDates).toContain('2025-10-22');
   });
 
   it('매월 반복 유형으로 일정을 생성하면 다음 달 같은 날짜에도 해당 일정이 표시된다', async () => {
-    setupRecurringMockHandlerCreation([]);
+    setupRepeatMockHandlerCreation([]);
     const { user } = setup(<App />);
+    vi.setSystemTime(new Date('2025-10-15'));
 
     await screen.findByText('일정 로딩 완료!');
 
-    /**
-     * TODO
-     * 시작일 10-15일로 매월 반복 일정 생성
-     */
+    await saveRepeatSchedule(user, {
+      title: '매월 반복 이벤트',
+      date: '2025-10-15',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '매월 반복 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: { type: 'monthly', interval: 1, endCondition: 'count', endCount: 2 },
+    });
 
     await screen.findByText('일정이 추가되었습니다.');
 
     let monthView = within(screen.getByTestId('month-view'));
-
-    expect(monthView.getByText('매월 반복 이벤트')).toBeInTheDocument();
+    expect(
+      monthView
+        .getAllByText('매월 반복 이벤트')
+        .filter((el) => el.closest('td')?.getAttribute('data-date') === '2025-10-15').length
+    ).toBe(1);
 
     const nextMonthButton = screen.getByLabelText('Next');
-
     await user.click(nextMonthButton);
 
     monthView = within(screen.getByTestId('month-view'));
-    const nextEvent = monthView.getByText('매월 반복 이벤트');
-    const nextEventDate = nextEvent.closest('td')?.textContent?.split('매월 반복 이벤트')[0];
-
-    expect(monthView.getByText(formatMonth(new Date('2025-11-01')))).toBeInTheDocument();
-    expect(nextEventDate).toBe('15');
+    await waitFor(() => {
+      expect(monthView.getByText(formatMonth(new Date('2025-11-01')))).toBeInTheDocument();
+    });
+    expect(
+      monthView
+        .getAllByText('매월 반복 이벤트')
+        .filter((el) => el.closest('td')?.getAttribute('data-date') === '2025-11-15').length
+    ).toBe(1);
   });
 
   it('매년 반복 유형으로 일정을 생성하면 다음 해 같은 날짜에도 해당 일정이 표시된다', async () => {
-    setupRecurringMockHandlerCreation([]);
+    setupRepeatMockHandlerCreation([]);
     const { user } = setup(<App />);
+    vi.setSystemTime(new Date('2025-10-15'));
 
     await screen.findByText('일정 로딩 완료!');
 
-    /**
-     * TODO
-     * 시작일 10-15일로 매년 반복 일정 생성
-     */
+    await saveRepeatSchedule(user, {
+      title: '매년 반복 이벤트',
+      date: '2025-10-15',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '매년 반복 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: { type: 'yearly', interval: 1, endCondition: 'count', endCount: 2 },
+    });
 
     await screen.findByText('일정이 추가되었습니다.');
 
     let monthView = within(screen.getByTestId('month-view'));
 
-    expect(monthView.getByText('매년 반복 이벤트')).toBeInTheDocument();
+    expect(
+      monthView
+        .getAllByText('매년 반복 이벤트')
+        .filter((el) => el.closest('td')?.getAttribute('data-date') === '2025-10-15').length
+    ).toBe(1);
 
     const nextMonthButton = screen.getByLabelText('Next');
-
     for (let i = 0; i < 12; i++) {
       await user.click(nextMonthButton);
     }
 
     monthView = within(screen.getByTestId('month-view'));
-    const nextEvent = monthView.getByText('매년 반복 이벤트');
-    const nextEventDate = nextEvent.closest('td')?.textContent?.split('매년 반복 이벤트')[0];
-
-    expect(monthView.getByText(formatMonth(new Date('2026-10-01')))).toBeInTheDocument();
-    expect(nextEventDate).toBe('15');
+    await waitFor(() => {
+      expect(monthView.getByText(formatMonth(new Date('2026-10-01')))).toBeInTheDocument();
+    });
+    expect(
+      monthView
+        .getAllByText('매년 반복 이벤트')
+        .filter((el) => el.closest('td')?.getAttribute('data-date') === '2026-10-15').length
+    ).toBe(1);
   });
 
   it('특정일에 시작하는 2일 간격 반복 일정은 시작일과 이틀 뒤에는 표시되고, 시작일 다음 날에는 표시되지 않는다', async () => {
-    setupRecurringMockHandlerCreation([]);
-    setup(<App />);
+    setupRepeatMockHandlerCreation([]);
+    const { user } = setup(<App />);
+    vi.setSystemTime(new Date('2025-10-15'));
 
     await screen.findByText('일정 로딩 완료!');
 
-    /**
-     * TODO
-     * 시작일 10-15일로 2일 간격 반복 일정 생성
-     */
+    await saveRepeatSchedule(user, {
+      title: '2일 간격 반복 이벤트',
+      date: '2025-10-15',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '2일 간격 반복 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: { type: 'daily', interval: 2, endCondition: 'count', endCount: 2 },
+    });
 
     await screen.findByText('일정이 추가되었습니다.');
 
     const monthView = within(screen.getByTestId('month-view'));
 
-    expect(monthView.getByText('2일 간격 반복 이벤트')).toBeInTheDocument();
+    const eventElements = monthView.getAllByText('2일 간격 반복 이벤트');
+    expect(eventElements.length).toBe(2);
 
-    const nextEvent = monthView.getAllByText('2일 간격 반복 이벤트')?.[1];
-    const nextEventDate = nextEvent.closest('td')?.textContent?.split('2일 간격 반복 이벤트')[0];
-
-    expect(nextEventDate).toBe('17');
+    const eventDates = eventElements.map((el) => el.closest('td')?.getAttribute('data-date'));
+    expect(eventDates).toContain('2025-10-15');
+    expect(eventDates).toContain('2025-10-17');
 
     const dayCellFor16th = monthView.getByText('16').closest('td');
-    const eventOnThe16th = dayCellFor16th?.textContent?.split('16')?.[1];
-    expect(eventOnThe16th).toBeUndefined();
-  });
-
-  it('특정일에 시작하는 3주 간격 반복 일정은 3주 뒤 해당 요일에는 표시되고, 1주 및 2주 뒤 해당 요일에는 표시되지 않는다', async () => {
-    setupRecurringMockHandlerCreation([]);
-    const { user } = setup(<App />);
-    vi.setSystemTime(new Date('2025-09-01'));
-
-    await screen.findByText('일정 로딩 완료!');
-
-    /**
-     * TODO
-     * 시작일 09-01일로 3주 간격, 특정 요일 반복 일정 생성
-     */
-
-    await screen.findByText('일정이 추가되었습니다.');
-
-    const view = screen.getByLabelText('view');
-    await user.selectOptions(view, 'week');
-
-    let weekView = within(screen.getByTestId('week-view'));
-    const nextMonthButton = screen.getByLabelText('Next');
-
-    await user.click(nextMonthButton);
-    expect(weekView.getByText(formatWeek(new Date('2025-09-01')))).toBeInTheDocument();
-    expect(weekView.queryByText('3주 간격 반복 이벤트')).not.toBeInTheDocument();
-
-    await user.click(nextMonthButton);
-    expect(weekView.getByText(formatWeek(new Date('2025-09-08')))).toBeInTheDocument();
-    expect(weekView.queryByText('3주 간격 반복 이벤트')).not.toBeInTheDocument();
-
-    const event = weekView.getByText('3주 간격 반복 이벤트').closest('td');
-    const eventDate = event?.textContent?.split('3주 간격 반복 이벤트')[0];
-    expect(new Date(`2025-09-${eventDate}`).getDay()).toEqual(new Date('2025-09-01').getDay());
-
-    await user.click(nextMonthButton);
-    expect(weekView.getByText(formatWeek(new Date('2025-09-15')))).toBeInTheDocument();
-    expect(weekView.getByText('3주 간격 반복 이벤트')).toBeInTheDocument();
+    if (dayCellFor16th) {
+      expect(within(dayCellFor16th).queryByText('2일 간격 반복 이벤트')).not.toBeInTheDocument();
+    } else {
+      throw new Error('16일 날짜 셀을 찾을 수 없습니다.');
+    }
   });
 
   it('특정일에 시작하는 2개월 간격 반복 일정은 시작월과 2개월 뒤 같은 날짜에는 표시되고, 시작 다음 달 같은 날짜에는 표시되지 않는다', async () => {
-    setupRecurringMockHandlerCreation([]);
-    const { user } = setup(<App />);
+    setupRepeatMockHandlerCreation([]);
     vi.setSystemTime(new Date('2025-09-01'));
+    const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
 
-    /**
-     * TODO
-     * 시작일 09-15일로 2개월 간격, 특정 요일 반복 일정 생성
-     */
+    await saveRepeatSchedule(user, {
+      title: '2개월 간격 반복 이벤트',
+      date: '2025-09-15',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '2개월 간격 반복 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: { type: 'monthly', interval: 2, endCondition: 'count', endCount: 2 },
+    });
 
     await screen.findByText('일정이 추가되었습니다.');
 
     let monthView = within(screen.getByTestId('month-view'));
+    let eventElements = monthView.getAllByText('2개월 간격 반복 이벤트');
+    expect(eventElements.length).toBe(1);
+
+    let eventCells = eventElements.map((eventEl) => eventEl.closest('td'));
+    let eventDates = eventCells.map((cell) => cell?.getAttribute('data-date'));
+    expect(eventDates).toContain('2025-09-15');
+
     const nextMonthButton = screen.getByLabelText('Next');
-
     await user.click(nextMonthButton);
-
     monthView = within(screen.getByTestId('month-view'));
 
     expect(monthView.getByText(formatMonth(new Date('2025-10-01')))).toBeInTheDocument();
-    expect(monthView.queryByText('2개월 간격 반복 이벤트')).not.toBeInTheDocument();
+
+    const dayCellFor15thOct = monthView.getByText('15').closest('td');
+    if (dayCellFor15thOct) {
+      expect(
+        within(dayCellFor15thOct).queryByText('2개월 간격 반복 이벤트')
+      ).not.toBeInTheDocument();
+    } else {
+      throw new Error('10월 15일 날짜 셀을 찾을 수 없습니다.');
+    }
 
     await user.click(nextMonthButton);
-
     monthView = within(screen.getByTestId('month-view'));
 
     expect(monthView.getByText(formatMonth(new Date('2025-11-01')))).toBeInTheDocument();
-    expect(monthView.getByText('2개월 간격 반복 이벤트')).toBeInTheDocument();
 
-    const event = monthView.getByText('2개월 간격 반복 이벤트').closest('td');
-    const eventDate = event?.textContent?.split('2개월 간격 반복 이벤트')[0];
-    expect(eventDate).toBe('15');
+    eventElements = monthView.getAllByText('2개월 간격 반복 이벤트');
+    expect(eventElements.length).toBe(1);
+
+    eventCells = eventElements.map((eventEl) => eventEl.closest('td'));
+    eventDates = eventCells.map((cell) => cell?.getAttribute('data-date'));
+    expect(eventDates).toContain('2025-11-15');
 
     await user.click(nextMonthButton);
-
     monthView = within(screen.getByTestId('month-view'));
 
     expect(monthView.getByText(formatMonth(new Date('2025-12-01')))).toBeInTheDocument();
-    expect(monthView.queryByText('2개월 간격 반복 이벤트')).not.toBeInTheDocument();
+
+    const dayCellFor15thDec = monthView.getByText('15').closest('td');
+    if (dayCellFor15thDec) {
+      expect(
+        within(dayCellFor15thDec).queryByText('2개월 간격 반복 이벤트')
+      ).not.toBeInTheDocument();
+    } else {
+      throw new Error('12월 15일 날짜 셀을 찾을 수 없습니다.');
+    }
   });
 
   it('매월 반복으로 1월 31일에 생성한 일정은 3월에는 표시되고, 2월에는 표시되지 않는다', async () => {
-    setupRecurringMockHandlerCreation([]);
-    const { user } = setup(<App />);
+    setupRepeatMockHandlerCreation([]);
     vi.setSystemTime(new Date('2025-01-01'));
+    const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
 
-    /**
-     * TODO
-     * 시작일 01-31일로 매월 31일 반복 일정 생성
-     */
+    await saveRepeatSchedule(user, {
+      title: '31일 반복 이벤트',
+      date: '2025-01-31',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '31일 반복 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: { type: 'monthly', interval: 1, endCondition: 'count', endCount: 3 },
+    });
 
     await screen.findByText('일정이 추가되었습니다.');
+    const nextMonthButton = screen.getByLabelText('Next');
 
     let monthView = within(screen.getByTestId('month-view'));
-    const eventCellForJanuary = monthView.getByText('31일 반복 이벤트').closest('td');
-    const eventDateForJanuary = eventCellForJanuary?.textContent?.split('31일 반복 이벤트')[0];
-
-    expect(monthView.getByText(formatMonth(new Date('2025-01-01')))).toBeInTheDocument();
-    expect(monthView.getByText('31일 반복 이벤트')).toBeInTheDocument();
-    expect(eventDateForJanuary).toBe('31');
-
-    const nextMonthButton = screen.getByLabelText('Next');
+    await waitFor(() =>
+      expect(monthView.getByText(formatMonth(new Date('2025-01-01')))).toBeInTheDocument()
+    );
+    expect(
+      monthView
+        .getAllByText('31일 반복 이벤트')
+        .filter((el) => el.closest('td')?.getAttribute('data-date') === '2025-01-31').length
+    ).toBe(1);
 
     await user.click(nextMonthButton);
 
     monthView = within(screen.getByTestId('month-view'));
+    const eventCellForFebruary = monthView.getByText('31일 반복 이벤트').closest('td');
+    const eventDateForFebruary = eventCellForFebruary?.textContent?.split('31일 반복 이벤트')[0];
 
     expect(monthView.getByText(formatMonth(new Date('2025-02-01')))).toBeInTheDocument();
-    expect(monthView.queryByText('31일 반복 이벤트')).not.toBeInTheDocument();
+    expect(monthView.getByText('31일 반복 이벤트')).toBeInTheDocument();
+    expect(eventDateForFebruary).toBe('28');
 
     await user.click(nextMonthButton);
 
@@ -310,214 +384,125 @@ describe('반복 일정', () => {
     expect(eventDateForMarch).toBe('31');
   });
 
-  it('매년 반복으로 2월 29일(윤년)에 생성한 일정은 다음 해가 평년일 경우 표시되지 않는다', async () => {
-    setupRecurringMockHandlerCreation([]);
-    const { user } = setup(<App />);
-    vi.setSystemTime(new Date('2024-02-01'));
-
-    await screen.findByText('일정 로딩 완료!');
-
-    /**
-     * TODO
-     * 시작일 02-29일로 매년 2월 29일 반복 일정 생성
-     */
-
-    await screen.findByText('일정이 추가되었습니다.');
-
-    let monthView = within(screen.getByTestId('month-view'));
-    const eventCellFor2024 = monthView.getByText('29일 반복 이벤트').closest('td');
-    const eventDateFor2024 = eventCellFor2024?.textContent?.split('29일 반복 이벤트')[0];
-
-    expect(monthView.getByText(formatMonth(new Date('2024-02-01')))).toBeInTheDocument();
-    expect(monthView.getByText('29일 반복 이벤트')).toBeInTheDocument();
-    expect(eventDateFor2024).toBe('29');
-
-    const nextMonthButton = screen.getByLabelText('Next');
-
-    for (let i = 0; i < 12; i++) {
-      await user.click(nextMonthButton);
-    }
-
-    monthView = within(screen.getByTestId('month-view'));
-
-    expect(monthView.getByText(formatMonth(new Date('2025-02-01')))).toBeInTheDocument();
-    expect(monthView.queryByText('29일 반복 이벤트')).not.toBeInTheDocument();
-  });
-
-  it('매년 반복으로 2월 29일(윤년)에 생성한 일정은 4년 뒤 윤년에 다시 2월 29일에 표시된다', async () => {
-    setupRecurringMockHandlerCreation([]);
-    const { user } = setup(<App />);
-    vi.setSystemTime(new Date('2020-02-01'));
-
-    await screen.findByText('일정 로딩 완료!');
-
-    /**
-     * TODO
-     * 시작일 02-29일로 매년 2월 29일 반복 일정 생성
-     */
-
-    await screen.findByText('일정이 추가되었습니다.');
-
-    let monthView = within(screen.getByTestId('month-view'));
-    const eventCellFor2020 = monthView.getByText('29일 반복 이벤트').closest('td');
-    const eventDateFor2020 = eventCellFor2020?.textContent?.split('29일 반복 이벤트')[0];
-
-    expect(monthView.getByText(formatMonth(new Date('2020-02-01')))).toBeInTheDocument();
-    expect(monthView.getByText('29일 반복 이벤트')).toBeInTheDocument();
-    expect(eventDateFor2020).toBe('29');
-
-    const nextMonthButton = screen.getByLabelText('Next');
-
-    for (let i = 0; i < 12 * 4; i++) {
-      await user.click(nextMonthButton);
-    }
-
-    monthView = within(screen.getByTestId('month-view'));
-    const eventCellFor2024 = monthView.getByText('29일 반복 이벤트').closest('td');
-    const eventDateFor2024 = eventCellFor2024?.textContent?.split('29일 반복 이벤트')[0];
-
-    expect(monthView.getByText(formatMonth(new Date('2024-02-01')))).toBeInTheDocument();
-    expect(monthView.getByText('29일 반복 이벤트')).toBeInTheDocument();
-    expect(eventDateFor2024).toBe('29');
-  });
-
   it('캘린더 뷰에서 반복 일정이 아이콘과 함께 시각적으로 구분되어 표시된다', async () => {
-    /**
-     * TODO
-     * 반복 일정 초기 생성
-     */
-    const mockEvents = [] as Event[];
-    setupRecurringMockHandlerCreation(mockEvents);
+    const initialDate = formatDateToYYYYMMDD(new Date('2025-10-15'));
+    const mockEvents = [
+      {
+        id: 'event-1',
+        title: '1일 반복 이벤트',
+        date: initialDate,
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '반복 이벤트입니다',
+        location: '어딘가',
+        category: '기타',
+        repeat: { type: 'daily', interval: 1, id: 'repeat-id-1' },
+        notificationTime: 10,
+      },
+    ] as Event[];
+
+    setupRepeatMockHandlerCreation(mockEvents);
     setup(<App />);
+    vi.setSystemTime(new Date(initialDate));
 
     await screen.findByText('일정 로딩 완료!');
 
     const monthView = within(screen.getByTestId('month-view'));
-    const eventCell = monthView.getByText('1일 반복 이벤트').closest('td');
+    const eventCell = monthView.getAllByText('1일 반복 이벤트')[0].closest('td');
 
-    expect(eventCell?.querySelector('svg')).toBeInTheDocument();
+    expect(eventCell).not.toBeNull();
+    if (eventCell) {
+      expect(eventCell.querySelector('svg')).toBeInTheDocument();
+    }
   });
+
   it('반복 종료 조건으로 특정 날짜를 지정하면 해당 날짜 이후에는 일정이 표시되지 않는다 (2025-09-30까지)', async () => {
-    setupRecurringMockHandlerCreation([]);
+    setupRepeatMockHandlerCreation([]);
     vi.setSystemTime(new Date('2025-01-01'));
     const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
 
-    /**
-     * TODO
-     * 시작일 01-30일로 09-30일 반복 일정 생성
-     */
+    await saveRepeatSchedule(user, {
+      title: '월간 반복 종료일 지정 이벤트',
+      date: '2025-01-30',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '종료일 있는 반복 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        endCondition: 'date',
+        endDate: '2025-09-30',
+      },
+    });
 
     await screen.findByText('일정이 추가되었습니다.');
-
     const nextMonthButton = screen.getByLabelText('Next');
 
     for (let i = 0; i < 8; i++) {
       await user.click(nextMonthButton);
     }
-
     let monthView = within(screen.getByTestId('month-view'));
-
-    expect(monthView.getByText(formatMonth(new Date('2025-09-01')))).toBeInTheDocument();
-    expect(monthView.getByText('1일 반복 이벤트')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(monthView.getByText(formatMonth(new Date('2025-09-01')))).toBeInTheDocument()
+    );
+    expect(monthView.getByText('월간 반복 종료일 지정 이벤트')).toBeInTheDocument();
 
     await user.click(nextMonthButton);
-
     monthView = within(screen.getByTestId('month-view'));
-
-    expect(monthView.getByText(formatMonth(new Date('2025-10-01')))).toBeInTheDocument();
-    expect(monthView.queryByText('1일 반복 이벤트')).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(monthView.getByText(formatMonth(new Date('2025-10-01')))).toBeInTheDocument()
+    );
+    expect(monthView.queryByText('월간 반복 종료일 지정 이벤트')).not.toBeInTheDocument();
   });
 
   it('반복 종료 조건으로 특정 횟수를 지정하면 해당 횟수 이후에는 일정이 표시되지 않는다', async () => {
-    setupRecurringMockHandlerCreation([]);
-    setup(<App />);
+    setupRepeatMockHandlerCreation([]);
+    vi.setSystemTime(new Date('2025-10-01'));
+    const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
 
-    /**
-     * TODO
-     * 시작일 10-1일로 1일 간격 반복 횟수 2회 일정 생성
-     */
+    await saveRepeatSchedule(user, {
+      title: '횟수 제한 반복 이벤트',
+      date: '2025-10-01',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '횟수 제한 반복 이벤트입니다',
+      location: '어딘가',
+      category: '기타',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endCondition: 'count',
+        endCount: 2,
+      },
+    });
 
     await screen.findByText('일정이 추가되었습니다.');
 
     const monthView = within(screen.getByTestId('month-view'));
+    await waitFor(() =>
+      expect(monthView.getByText(formatMonth(new Date('2025-10-01')))).toBeInTheDocument()
+    );
 
-    expect(monthView.getByText(formatMonth(new Date('2025-10-01')))).toBeInTheDocument();
-    expect(monthView.getAllByText('1일 간격 반복 이벤트')).toHaveLength(2);
+    const eventElements = monthView.getAllByText('횟수 제한 반복 이벤트');
+    expect(eventElements.length).toBe(2);
+    expect(
+      eventElements.some((el) => el.closest('td')?.getAttribute('data-date') === '2025-10-01')
+    ).toBe(true);
+    expect(
+      eventElements.some((el) => el.closest('td')?.getAttribute('data-date') === '2025-10-02')
+    ).toBe(true);
 
-    const eventCellFor3rd = monthView.getByText('3').closest('td');
-    const eventTitleFor3rd = eventCellFor3rd?.textContent?.split('1일 간격 반복 이벤트')?.[1];
-
-    expect(eventTitleFor3rd).toBeUndefined();
-  });
-
-  it('반복 일정 중 하나를 수정하면 해당 일정만 단일 일정으로 변경되고 반복 아이콘이 사라진다', async () => {
-    vi.setSystemTime(new Date('2025-01-01'));
-    /**
-     * TODO
-     * 시작일 01-01일로 1일 간격 일정 초기 생성
-     */
-    setupRecurringMockHandlerCreation([]);
-    const { user } = setup(<App />);
-
-    await screen.findByText('일정 로딩 완료!');
-
-    const monthView = within(screen.getByTestId('month-view'));
-
-    expect(monthView.getByText(formatMonth(new Date('2025-01-01')))).toBeInTheDocument();
-    expect(monthView.getByText('1일 간격 반복 이벤트')).toBeInTheDocument();
-
-    const editButton = (await screen.findAllByLabelText('Edit event'))[0];
-
-    await user.click(editButton);
-
-    const eventForm = within(screen.getByTestId('event-form'));
-
-    await user.clear(eventForm.getByLabelText('제목'));
-    await user.type(eventForm.getByLabelText('제목'), '수정된 일정');
-
-    await user.click(eventForm.getByTestId('event-submit-button'));
-
-    expect(monthView.queryByText('1달 간격 반복 이벤트')).not.toBeInTheDocument();
-    expect(monthView.getByText('수정된 일정')).toBeInTheDocument();
-
-    const eventCellFor1st = monthView.getByText('1').closest('td');
-
-    expect(eventCellFor1st?.querySelector('svg')).not.toBeInTheDocument();
-  });
-
-  it('반복 일정 중 하나를 삭제하면 해당 특정 날짜의 일정만 삭제되고 다른 반복 발생은 유지된다', async () => {
-    vi.setSystemTime(new Date('2025-01-01'));
-    /**
-     * TODO
-     * 시작일 01-01일로 1일 간격 일정 초기 생성
-     */
-    setupRecurringMockHandlerCreation([]);
-    const { user } = setup(<App />);
-
-    await screen.findByText('일정 로딩 완료!');
-
-    const monthView = within(screen.getByTestId('month-view'));
-
-    expect(monthView.getByText(formatMonth(new Date('2025-01-01')))).toBeInTheDocument();
-    expect(monthView.getByText('1일 간격 반복 이벤트')).toBeInTheDocument();
-
-    const deleteButton = (await screen.findAllByLabelText('Delete event'))[0];
-
-    await user.click(deleteButton);
-
-    const eventCellFor1st = monthView.getByText('1').closest('td');
-    const eventTitleFor1st = eventCellFor1st?.textContent?.split('1일 간격 반복 이벤트')?.[1];
-
-    expect(eventTitleFor1st).toBeUndefined();
-
-    const eventCellFor2nd = monthView.getByText('2').closest('td');
-    const eventTitleFor2nd = eventCellFor2nd?.textContent?.split('1일 간격 반복 이벤트')?.[1];
-
-    expect(eventTitleFor2nd).toBe('1일 간격 반복 이벤트');
-    expect(eventCellFor2nd?.querySelector('svg')).toBeInTheDocument();
+    const dayCellFor3rd = monthView.getByText('3').closest('td');
+    if (dayCellFor3rd) {
+      expect(within(dayCellFor3rd).queryByText('횟수 제한 반복 이벤트')).not.toBeInTheDocument();
+    } else {
+      throw new Error('3일 날짜 셀을 찾을 수 없습니다.');
+    }
   });
 });

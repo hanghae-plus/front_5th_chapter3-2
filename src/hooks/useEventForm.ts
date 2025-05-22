@@ -1,6 +1,6 @@
 import { ChangeEvent, useState } from 'react';
 
-import { Event, RepeatType } from '../types';
+import { Event, RepeatEndCondition, RepeatType } from '../types';
 import { getTimeErrorMessage } from '../utils/timeValidation';
 
 type TimeErrorRecord = Record<'startTimeError' | 'endTimeError', string | null>;
@@ -13,10 +13,16 @@ export const useEventForm = (initialEvent?: Event) => {
   const [description, setDescription] = useState(initialEvent?.description || '');
   const [location, setLocation] = useState(initialEvent?.location || '');
   const [category, setCategory] = useState(initialEvent?.category || '');
-  const [isRepeating, setIsRepeating] = useState(initialEvent?.repeat.type !== 'none');
+  const [isRepeating, setIsRepeating] = useState(
+    initialEvent ? initialEvent.repeat.type !== 'none' : false
+  );
   const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat.type || 'none');
   const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat.interval || 1);
   const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
+  const [repeatEndCondition, setRepeatEndCondition] = useState<RepeatEndCondition>(
+    initialEvent?.repeat.endCondition || 'date'
+  );
+  const [repeatCount, setRepeatCount] = useState(initialEvent?.repeat.endCount || 1);
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -25,6 +31,21 @@ export const useEventForm = (initialEvent?: Event) => {
     startTimeError: null,
     endTimeError: null,
   });
+
+  // isRepeating 상태가 변경될 때 repeatType을 자동으로 업데이트
+  const handleIsRepeatingChange = (isChecked: boolean) => {
+    setIsRepeating(isChecked);
+
+    // 반복이 체크되면 기본값으로 daily 설정
+    if (isChecked && repeatType === 'none') {
+      setRepeatType('daily');
+    }
+
+    // 반복이 해제되면 none으로 설정
+    if (!isChecked) {
+      setRepeatType('none');
+    }
+  };
 
   const handleStartTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newStartTime = e.target.value;
@@ -85,13 +106,17 @@ export const useEventForm = (initialEvent?: Event) => {
     category,
     setCategory,
     isRepeating,
-    setIsRepeating,
+    setIsRepeating: handleIsRepeatingChange,
     repeatType,
     setRepeatType,
     repeatInterval,
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatEndCondition,
+    setRepeatEndCondition,
+    repeatCount,
+    setRepeatCount,
     notificationTime,
     setNotificationTime,
     startTimeError,
