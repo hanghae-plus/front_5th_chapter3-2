@@ -59,6 +59,42 @@
       "category": "개인",
       "repeat": { "type": "none", "interval": 0 },
       "notificationTime": 1
+    },
+    {
+      "id": "0dbffc1f-5c47-46f2-a30f-7c16c0f1d5fe",
+      "title": "test",
+      "date": "2025-05-10",
+      "startTime": "15:42",
+      "endTime": "16:42",
+      "description": "수정 테스트2",
+      "location": "test",
+      "category": "업무",
+      "repeat": { "type": "none", "interval": 1, "endDate": "2025-05-15" },
+      "notificationTime": 10
+    },
+    {
+      "id": "8a74695e-9c19-4696-9f3e-b273d39d587e",
+      "title": "반복 일정 test",
+      "date": "2025-05-10",
+      "startTime": "16:53",
+      "endTime": "17:53",
+      "description": "반복 일정 test",
+      "location": "test",
+      "category": "업무",
+      "repeat": { "type": "monthly", "interval": 1, "endDate": "2025-06-10" },
+      "notificationTime": 10
+    },
+    {
+      "id": "1163943d-5965-40a5-9924-00dc52aa242c",
+      "title": "일정TEST",
+      "date": "2025-05-13",
+      "startTime": "13:56",
+      "endTime": "14:56",
+      "description": "test",
+      "location": "test",
+      "category": "개인",
+      "repeat": { "type": "none", "interval": 1 },
+      "notificationTime": 10
     }
   ]
 }
