@@ -40,26 +40,10 @@ const saveSchedule = async (
   await user.click(screen.getByTestId('event-submit-button'));
 };
 
-const saveRepeatSchedule = async (
-  user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime'>
-) => {
-  const { title, date, startTime, endTime, location, description, category, repeat } = form;
-
-  await user.click(screen.getAllByText('일정 추가')[0]);
-
-  await user.type(screen.getByLabelText('제목'), title);
-  await user.type(screen.getByLabelText('날짜'), date);
-  await user.type(screen.getByLabelText('시작 시간'), startTime);
-  await user.type(screen.getByLabelText('종료 시간'), endTime);
-  await user.type(screen.getByLabelText('설명'), description);
-  await user.type(screen.getByLabelText('위치'), location);
-  await user.selectOptions(screen.getByLabelText('카테고리'), category);
-  await user.selectOptions(screen.getByLabelText('repeat-type'), repeat.type);
-  await user.type(screen.getByLabelText('repeat-interval'), repeat.interval.toString());
-  await user.type(screen.getByLabelText('repeat-end-date'), repeat.endDate || 'none');
-
-  await user.click(screen.getByTestId('event-submit-button'));
+const getDateCellByDay = (container: HTMLElement, day: string) => {
+  return Array.from(container.querySelectorAll('td')).find((td) =>
+    td.textContent?.trim().startsWith(day)
+  );
 };
 
 describe('일정 CRUD 및 기본 기능', () => {
