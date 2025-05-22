@@ -573,11 +573,42 @@ describe('반복 일정 기능', () => {
       ]);
     });
   });
+
+  // 반복 종료
+  // - 반복 종료 조건을 지정할 수 있다.
+  describe('반복 종료 조건', () => {
+    it('특정 날짜까지 반복되는 일정을 생성할 수 있다', async () => {
+      setupMockHandlerCreation();
+      const { result } = renderHook(() => useEventOperations(false));
+
+      await act(() => Promise.resolve(null));
+
+      const event: Event = {
+        id: '1',
+        title: '주간 팀 회의',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '매주 진행되는 팀 회의',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-15' },
+        notificationTime: 5,
+      };
+
+      await act(async () => {
+        await result.current.saveRepeatEvent(event);
+      });
+
+      await act(async () => {
+        await result.current.fetchEvents();
+      });
+
+      // 10월 1일, 8일, 15일에 반복 일정이 생성됨
+      expect(result.current.events).toHaveLength(3);
+      expect(result.current.events[0].date).toBe('2025-10-01');
+      expect(result.current.events[1].date).toBe('2025-10-08');
+      expect(result.current.events[2].date).toBe('2025-10-15');
+    });
+  });
 });
-
-// 반복 일정 - 통합 테스트로 확인
-// -캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표시한다.
-
-// 반복 종료
-// - 반복 종료 조건을 지정할 수 있다.
-// - 옵션: 특정 날짜까지, 특정 횟수만큼, 또는 종료 없음 (예제 특성상, 2025-09-30까지)
