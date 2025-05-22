@@ -4,13 +4,12 @@ import '@testing-library/jest-dom';
 import { handlers } from './__mocks__/handlers';
 
 // ! Hard 여기 제공 안함
-if (typeof HTMLElement.prototype.focus !== 'function') {
-  Object.defineProperty(HTMLElement.prototype, 'focus', {
-    value: () => {},
-    writable: true,
-    configurable: true,
-  });
-}
+vi.mock('@zag-js/focus-visible', () => ({
+  trackFocusVisible: vi.fn(), // 함수 호출을 추적할 수 있도록 vi.fn()으로 변경
+  setupGlobalFocusEvents: vi.fn(),
+  default: vi.fn(), // default export도 모의 처리
+}));
+
 /* msw */
 export const server = setupServer(...handlers);
 
