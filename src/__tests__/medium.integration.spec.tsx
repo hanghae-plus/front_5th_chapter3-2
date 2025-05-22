@@ -240,21 +240,64 @@ describe('반복 일정 표시', () => {
 });
 
 describe('반복 종료', () => {
-  it('특정 날짜까지 반복되도록 설정할 수 있어야 한다', () => {});
+  it('2025년 9월 1일 설정한 날짜까지 반복되도록 설정할 수 있어야 한다', async () => {
+    const { user } = setup(<App />);
 
-  it('특정 횟수만큼 반복되도록 설정할 수 있어야 한다', () => {});
+    // 반복 설정 체크 박스가 존재하는지 확인
+    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+    expect(checkboxInput).toBeInTheDocument();
 
-  it('종료 없이 반복되도록 설정할 수 있어야 한다', () => {});
+    // 클릭하기 전 반복 유형 표시되는지 확인
+    expect(screen.queryByTestId('repeat-type-select')).not.toBeInTheDocument();
+    await user.click(checkboxInput);
+
+    await user.clear(screen.getByLabelText('반복 종료일'));
+    await user.type(screen.getByLabelText('반복 종료일'), '2025-09-01');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+  });
+
+  it('3회 반복되도록 설정할 수 있어야 한다', async () => {
+    const { user } = setup(<App />);
+
+    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+    expect(checkboxInput).toBeInTheDocument();
+
+    await user.click(checkboxInput);
+    expect(screen.queryByTestId('repeat-type-select')).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('반복 횟수'));
+    await user.type(screen.getByLabelText('반복 횟수'), '3');
+    expect(screen.getByLabelText('반복 횟수')).toHaveValue(3);
+  });
 });
 
 describe('반복 일정 수정', () => {
-  it('반복 일정을 수정하면 단일 일정으로 변경되어야 한다', () => {});
+  it('반복 일정을 수정하면 단일 일정으로 변경되어야 한다', () => {
+    const { user } = setup(<App />);
+  });
 
-  it('반복 일정 수정 후 반복 아이콘이 사라져야 한다', () => {});
+  it('반복 일정 수정 후 반복 아이콘이 사라져야 한다', async () => {
+    const { user } = setup(<App />);
+    setupMockHandlerUpdating();
+    setup(<App />);
+    const calendarView = await screen.findByTestId('calendar-view');
+    const repeatIcon = within(calendarView).queryByLabelText('반복 아이콘');
+    expect(repeatIcon).toBeInTheDocument();
+  });
 });
 
 describe('반복 일정 삭제', () => {
-  it('반복 일정을 삭제하면 해당 일정만 삭제되어야 한다', () => {});
+  it('반복 일정을 삭제하면 해당 일정만 삭제되어야 한다', async () => {
+    setupMockHandlerDeletion();
+    const { user } = setup(<App />);
+    const eventList = within(await screen.findByTestId('event-list'));
+    const deleteButtons = await eventList.findAllByLabelText('Delete event');
+    await user.click(deleteButtons[0]);
+    expect(eventList.queryByText('삭제할 이벤트')).not.toBeInTheDocument();
+  });
 });
 
 describe('일정 CRUD 및 기본 기능', () => {
@@ -421,6 +464,18 @@ describe('검색 기능', () => {
               category: '업무',
               repeat: { type: 'none', interval: 0 },
               notificationTime: 10,
+            },
+            {
+              id: 3,
+              title: '세미나',
+              date: '2025-10-17',
+              startTime: '10:00',
+              endTime: '11:00',
+              description: '세미나 참석',
+              location: '외부 강당',
+              category: '교육',
+              repeat: { type: 'weekly', interval: 1 },
+              notificationTime: 30,
             },
           ],
         });
