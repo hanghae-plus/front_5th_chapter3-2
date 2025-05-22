@@ -394,7 +394,6 @@ function App() {
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
                   <Input
-                    type="number"
                     value={repeatInterval}
                     onChange={(e) => setRepeatInterval(Number(e.target.value))}
                     min={1}

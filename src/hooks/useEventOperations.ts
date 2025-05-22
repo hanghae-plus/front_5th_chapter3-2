@@ -30,12 +30,12 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const saveEvent = async (eventData: Event | EventForm) => {
     try {
       let response;
-      let repeatingEvents: Event[] = [];
+      let repeatingEvents: (Event | EventForm)[] = [];
 
       // 반복 이벤트 처리
-      // if (eventData.repeat && eventData.repeat.type !== 'none' && !editing) {
-      //   repeatingEvents = generateRepeatingEvents(eventData);
-      // }
+      if (eventData.repeat && eventData.repeat.type !== 'none' && !editing) {
+        repeatingEvents = generateRepeatingEvents(eventData);
+      }
 
       // 기존 이벤트 수정인 경우
       if (editing) {
