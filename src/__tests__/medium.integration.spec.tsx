@@ -658,14 +658,14 @@ describe('반복 일정 추가', () => {
     await screen.findByText('일정 로딩 완료!');
 
     const calendar = screen.getByTestId('month-view');
-    const repeatIcons = within(calendar).getAllByTestId('repeat-icon');
+    const repeatIconContainers = within(calendar).getAllByTestId('repeat-icon');
     const eventTitles = within(calendar).getAllByText('반복 일정');
 
-    expect(repeatIcons).toHaveLength(eventTitles.length);
+    expect(repeatIconContainers).toHaveLength(eventTitles.length);
 
-    repeatIcons.forEach((icon) => {
-      expect(icon).toHaveAttribute('aria-label', '반복');
-      expect(icon).toHaveClass('chakra-icon');
+    repeatIconContainers.forEach((container) => {
+      expect(container).toHaveAttribute('aria-label', '반복');
+      expect(container.querySelector('svg')).toBeInTheDocument();
     });
   });
 });
