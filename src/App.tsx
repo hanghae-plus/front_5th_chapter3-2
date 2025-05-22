@@ -266,7 +266,7 @@ function App() {
                           color={isNotified ? 'red.500' : 'inherit'}
                         >
                           <HStack spacing={1}>
-                            {isNotified && <BellIcon />}
+                            {isNotified && <BellIcon data-testid="bell-icon" />}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -335,7 +335,7 @@ function App() {
                                 color={isNotified ? 'red.500' : 'inherit'}
                               >
                                 <HStack spacing={1}>
-                                  {isNotified && <BellIcon />}
+                                  {isNotified && <BellIcon data-testid="bell-icon" />}
                                   {event.repeat.type !== 'none' && <RepeatIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
@@ -563,7 +563,10 @@ function App() {
                 <HStack justifyContent="space-between">
                   <VStack align="start">
                     <HStack>
-                      {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
+                      {' '}
+                      {notifiedEvents.includes(event.id) && (
+                        <BellIcon data-testid="bell-icon" color="red.500" />
+                      )}
                       <Text
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                         color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
