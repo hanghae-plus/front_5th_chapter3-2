@@ -110,7 +110,6 @@ export const setupMockHandlerEventsListCreation = (initEvents: Event[] = []) => 
 
     mockEvents.push(...createdEvents);
 
-    console.log('createdEvents', createdEvents);
     return HttpResponse.json(createdEvents, { status: 201 });
   });
 
