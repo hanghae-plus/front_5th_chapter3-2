@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
+  setupMockHandlerEventsListCreation,
   setupMockHandlerUpdating,
 } from '../../__mocks__/handlersUtils.ts';
 import { useEventOperations } from '../../hooks/useEventOperations.ts';
@@ -183,4 +184,147 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
   });
 
   expect(result.current.events).toHaveLength(1);
+});
+
+describe('반복 이벤트 저장', () => {
+  it('반복 이벤트 저장 시 반복 주기와 일정에 따라 반복 이벤트가 올바르게 저장된다', async () => {
+    setupMockHandlerEventsListCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-11-23' },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvents(newRepeatEvent);
+    });
+
+    const expectedEvents = [
+      { ...newRepeatEvent, id: '1', date: '2025-10-16' },
+      { ...newRepeatEvent, id: '2', date: '2025-10-23' },
+      { ...newRepeatEvent, id: '3', date: '2025-10-30' },
+      { ...newRepeatEvent, id: '4', date: '2025-11-06' },
+      { ...newRepeatEvent, id: '5', date: '2025-11-13' },
+      { ...newRepeatEvent, id: '6', date: '2025-11-20' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+
+  it('윤년 29일에 매년 반복 일정을 설정한 경우 종료 시점까지 2월 말일에 반복 일정이 저장된다', async () => {
+    setupMockHandlerEventsListCreation();
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2024-02-29',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1, endDate: '2030-02-28' },
+      notificationTime: 5,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatEvents(newRepeatEvent);
+    });
+
+    const expectedEvents = [
+      { ...newRepeatEvent, id: '1', date: '2024-02-29' },
+      { ...newRepeatEvent, id: '2', date: '2025-02-28' },
+      { ...newRepeatEvent, id: '3', date: '2026-02-28' },
+      { ...newRepeatEvent, id: '4', date: '2027-02-28' },
+      { ...newRepeatEvent, id: '5', date: '2028-02-29' },
+      { ...newRepeatEvent, id: '6', date: '2029-02-28' },
+      { ...newRepeatEvent, id: '7', date: '2030-02-28' },
+    ];
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+
+  it('해당 해의 31일에 매일 반복을 설정한 경우 종료 시점까지 매일 반복 일정이 저장된다', async () => {
+    setupMockHandlerEventsListCreation();
+
+    const newEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-12-31',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2026-01-03' },
+      notificationTime: 5,
+    };
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    const expectedEvents = [
+      { ...newEvent, id: '1', date: '2025-12-31' },
+      { ...newEvent, id: '2', date: '2026-01-01' },
+      { ...newEvent, id: '3', date: '2026-01-02' },
+      { ...newEvent, id: '4', date: '2026-01-03' },
+    ];
+
+    await act(async () => {
+      await result.current.saveRepeatEvents(newEvent);
+    });
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
+
+  it('종료 시점이 없는 경우 2025-09-30까지 반복 일정이 저장된다', async () => {
+    setupMockHandlerEventsListCreation();
+
+    const newRepeatEvent: Event = {
+      id: '1',
+      title: '새 회의',
+      date: '2025-05-20',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '새로운 팀 미팅',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1 },
+      notificationTime: 5,
+    };
+
+    const { result } = renderHook(() => useEventOperations(false));
+
+    await act(() => Promise.resolve(null));
+
+    await act(async () => {
+      await result.current.saveRepeatEvents(newRepeatEvent);
+    });
+
+    const expectedEvents = [
+      { ...newRepeatEvent, id: '1', date: '2025-05-20' },
+      { ...newRepeatEvent, id: '2', date: '2025-06-20' },
+      { ...newRepeatEvent, id: '3', date: '2025-07-20' },
+      { ...newRepeatEvent, id: '4', date: '2025-08-20' },
+      { ...newRepeatEvent, id: '5', date: '2025-09-20' },
+    ];
+
+    expect(result.current.events).toEqual(expectedEvents);
+  });
 });
