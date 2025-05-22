@@ -10,6 +10,7 @@
     "dev": "concurrently \"pnpm run server:watch\" \"pnpm run start\"",
     "test": "vitest",
     "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
     "test:coverage": "vitest run --coverage",
     "build": "tsc -b && vite build",
     "lint": "eslint . --ext ts,tsx,js --report-unused-disable-directives --max-warnings 0"
