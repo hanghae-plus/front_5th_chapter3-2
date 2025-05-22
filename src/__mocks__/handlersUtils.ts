@@ -1,5 +1,3 @@
-import { randomUUID } from 'crypto';
-
 import { http, HttpResponse } from 'msw';
 
 import { server } from '../setupTests';

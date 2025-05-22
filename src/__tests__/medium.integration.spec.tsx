@@ -1,7 +1,6 @@
 import { ChakraProvider } from '@chakra-ui/react';
 import { render, screen, within, act } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
-import { desc } from 'framer-motion/client';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
 
