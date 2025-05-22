@@ -1,6 +1,6 @@
 import { isBefore, addDays, addMonths, addYears, isSameDay } from 'date-fns';
 
-import { Event } from '../types';
+import { Event, EventForm, RepeatType } from '../types';
 
 /**
  * form에서 작성한 event를 기반으로 반복 이벤트 리스트 생성
@@ -70,17 +70,29 @@ export const createRecurringEvents = (event: Event) => {
  * @param updatedRecurringEvents 업데이트된 반복 이벤트 리스트
  * @returns 업데이트된 반복 이벤트 리스트
  */
-export const updateRecurringEvents = (events: Event[], updatedRecurringEvents: Event[]) => {
-  if (updatedRecurringEvents.length === 0) {
-    return events;
-  }
+export const updateRecurringEvents = (
+  editedEvent: Event,
+  events: Event[],
+  newRecurringEvents: Event[]
+) => {
+  if (newRecurringEvents.length === 0) return events;
 
-  const repeatId = updatedRecurringEvents[0].repeat.id;
+  const repeatId = newRecurringEvents[0].repeat.id;
 
-  updatedRecurringEvents.map((event) => (event.repeat.id = repeatId));
+  const recurringEvents = events.filter((event) => event.repeat.id === repeatId);
+  recurringEvents.map((event) => {
+    if (event.id === editedEvent.id) {
+      return {
+        ...event,
+        ...editedEvent,
+        repeat: { ...event.repeat, type: 'none' as RepeatType, id: repeatId },
+      };
+    }
 
-  const filteredEvents = events.filter((e) => e.repeat.id !== repeatId);
-  return [...filteredEvents, ...updatedRecurringEvents];
+    event.repeat.type = 'none' as RepeatType;
+  });
+
+  return [...events, ...recurringEvents];
 };
 
 /**

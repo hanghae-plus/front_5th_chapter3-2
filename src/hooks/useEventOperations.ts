@@ -45,7 +45,11 @@ export const useEventOperations = (isEditing?: boolean) => {
 
     if (editing) {
       const newRecurringEvents = createRecurringEvents(eventData as Event);
-      const updatedRecurringEvents = updateRecurringEvents(events, newRecurringEvents as Event[]);
+      const updatedRecurringEvents = updateRecurringEvents(
+        eventData as Event,
+        events,
+        newRecurringEvents as Event[]
+      );
 
       response = await fetch(BASE_URL(isRepeating), {
         method: 'PUT',
