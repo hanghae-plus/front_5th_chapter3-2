@@ -2,6 +2,7 @@ import { useToast } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import { generateRepeatEvents } from '../utils/eventUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -30,24 +31,39 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     try {
       let response;
       if (editing) {
+        const editingEvent = {
+          ...eventData,
+          repeat: {
+            ...(eventData as Event).repeat,
+            type: 'none',
+          },
+        };
+
         response = await fetch(`/api/events/${(eventData as Event).id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
+          body: JSON.stringify(editingEvent),
         });
+
+        await fetchEvents();
       } else {
-        response = await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
+        if (eventData.repeat.type === 'none') {
+          response = await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+
+          await fetchEvents();
+        } else {
+          response = await saveRepeatEvents(eventData);
+        }
       }
 
-      if (!response.ok) {
+      if (!response?.ok) {
         throw new Error('Failed to save event');
       }
 
-      await fetchEvents();
       onSave?.();
       toast({
         title: editing ? '일정이 수정되었습니다.' : '일정이 추가되었습니다.',
@@ -92,6 +108,23 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  const saveRepeatEvents = async (eventData: Event | EventForm) => {
+    const repeatEvents = generateRepeatEvents(eventData);
+    const response = await fetch('/api/events-list', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ events: repeatEvents }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to save repeat events');
+    }
+
+    await fetchEvents();
+
+    return response;
+  };
+
   async function init() {
     await fetchEvents();
     toast({
@@ -106,5 +139,5 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent };
+  return { events, fetchEvents, saveEvent, deleteEvent, saveRepeatEvents };
 };
