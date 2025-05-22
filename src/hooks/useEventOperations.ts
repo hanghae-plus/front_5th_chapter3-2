@@ -126,6 +126,33 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  const deleteRepeatEvent = async (ids: string[]) => {
+    try {
+      const response = await fetch('/api/events-list', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventIds: ids }),
+      });
+
+      if (!response.ok) throw new Error();
+
+      await fetchEvents();
+      toast({
+        title: '일정이 삭제되었습니다.',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch {
+      toast({
+        title: '일정 삭제 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   useEffect(() => {
     fetchEvents().then(() =>
       toast({
@@ -137,5 +164,5 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, saveRepeatEvent, deleteEvent };
+  return { events, fetchEvents, saveEvent, saveRepeatEvent, deleteEvent, deleteRepeatEvent };
 };

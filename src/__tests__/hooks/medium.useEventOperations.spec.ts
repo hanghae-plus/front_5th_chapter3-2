@@ -507,7 +507,7 @@ describe('반복 일정', () => {
     expect(result.current.events.length).toBe(2);
 
     await act(async () => {
-      await result.current.deleteRepeatEvent(newEvent.id);
+      await result.current.deleteRepeatEvent([newEvent.id]);
     });
 
     expect(result.current.events.length).toBe(1);
