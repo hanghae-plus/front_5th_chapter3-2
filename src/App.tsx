@@ -342,7 +342,16 @@ function App() {
                                     <IconButton
                                       aria-label="Edit event"
                                       icon={<EditIcon />}
-                                      onClick={() => editEvent(event)}
+                                      onClick={() => {
+                                        // console.log(event, event.parentId);
+                                        if (event.parentId) {
+                                          // 반복 일정의 단일 인스턴스 삭제
+                                          editEvent(event.id, event.parentId, event.date);
+                                        } else {
+                                          // 일반 이벤트 삭제
+                                          editEvent(event.id);
+                                        }
+                                      }}
                                     />
                                     <IconButton
                                       aria-label="Delete single occurrence"
