@@ -251,6 +251,7 @@ function App() {
                             {isNotified && <BellIcon />}
                             {event.repeat.type !== 'none' && (
                               <RepeatIcon
+                                data-testid="repeat-icon"
                                 aria-label="반복 일정 아이콘"
                                 color="gray.500"
                                 fontSize="sm"
@@ -327,6 +328,7 @@ function App() {
                                   {isNotified && <BellIcon />}
                                   {event.repeat.type !== 'none' && (
                                     <RepeatIcon
+                                      data-testid="repeat-icon"
                                       aria-label="repeat-icon"
                                       color="gray.500"
                                       fontSize="sm"

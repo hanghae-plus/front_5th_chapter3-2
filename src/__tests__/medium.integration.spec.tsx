@@ -324,3 +324,34 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
+
+describe('반복 일정 표시', () => {
+  beforeEach(() => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '월간 팀 회의',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '매월 진행되는 팀 회의',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-11-15' },
+        notificationTime: 10,
+      },
+    ]);
+  });
+
+  it('캘린더 뷰에서 반복 일정을 시각적으로 구분하여 표시한다', async () => {
+    setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const monthView = within(screen.getByTestId('month-view'));
+
+    const repeatIcon = monthView.getByLabelText('repeat-icon');
+
+    expect(repeatIcon).toBeInTheDocument();
+  });
+});
