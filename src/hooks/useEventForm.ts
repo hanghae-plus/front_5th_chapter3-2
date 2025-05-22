@@ -53,21 +53,31 @@ export const useEventForm = (initialEvent?: Event) => {
     setNotificationTime(10);
   };
 
-  const editEvent = (event: Event) => {
-    setEditingEvent(event);
-    setTitle(event.title);
-    setDate(event.date);
-    setStartTime(event.startTime);
-    setEndTime(event.endTime);
-    setDescription(event.description);
-    setLocation(event.location);
-    setCategory(event.category);
-    setIsRepeating(event.repeat.type !== 'none');
-    setRepeatType(event.repeat.type);
-    setRepeatInterval(event.repeat.interval);
-    setRepeatEndDate(event.repeat.endDate || '');
-    setNotificationTime(event.notificationTime);
-  };
+
+const editEvent = (event: Event) => {
+  setEditingEvent({
+    ...event,
+    repeat: {
+      ...event.repeat,
+      type: 'none',        // 반복 해제
+      interval: 1,
+      id: undefined,       // 반복 그룹 ID 제거
+    },
+  });
+
+  setTitle(event.title);
+  setDate(event.date);
+  setStartTime(event.startTime);
+  setEndTime(event.endTime);
+  setDescription(event.description);
+  setLocation(event.location);
+  setCategory(event.category);
+  setIsRepeating(true);         
+  setRepeatType('none');
+  setRepeatInterval(1);
+  setRepeatEndDate('');
+  setNotificationTime(event.notificationTime);
+};
 
   return {
     title,

@@ -118,6 +118,7 @@ function App() {
   const toast = useToast();
 
   const addOrUpdateEvent = async () => {
+    console.log('[🧪 repeatType 값]', repeatType);
     if (!title || !date || !startTime || !endTime) {
       toast({
         title: '필수 정보를 모두 입력해주세요.',
@@ -139,21 +140,28 @@ function App() {
     }
 
     const eventData: Event | EventForm = {
-      id: editingEvent ? editingEvent.id : undefined,
-      title,
-      date,
-      startTime,
-      endTime,
-      description,
-      location,
-      category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
+  id: editingEvent ? editingEvent.id : undefined,
+  title,
+  date,
+  startTime,
+  endTime,
+  description,
+  location,
+  category,
+   repeat: isRepeating
+    ? {
+        type: repeatType,
         interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
+        endDate: repeatEndDate || '2025-09-30',
+      }
+    : {
+        type: 'none',
+        interval: 0,
       },
-      notificationTime,
-    };
+};
+
+// 🔍 여기에 로그 추가
+console.log('[🧪 eventData 저장 전]', eventData);
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
@@ -256,7 +264,8 @@ function App() {
                               {holiday}
                             </Text>
                           )}
-                          {getEventsForDay(filteredEvents, day).map((event) => {
+                          {getEventsForDay(filteredEvents, day, currentDate).map((event) => {
+                            const isRepeating = event.repeat.type !== 'none'; // 반복 여부 판별
                             const isNotified = notifiedEvents.includes(event.id);
                             return (
                               <Box
@@ -270,6 +279,7 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {isRepeating && <Text as="span">🔹</Text>}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
