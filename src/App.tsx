@@ -40,10 +40,12 @@ import {
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
 
+import RepeatEventManager from './components/RepeatEventManager.tsx';
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
+import { useRepeatSettings } from './hooks/useRepeatSettings.ts';
 import { useSearch } from './hooks/useSearch.ts';
 import { Event, EventForm, RepeatType } from './types';
 import {
@@ -83,14 +85,6 @@ function App() {
     setLocation,
     category,
     setCategory,
-    isRepeating,
-    setIsRepeating,
-    repeatType,
-    setRepeatType,
-    repeatInterval,
-    setRepeatInterval,
-    repeatEndDate,
-    setRepeatEndDate,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -102,6 +96,19 @@ function App() {
     resetForm,
     editEvent,
   } = useEventForm();
+
+  const {
+    isRepeating,
+    setIsRepeating,
+    repeatType,
+    setRepeatType,
+    repeatInterval,
+    setRepeatInterval,
+    repeatEndDate,
+    setRepeatEndDate,
+    resetRepeat,
+    editRepeat,
+  } = useRepeatSettings();
 
   const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
     setEditingEvent(null)
@@ -162,6 +169,7 @@ function App() {
     } else {
       await saveEvent(eventData);
       resetForm();
+      resetRepeat();
     }
   };
 
@@ -355,13 +363,7 @@ function App() {
             </Select>
           </FormControl>
 
-          <FormControl>
-            <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
-              반복 일정
-            </Checkbox>
-          </FormControl>
-
+          {/* 알림 설정 */}
           <FormControl>
             <FormLabel>알림 설정</FormLabel>
             <Select
@@ -376,41 +378,17 @@ function App() {
             </Select>
           </FormControl>
 
-          {isRepeating && (
-            <VStack width="100%">
-              <FormControl>
-                <FormLabel>반복 유형</FormLabel>
-                <Select
-                  value={repeatType}
-                  onChange={(e) => setRepeatType(e.target.value as RepeatType)}
-                >
-                  <option value="daily">매일</option>
-                  <option value="weekly">매주</option>
-                  <option value="monthly">매월</option>
-                  <option value="yearly">매년</option>
-                </Select>
-              </FormControl>
-              <HStack width="100%">
-                <FormControl>
-                  <FormLabel>반복 간격</FormLabel>
-                  <Input
-                    type="number"
-                    value={repeatInterval}
-                    onChange={(e) => setRepeatInterval(Number(e.target.value))}
-                    min={1}
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel>반복 종료일</FormLabel>
-                  <Input
-                    type="date"
-                    value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
-                  />
-                </FormControl>
-              </HStack>
-            </VStack>
-          )}
+          {/* 반복 설정*/}
+          <RepeatEventManager
+            isRepeating={isRepeating}
+            setIsRepeating={setIsRepeating}
+            repeatInterval={repeatInterval}
+            repeatEndDate={repeatEndDate}
+            repeatType={repeatType}
+            setRepeatEndDate={setRepeatEndDate}
+            setRepeatInterval={setRepeatInterval}
+            setRepeatType={setRepeatType}
+          />
 
           <Button data-testid="event-submit-button" onClick={addOrUpdateEvent} colorScheme="blue">
             {editingEvent ? '일정 수정' : '일정 추가'}
@@ -502,7 +480,10 @@ function App() {
                     <IconButton
                       aria-label="Edit event"
                       icon={<EditIcon />}
-                      onClick={() => editEvent(event)}
+                      onClick={() => {
+                        editEvent(event);
+                        editRepeat(event.repeat);
+                      }}
                     />
                     <IconButton
                       aria-label="Delete event"
