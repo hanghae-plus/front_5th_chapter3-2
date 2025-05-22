@@ -90,8 +90,12 @@ function App() {
     setRepeatType,
     repeatInterval,
     setRepeatInterval,
+    repeatEndType,
+    setRepeatEndType,
     repeatEndDate,
     setRepeatEndDate,
+    repeatEndCount,
+    setRepeatEndCount,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -383,19 +387,19 @@ function App() {
 
           {isRepeating && (
             <VStack width="100%">
-              <FormControl>
-                <FormLabel>반복 유형</FormLabel>
-                <Select
-                  value={repeatType}
-                  onChange={(e) => setRepeatType(e.target.value as RepeatType)}
-                >
-                  <option value="daily">매일</option>
-                  <option value="weekly">매주</option>
-                  <option value="monthly">매월</option>
-                  <option value="yearly">매년</option>
-                </Select>
-              </FormControl>
               <HStack width="100%">
+                <FormControl>
+                  <FormLabel>반복 유형</FormLabel>
+                  <Select
+                    value={repeatType}
+                    onChange={(e) => setRepeatType(e.target.value as RepeatType)}
+                  >
+                    <option value="daily">매일</option>
+                    <option value="weekly">매주</option>
+                    <option value="monthly">매월</option>
+                    <option value="yearly">매년</option>
+                  </Select>
+                </FormControl>
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
                   <Input
@@ -405,14 +409,37 @@ function App() {
                     min={1}
                   />
                 </FormControl>
+              </HStack>
+              <HStack width="100%">
                 <FormControl>
-                  <FormLabel>반복 종료일</FormLabel>
-                  <Input
-                    type="date"
-                    value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
-                  />
+                  <FormLabel>반복 종료 유형</FormLabel>
+                  <Select
+                    value={repeatEndType}
+                    onChange={(e) => setRepeatEndType(e.target.value as 'count' | 'date')}
+                  >
+                    <option value="date">날짜</option>
+                    <option value="count">횟수</option>
+                  </Select>
                 </FormControl>
+                {repeatEndType === 'date' ? (
+                  <FormControl>
+                    <FormLabel>반복 종료일</FormLabel>
+                    <Input
+                      type="date"
+                      value={repeatEndDate}
+                      onChange={(e) => setRepeatEndDate(e.target.value)}
+                    />
+                  </FormControl>
+                ) : (
+                  <FormControl>
+                    <FormLabel>설정 횟수</FormLabel>
+                    <Input
+                      type="text"
+                      value={repeatEndCount}
+                      onChange={(e) => setRepeatEndCount(Number(e.target.value))}
+                    />
+                  </FormControl>
+                )}
               </HStack>
             </VStack>
           )}
@@ -563,7 +590,9 @@ function App() {
                     repeat: {
                       type: isRepeating ? repeatType : 'none',
                       interval: repeatInterval,
+                      endType: repeatEndType || 'date',
                       endDate: repeatEndDate || undefined,
+                      endCount: repeatEndCount || 1,
                     },
                     notificationTime,
                   });

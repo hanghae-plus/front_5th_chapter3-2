@@ -1,8 +1,11 @@
 export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type RepeatEndType = 'count' | 'date';
 
 export interface RepeatInfo {
   type: RepeatType;
   interval: number;
+  endType?: RepeatEndType;
+  endCount?: number;
   endDate?: string;
   id?: string;
 }
