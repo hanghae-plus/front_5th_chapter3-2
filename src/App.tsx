@@ -201,8 +201,9 @@ function App() {
                         >
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
-                            <Text fontSize="sm" noOfLines={1}>
+                            <Text flex="1" fontSize="sm">
                               {event.title}
+                              {event.repeat.type !== 'none' && ' 🔁'}
                             </Text>
                           </HStack>
                         </Box>
@@ -270,8 +271,9 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
-                                  <Text fontSize="sm" noOfLines={1}>
+                                  <Text flex="1" fontSize="sm">
                                     {event.title}
+                                    {event.repeat.type !== 'none' && ' 🔁'}
                                   </Text>
                                 </HStack>
                               </Box>
@@ -502,11 +504,13 @@ function App() {
                     <IconButton
                       aria-label="Edit event"
                       icon={<EditIcon />}
+                      size="xs"
                       onClick={() => editEvent(event)}
                     />
                     <IconButton
                       aria-label="Delete event"
                       icon={<DeleteIcon />}
+                      size="xs"
                       onClick={() => deleteEvent(event.id)}
                     />
                   </HStack>

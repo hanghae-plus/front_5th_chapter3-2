@@ -40,9 +40,15 @@ app.put('/api/events/:id', async (req, res) => {
   const events = await getEvents();
   const id = req.params.id;
   const eventIndex = events.events.findIndex((event) => event.id === id);
+  
   if (eventIndex > -1) {
     const newEvents = [...events.events];
-    newEvents[eventIndex] = { ...events.events[eventIndex], ...req.body };
+    const updatedEvent = { 
+      ...events.events[eventIndex], 
+      ...req.body,
+      repeat: { type: 'none' } // 반복 일정 수정 시 단일 일정으로 변경
+    };
+    newEvents[eventIndex] = updatedEvent;
 
     fs.writeFileSync(
       `${__dirname}/src/__mocks__/response/realEvents.json`,
@@ -51,7 +57,7 @@ app.put('/api/events/:id', async (req, res) => {
       })
     );
 
-    res.json(events.events[eventIndex]);
+    res.json(updatedEvent);
   } else {
     res.status(404).send('Event not found');
   }
@@ -60,7 +66,14 @@ app.put('/api/events/:id', async (req, res) => {
 app.delete('/api/events/:id', async (req, res) => {
   const events = await getEvents();
   const id = req.params.id;
+  const eventToDelete = events.events.find((event) => event.id === id);
 
+  if (!eventToDelete) {
+    res.status(404).send('Event not found');
+    return;
+  }
+
+  // 해당 일정만 삭제
   fs.writeFileSync(
     `${__dirname}/src/__mocks__/response/realEvents.json`,
     JSON.stringify({
