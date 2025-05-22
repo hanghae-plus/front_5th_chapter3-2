@@ -58,6 +58,7 @@ export function generateRepeatEvents(event: Event | EventForm): Event[] | EventF
   const endDate = repeat.endDate ? new Date(repeat.endDate) : defaultEndDate;
   const count = repeat.count || 0;
 
+  const interval = repeat.interval ?? 1;
   let currentDate = new Date(startDate);
   let eventCount = 0;
 
@@ -70,16 +71,16 @@ export function generateRepeatEvents(event: Event | EventForm): Event[] | EventF
 
     switch (repeat.type) {
       case 'daily':
-        currentDate.setDate(currentDate.getDate() + repeat.interval);
+        currentDate.setDate(currentDate.getDate() + interval);
         break;
       case 'weekly':
-        currentDate.setDate(currentDate.getDate() + 7 * repeat.interval);
+        currentDate.setDate(currentDate.getDate() + 7 * interval);
         break;
       case 'monthly':
-        currentDate.setMonth(currentDate.getMonth() + repeat.interval);
+        currentDate.setMonth(currentDate.getMonth() + interval);
         break;
       case 'yearly':
-        currentDate.setFullYear(currentDate.getFullYear() + repeat.interval);
+        currentDate.setFullYear(currentDate.getFullYear() + interval);
         break;
     }
     eventCount++;

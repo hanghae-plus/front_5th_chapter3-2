@@ -34,28 +34,19 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       // 반복 설정이 변경된 경우
       if (isRepeatingEvent(eventData)) {
         // 단일 일정에서 반복 일정으로 변경
-
         const repeatEvents = generateRepeatEvents(eventData);
-        console.log('eventData', eventData, ', repeatEvents', repeatEvents);
-        const response = await fetch('/api/events-list', {
+        return await fetch('/api/events-list', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ events: repeatEvents }),
         });
-        if (!response.ok) {
-          throw new Error('Failed to create repeat events');
-        }
       } else {
         // 반복 일정에서 단일 일정으로 변경
-        console.log('eventData', eventData);
-        const response = await fetch(`/api/events/${eventData.id}`, {
+        return await fetch(`/api/events/${eventData.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),
         });
-        if (!response.ok) {
-          throw new Error('Failed to update event');
-        }
       }
     } catch (error) {
       console.error('Error updating event with repeat change:', error);
@@ -74,7 +65,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         }
         // 반복 설정이 변경된 경우
         if (isRepeatingEvent(eventData) !== isRepeatingEvent(existingEvent)) {
-          await updateEventWithRepeatChange(eventData as Event);
+          response = await updateEventWithRepeatChange(eventData as Event);
         } else {
           response = await fetch(`/api/events/${(eventData as Event).id}`, {
             method: 'PUT',
@@ -101,7 +92,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         });
       }
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error('Failed to save event');
       }
 

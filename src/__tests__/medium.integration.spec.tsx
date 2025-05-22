@@ -217,14 +217,15 @@ describe('반복 일정 표시', () => {
     setupMockHandlerUpdating();
     setup(<App />);
     const calendarView = await screen.findByTestId('calendar-view');
-    const repeatIcon = within(calendarView).queryByLabelText('반복 아이콘');
+    const repeatIcon = within(calendarView).queryAllByLabelText('반복 아이콘')[0];
+    console.log(screen.debug(repeatIcon));
     expect(repeatIcon).toBeInTheDocument();
   });
   it('이벤트 리스트에서 반복 일정은 일정 제목 앞에 반복 아이콘으로 구분되어 표시되어야 한다.', async () => {
     setupMockHandlerUpdating();
     setup(<App />);
     const eventList = await screen.findByTestId('event-list');
-    const repeatIcon = within(eventList).queryByLabelText('반복 아이콘');
+    const repeatIcon = within(eventList).queryAllByLabelText('반복 아이콘')[0];
     expect(repeatIcon).toBeInTheDocument();
   });
 });
@@ -289,20 +290,29 @@ describe('반복 일정 수정', () => {
     setupMockHandlerUpdating();
     const { user } = setup(<App />);
 
-    const editButton = (await screen.findAllByLabelText('Edit event'))[2]; // 반복 일정 인덱스
-    await user.click(editButton);
+    const editButton_1 = (await screen.findAllByLabelText('Edit event'))[2]; // 반복 일정 인덱스
+    await user.click(editButton_1);
 
-    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
-    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
-    console.log('checkboxInput', screen.debug(checkboxInput));
+    const repeatCheckbox_1 = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput_1 = within(repeatCheckbox_1[0]).getByRole('checkbox');
     // expect(checkboxInput).toBeChecked()
 
-    if (checkboxInput.checked) await user.click(checkboxInput);
+    if (checkboxInput_1 && checkboxInput_1.checked) await user.click(checkboxInput_1);
     await user.click(screen.getByTestId('event-submit-button'));
 
-    const calendarView = await screen.findByTestId('calendar-view');
-    const repeatIcon = within(calendarView).queryByLabelText('반복 아이콘');
-    expect(repeatIcon).not.toBeInTheDocument();
+    const editButton_2 = (await screen.findAllByLabelText('Edit event'))[3]; // 반복 일정 인덱스
+    await user.click(editButton_2);
+
+    const repeatCheckbox_2 = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput_2 = within(repeatCheckbox_2[0]).getByRole('checkbox');
+    // expect(checkboxInput).toBeChecked()
+
+    if (checkboxInput_2 && checkboxInput_2.checked) await user.click(checkboxInput_2);
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const calendarView = await screen.findByTestId('event-list');
+    const repeatIcon = within(calendarView).queryAllByLabelText('반복 아이콘');
+    expect(repeatIcon.length).toBe(0);
   });
 });
 

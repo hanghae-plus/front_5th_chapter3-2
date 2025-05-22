@@ -49,7 +49,7 @@ export const setupMockHandlerUpdating = () => {
     {
       id: '3',
       title: 'PT',
-      date: '2025-08-23',
+      date: '2025-10-16',
       startTime: '08:00',
       endTime: '09:00',
       description: '헬스장 10분 전 도착하기',
@@ -61,7 +61,7 @@ export const setupMockHandlerUpdating = () => {
     {
       id: '4',
       title: 'PT',
-      date: '2025-08-23',
+      date: '2025-10-17',
       startTime: '09:00',
       endTime: '10:00',
       description: '헬스장 10분 전 도착하기',
