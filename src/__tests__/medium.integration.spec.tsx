@@ -13,14 +13,12 @@ import App from '../App';
 import { server } from '../setupTests';
 import { Event } from '../types';
 
-// ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
   const user = userEvent.setup();
 
   return { ...render(<ChakraProvider>{element}</ChakraProvider>), user }; // ? Med: 왜 ChakraProvider로 감싸는지 물어보자
 };
 
-// ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
   form: Omit<Event, 'id' | 'notificationTime' | 'repeat'>
@@ -323,4 +321,22 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('일정 반복', () => {
+  it('반복 일정 "매일"을 선택하여 특정한 일정이 매일 표시됩니다..', async () => {});
+
+  it('반복 일정 "매달"을 선택하여 특정한 일정이 매달 표시됩니다.', async () => {});
+
+  it('반복 일정 "매년"을 선택하여 특정한 일정이 매년 표시됩니다.', async () => {});
+
+  it('반복 간격을 "2일"로 설정하여 특정 일정이 2일마다 표시됩니다.', async () => {});
+
+  it('반복 간격을 "3달"로 설정하여 특정 일정이 3달마다 표시됩니다.'), async () => {};
+
+  it('반복 일정의 종료날짜를 지정하여, 종료 날짜 이후에 일정이 반복되지 않도록 합니다.', async () => {});
+
+  it('반복일정을 수정하면 단일 일정으로 표시됩니다.', async () => {});
+
+  it('반복일정을 삭제하면 해당 일정만 삭제합니다..', async () => {});
 });

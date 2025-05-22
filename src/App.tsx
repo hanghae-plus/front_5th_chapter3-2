@@ -137,7 +137,7 @@ function App() {
       });
       return;
     }
-
+    console.log(editingEvent);
     const repeat = editingEvent
       ? {
           type: 'none' as RepeatType,

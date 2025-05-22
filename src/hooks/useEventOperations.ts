@@ -65,6 +65,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   };
 
   const saveRepeatEvent = async (eventData: Event | EventForm) => {
+    console.log(eventData);
     try {
       let response: Response;
 
