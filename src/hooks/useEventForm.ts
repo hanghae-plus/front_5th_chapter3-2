@@ -13,10 +13,12 @@ export const useEventForm = (initialEvent?: Event) => {
   const [description, setDescription] = useState(initialEvent?.description || '');
   const [location, setLocation] = useState(initialEvent?.location || '');
   const [category, setCategory] = useState(initialEvent?.category || '');
-  const [isRepeating, setIsRepeating] = useState(initialEvent?.repeat.type !== 'none');
-  const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat.type || 'none');
+  const [isRepeating, setIsRepeating] = useState(false);
+  const [repeatType, setRepeatType] = useState<RepeatType>('none');
   const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat.interval || 1);
   const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
+  const [repeatEndType, setRepeatEndType] = useState<'date' | 'count' | 'none'>('date');
+  const [repeatCount, setRepeatCount] = useState<number>(5); // 기본 횟수 5
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -25,6 +27,15 @@ export const useEventForm = (initialEvent?: Event) => {
     startTimeError: null,
     endTimeError: null,
   });
+
+  const handleIsRepeatingChange = (checked: boolean) => {
+    setIsRepeating(checked);
+    if (checked && repeatType === 'none') {
+      setRepeatType('daily');
+    } else if (!checked) {
+      setRepeatType('none');
+    }
+  };
 
   const handleStartTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newStartTime = e.target.value;
@@ -85,7 +96,7 @@ export const useEventForm = (initialEvent?: Event) => {
     category,
     setCategory,
     isRepeating,
-    setIsRepeating,
+    setIsRepeating: handleIsRepeatingChange,
     repeatType,
     setRepeatType,
     repeatInterval,
@@ -102,5 +113,9 @@ export const useEventForm = (initialEvent?: Event) => {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    repeatEndType,
+    setRepeatEndType,
+    repeatCount,
+    setRepeatCount,
   };
 };
