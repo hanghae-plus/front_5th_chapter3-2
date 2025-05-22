@@ -3,10 +3,6 @@ import { expect, Page, test } from '@playwright/test';
 import { Event } from '../src/types';
 import { formatDate } from '../src/utils/dateUtils';
 
-// 일정의 각 항목을 작성하고 제출하면 캘린더와 목록에 표기된다.
-// 다음 달의 일정과 미리 알림을 설정하면, 다음 달 버튼을 클릭했을 때 캘린더에 일정과 함께 아이콘이 렌더링된다.
-// 2주 간격의 반복 일정을 다음 달 말일까지 등록하면, 반복 횟수에 따라 일정이 캘린더에 표시되고 다음 달 이동 버튼을 클릭해도 일정이 표기된다.
-
 const fillScheduleForm = async (page: Page, data: Omit<Event, 'id'>) => {
   await page.getByRole('button', { name: '일정 추가' }).click();
 
@@ -41,6 +37,11 @@ const fillScheduleForm = async (page: Page, data: Omit<Event, 'id'>) => {
     await proceedButton.click();
   }
 };
+
+// 일정의 각 항목을 작성하고 제출하면 캘린더와 목록에 표기된다
+// 다음 달 버튼을 클릭했을 때 목록과 캘린더에 저장된 반복 일정이 표기되고, 목록에서 반복 일정 수정 시 해당 항목만 수정된다.
+// 테스트로 생성된 반복 일정, 수정된 반복 일정을 다음 달 기록까지 모두 단일 제거로 제거한다.
+
 test.describe.serial('반복 일정 테스트', () => {
   const targetTitle = '반복 일정 1';
   test('일정의 각 항목을 작성하고 제출하면 캘린더와 목록에 표기된다', async ({ page }) => {
