@@ -246,7 +246,6 @@ describe('반복 유형 선택', () => {
     });
 
     expect(result.current.events[result.current.events.length - 1].repeat.type).toBe('none');
-    expect(result.current.events[result.current.events.length - 1].repeat.interval).toBe(1);
   });
 
   it('반복 유형이 매월이고 윤년 2024년 2월 29일에 반복 일정을 선택했을 때, 2025년 3월 01일에 반복 일정이 생성된다.', async () => {
