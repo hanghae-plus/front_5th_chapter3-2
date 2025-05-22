@@ -2,6 +2,7 @@ import { expect, Page, test } from '@playwright/test';
 
 import { Event } from '../src/types';
 import { formatDate } from '../src/utils/dateUtils';
+import { createTempEventFile, deleteTempEventFile } from '../tempJson';
 
 const fillScheduleForm = async (page: Page, data: Omit<Event, 'id'>) => {
   await page.getByRole('button', { name: '일정 추가' }).click();
@@ -38,30 +39,63 @@ const fillScheduleForm = async (page: Page, data: Omit<Event, 'id'>) => {
   }
 };
 
+const deleteAllEvents = async (page: Page, title: string) => {
+  const eventList = page.getByTestId('event-list');
+  let remaining = true;
+
+  while (remaining) {
+    const targetCard = eventList
+      .locator('[data-testid^="event-id-"]')
+      .filter({ hasText: title })
+      .first();
+
+    if ((await targetCard.count()) === 0) {
+      remaining = false;
+      break;
+    }
+
+    await targetCard.getByRole('button', { name: 'Delete event' }).click();
+    await page.waitForTimeout(100);
+  }
+};
+
 // 1. 일정의 각 항목을 작성하고 제출하면 캘린더와 목록에 표기된다
 // 2. 다음 달 버튼을 클릭했을 때 목록과 캘린더에 저장된 반복 일정이 표기되고, 목록에서 반복 일정 수정 시 해당 항목만 수정된다.
 // 3. 테스트로 생성된 반복 일정, 수정된 반복 일정을 다음 달 기록까지 모두 단일 제거로 제거한다.
 
-test.describe.serial('반복 일정 테스트', () => {
-  const targetTitle = '반복 일정 1';
-  test('일정의 각 항목을 작성하고 제출하면 캘린더와 목록에 표기된다', async ({ page }) => {
-    // 테스트 당시의 일자를 기준으로 테스트 이벤트를 생성
-    const now = new Date();
-    const date = formatDate(now, 10);
-    const endDate = formatDate(new Date(now.getFullYear(), now.getMonth() + 2, 0));
+const targetTitle = '반복 일정 1';
+const now = new Date();
+const date = formatDate(now, 10);
+const endDate = formatDate(new Date(now.getFullYear(), now.getMonth() + 2, 0));
 
+const event = {
+  title: targetTitle,
+  date,
+  startTime: '10:00',
+  endTime: '11:00',
+  description: '일정 1 설명',
+  location: '집',
+  category: '개인',
+  repeat: { type: 'weekly', interval: 2, endDate },
+  notificationTime: 60,
+} as const;
+
+let filePath: string;
+test.beforeAll(() => {
+  const result = createTempEventFile();
+  filePath = result.filePath;
+
+  process.env.EVENTS_JSON_PATH = filePath;
+});
+
+test.afterAll(() => {
+  deleteTempEventFile(filePath);
+});
+
+test.describe.serial('반복 일정 테스트', () => {
+  test('일정의 각 항목을 작성하고 제출하면 캘린더와 목록에 표기된다', async ({ page }) => {
     await page.goto('/');
-    await fillScheduleForm(page, {
-      title: targetTitle,
-      date,
-      startTime: '10:00',
-      endTime: '11:00',
-      description: '일정 1 설명',
-      location: '집',
-      category: '개인',
-      repeat: { type: 'weekly', interval: 2, endDate },
-      notificationTime: 60,
-    });
+    await fillScheduleForm(page, event);
 
     const monthView = page.getByTestId('month-view');
     const calendarEvents = monthView.locator('text=반복 일정 1');
@@ -79,11 +113,15 @@ test.describe.serial('반복 일정 테스트', () => {
     await page.getByRole('button', { name: 'Next' }).click();
 
     const monthView = page.getByTestId('month-view');
-    const calendarEvents = monthView.locator('text=반복 일정 1');
+    const calendarEvents = monthView
+      .locator('[data-testid^="event-id-"]')
+      .filter({ hasText: '반복 일정 1' });
     await expect(calendarEvents.first()).toBeVisible();
 
     const eventList = page.getByTestId('event-list');
-    const listEvents = eventList.locator('text=반복 일정 1');
+    const listEvents = eventList
+      .locator('[data-testid^="event-id-"]')
+      .filter({ hasText: '반복 일정 1' });
     await expect(listEvents.first()).toBeVisible();
 
     const targetEvent = eventList
@@ -111,6 +149,8 @@ test.describe.serial('반복 일정 테스트', () => {
 
     const updatedListEvents = eventList.locator('text=수정된 반복 해제 일정 1');
     await expect(updatedListEvents.first()).toBeVisible();
+
+    await page.goto('/');
   });
 
   test('테스트로 생성된 반복 일정, 수정된 반복 일정을 다음 달 기록까지 모두 단일 제거로 제거한다.', async ({
@@ -118,33 +158,13 @@ test.describe.serial('반복 일정 테스트', () => {
   }) => {
     await page.goto('/'); // 다시 5월부터 하나씩 삭제
 
-    const deleteAllEvents = async (title: string) => {
-      const eventList = page.getByTestId('event-list');
-      let remaining = true;
-
-      while (remaining) {
-        const targetCard = eventList
-          .locator('[data-testid^="event-id-"]')
-          .filter({ hasText: title })
-          .first();
-
-        if ((await targetCard.count()) === 0) {
-          remaining = false;
-          break;
-        }
-
-        await targetCard.getByRole('button', { name: 'Delete event' }).click();
-        await page.waitForTimeout(100);
-      }
-    };
-
-    await deleteAllEvents('반복 일정 1');
-    await deleteAllEvents('수정된 반복 해제 일정 1');
+    await deleteAllEvents(page, '반복 일정 1');
+    await deleteAllEvents(page, '수정된 반복 해제 일정 1');
 
     await page.getByRole('button', { name: 'Next' }).click();
 
-    await deleteAllEvents('반복 일정 1');
-    await deleteAllEvents('수정된 반복 해제 일정 1');
+    await deleteAllEvents(page, '반복 일정 1');
+    await deleteAllEvents(page, '수정된 반복 해제 일정 1');
 
     const monthView = page.getByTestId('month-view');
     await expect(monthView.locator('text=반복 일정 1')).toHaveCount(0);

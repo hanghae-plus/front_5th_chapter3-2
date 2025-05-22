@@ -11,9 +11,16 @@ const __dirname = path.resolve();
 
 app.use(express.json());
 
-const getEvents = async () => {
-  const data = await readFile(`${__dirname}/src/__mocks__/response/realEvents.json`, 'utf8');
+// 독립 환경 테스트 JSON 생성
+const getFilePath = () => {
+  return (
+    process.env.EVENTS_JSON_PATH ||
+    path.resolve(__dirname, 'src/__mocks__/response/realEvents.json')
+  );
+};
 
+const getEvents = async () => {
+  const data = await readFile(getFilePath(), 'utf8');
   return JSON.parse(data);
 };
 
@@ -26,12 +33,7 @@ app.post('/api/events', async (req, res) => {
   const events = await getEvents();
   const newEvent = { id: randomUUID(), ...req.body };
 
-  fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/realEvents.json`,
-    JSON.stringify({
-      events: [...events.events, newEvent],
-    })
-  );
+  fs.writeFileSync(getFilePath(), JSON.stringify({ events: [...events.events, newEvent] }));
 
   res.status(201).json(newEvent);
 });
@@ -44,12 +46,7 @@ app.put('/api/events/:id', async (req, res) => {
     const newEvents = [...events.events];
     newEvents[eventIndex] = { ...events.events[eventIndex], ...req.body };
 
-    fs.writeFileSync(
-      `${__dirname}/src/__mocks__/response/realEvents.json`,
-      JSON.stringify({
-        events: newEvents,
-      })
-    );
+    fs.writeFileSync(getFilePath(), JSON.stringify({ events: newEvents }));
 
     res.json(events.events[eventIndex]);
   } else {
@@ -62,10 +59,8 @@ app.delete('/api/events/:id', async (req, res) => {
   const id = req.params.id;
 
   fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/realEvents.json`,
-    JSON.stringify({
-      events: events.events.filter((event) => event.id !== id),
-    })
+    getFilePath(),
+    JSON.stringify({ events: events.events.filter((event) => event.id !== id) })
   );
 
   res.status(204).send();
@@ -88,7 +83,7 @@ app.post('/api/events-list', async (req, res) => {
   });
 
   fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/realEvents.json`,
+    getFilePath(),
     JSON.stringify({
       events: [...events.events, ...newEvents],
     })
@@ -111,12 +106,7 @@ app.put('/api/events-list', async (req, res) => {
   });
 
   if (isUpdated) {
-    fs.writeFileSync(
-      `${__dirname}/src/__mocks__/response/realEvents.json`,
-      JSON.stringify({
-        events: newEvents,
-      })
-    );
+    fs.writeFileSync(getFilePath(), JSON.stringify({ events: newEvents }));
 
     res.json(events.events);
   } else {
@@ -128,12 +118,7 @@ app.delete('/api/events-list', async (req, res) => {
   const events = await getEvents();
   const newEvents = events.events.filter((event) => !req.body.eventIds.includes(event.id)); // ? ids를 전달하면 해당 아이디를 기준으로 events에서 제거
 
-  fs.writeFileSync(
-    `${__dirname}/src/__mocks__/response/realEvents.json`,
-    JSON.stringify({
-      events: newEvents,
-    })
-  );
+  fs.writeFileSync(getFilePath(), JSON.stringify({ events: newEvents }));
 
   res.status(204).send();
 });
