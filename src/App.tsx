@@ -500,9 +500,11 @@ function App() {
                   <VStack align="start">
                     <HStack>
                       {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
-                      <Text as="span" aria-label="반복 일정 아이콘" fontSize="sm">
-                        🔁
-                      </Text>
+                      {event.repeat.type !== 'none' && (
+                        <Text as="span" aria-label="반복 일정 아이콘" fontSize="sm">
+                          🔁
+                        </Text>
+                      )}
                       <Text
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                         color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
