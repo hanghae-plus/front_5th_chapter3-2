@@ -45,7 +45,7 @@ import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { EndType, Event, EventForm, RepeatType } from './types';
 import {
   formatDate,
   formatMonth,
@@ -101,6 +101,10 @@ function App() {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    endType,
+    setEndType,
+    repeatEndCount,
+    setRepeatEndCount,
   } = useEventForm();
 
   const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
@@ -202,6 +206,9 @@ function App() {
                           <HStack spacing={1}>
                             {isNotified && <BellIcon />}
                             <Text fontSize="sm" noOfLines={1}>
+                              {event.repeat.type !== 'none' && (
+                                <span data-testid="repeating-tag">[반복]</span>
+                              )}
                               {event.title}
                             </Text>
                           </HStack>
@@ -271,6 +278,9 @@ function App() {
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
+                                    {event.repeat.type !== 'none' && (
+                                      <span data-testid="repeating-tag">[반복]</span>
+                                    )}
                                     {event.title}
                                   </Text>
                                 </HStack>
@@ -390,6 +400,14 @@ function App() {
                   <option value="yearly">매년</option>
                 </Select>
               </FormControl>
+              <FormControl>
+                <FormLabel>반복 종료 조건</FormLabel>
+                <Select value={endType} onChange={(e) => setEndType(e.target.value as EndType)}>
+                  <option value="date">특정 날짜</option>
+                  <option value="count">특정 횟수</option>
+                  <option value="none">종료 없음</option>
+                </Select>
+              </FormControl>
               <HStack width="100%">
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
@@ -400,14 +418,26 @@ function App() {
                     min={1}
                   />
                 </FormControl>
-                <FormControl>
-                  <FormLabel>반복 종료일</FormLabel>
-                  <Input
-                    type="date"
-                    value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
-                  />
-                </FormControl>
+                {endType === 'date' && (
+                  <FormControl>
+                    <FormLabel>반복 종료일</FormLabel>
+                    <Input
+                      type="date"
+                      value={repeatEndDate}
+                      onChange={(e) => setRepeatEndDate(e.target.value)}
+                    />
+                  </FormControl>
+                )}
+                {endType === 'count' && (
+                  <FormControl>
+                    <FormLabel>반복 횟수</FormLabel>
+                    <Input
+                      type="number"
+                      value={repeatEndCount}
+                      onChange={(e) => setRepeatEndCount(e.target.value)}
+                    />
+                  </FormControl>
+                )}
               </HStack>
             </VStack>
           )}
@@ -459,7 +489,14 @@ function App() {
             <Text>검색 결과가 없습니다.</Text>
           ) : (
             filteredEvents.map((event) => (
-              <Box key={event.id} borderWidth={1} borderRadius="lg" p={3} width="100%">
+              <Box
+                key={event.id}
+                borderWidth={1}
+                borderRadius="lg"
+                p={3}
+                width="100%"
+                data-testid="calendar-event"
+              >
                 <HStack justifyContent="space-between">
                   <VStack align="start">
                     <HStack>
@@ -467,6 +504,7 @@ function App() {
                       <Text
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                         color={notifiedEvents.includes(event.id) ? 'red.500' : 'inherit'}
+                        data-testid="calendar-event-title"
                       >
                         {event.title}
                       </Text>
@@ -479,7 +517,7 @@ function App() {
                     <Text>{event.location}</Text>
                     <Text>카테고리: {event.category}</Text>
                     {event.repeat.type !== 'none' && (
-                      <Text>
+                      <Text data-testid="repeat-info">
                         반복: {event.repeat.interval}
                         {event.repeat.type === 'daily' && '일'}
                         {event.repeat.type === 'weekly' && '주'}
