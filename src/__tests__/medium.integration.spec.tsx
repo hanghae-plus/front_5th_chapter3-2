@@ -275,12 +275,25 @@ describe('반복 종료', () => {
 });
 
 describe('반복 일정 수정', () => {
-  it('반복 일정을 수정하면 단일 일정으로 변경되어야 한다', () => {
+  it('반복 일정을 수정하면 단일 일정으로 변경되어야 한다', async () => {
+    setupMockHandlerUpdating();
     const { user } = setup(<App />);
+
+    const editButton = (await screen.findAllByLabelText('Edit event'))[0]; // 반복 일정 인덱스
+    await user.click(editButton);
+
+    const repeatCheckbox = screen.getAllByTestId('repeat-settings-checkbox');
+    const checkboxInput = within(repeatCheckbox[0]).getByRole('checkbox');
+    expect(checkboxInput).toBeChecked();
+
+    await user.click(checkboxInput);
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const eventList = await screen.findByTestId('event-list');
+    expect(within(eventList).getByText('반복')).not.toBeInTheDocument();
   });
 
   it('반복 일정 수정 후 반복 아이콘이 사라져야 한다', async () => {
-    const { user } = setup(<App />);
     setupMockHandlerUpdating();
     setup(<App />);
     const calendarView = await screen.findByTestId('calendar-view');
