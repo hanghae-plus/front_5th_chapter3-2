@@ -60,7 +60,6 @@ test.describe('반복일정 추가', () => {
     }
 
     const lastEvent = page.getByTestId('event-card').last();
-    await lastEvent.scrollIntoViewIfNeeded();
     await expect(lastEvent).toBeVisible();
     await expect(lastEvent).toContainText(title);
     await expect(lastEvent).toContainText('반복: 1주마다 (종료: 2025-10-01)');
@@ -113,7 +112,6 @@ test.describe('반복일정 수정', () => {
       await page.waitForSelector('text=일정이 수정되었습니다');
     }
 
-    await lastEvent.scrollIntoViewIfNeeded();
     await expect(lastEvent).toContainText(updatedTitle);
     await expect(lastEvent).not.toContainText('반복: 5주마다 (종료: 2025-06-15)');
   });
