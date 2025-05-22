@@ -14,7 +14,7 @@ import App from '../App';
 import { useEventOperations } from '../hooks/useEventOperations';
 import { server } from '../setupTests';
 import { Event } from '../types';
-import { validateRepeatEndDate } from '../../utils/validate';
+import { validateRepeatEndDate } from '../utils/validate';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
