@@ -102,7 +102,7 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, setEvents, saveEvent, deleteEvent, saveRepeatEvents } = useEventOperations(
+  const { events, saveEvent, deleteEvent, saveRepeatEvents } = useEventOperations(
     Boolean(editingEvent),
     () => setEditingEvent(null)
   );
