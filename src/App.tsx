@@ -383,7 +383,15 @@ function App() {
 
           <FormControl>
             <FormLabel>반복 설정</FormLabel>
-            <Checkbox isChecked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)}>
+            <Checkbox
+              isChecked={isRepeating}
+              onChange={(e) => {
+                setIsRepeating(e.target.checked);
+                if (e.target.checked) {
+                  setRepeatType('daily'); // 체크박스 선택 시 기본값을 'daily'로 설정
+                }
+              }}
+            >
               반복 일정
             </Checkbox>
           </FormControl>
