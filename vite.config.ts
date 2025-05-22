@@ -16,14 +16,17 @@ export default mergeConfig(
   }),
   defineTestConfig({
     test: {
-      globals: true,
       environment: 'jsdom',
-      setupFiles: './src/setupTests.ts',
-      coverage: {
-        reportsDirectory: './.coverage',
-        reporter: ['lcov', 'json', 'json-summary'],
-      },
-      exclude: ['src/e2e/**'],
+      setupFiles: ['./src/setupTests.ts'],
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/cypress/**',
+        '**/.{idea,git,cache,output,temp}/**',
+        '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsconfig}.config.*',
+        '**/e2e/**',
+      ],
+      globals: true,
     },
   })
 );
