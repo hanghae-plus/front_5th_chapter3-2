@@ -8,6 +8,9 @@ import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
   setupMockHandlerUpdating,
+  setupMockRepeatHandlerCreateion,
+  setupMockRepeatHandlerDeletion,
+  setupMockRepeatHandlerUpdation,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
@@ -34,6 +37,31 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
+
+  await user.click(screen.getByTestId('event-submit-button'));
+};
+
+const saveRepeatSchedule = async (
+  user: UserEvent,
+  form: Omit<Event, 'id' | 'notificationTime'>
+) => {
+  const { title, date, startTime, endTime, location, description, category, repeat } = form;
+
+  await user.click(screen.getAllByText('일정 추가')[0]);
+
+  await user.type(screen.getByLabelText('제목'), title);
+  await user.type(screen.getByLabelText('날짜'), date);
+  await user.type(screen.getByLabelText('시작 시간'), startTime);
+  await user.type(screen.getByLabelText('종료 시간'), endTime);
+  await user.type(screen.getByLabelText('설명'), description);
+  await user.type(screen.getByLabelText('위치'), location);
+  await user.selectOptions(screen.getByLabelText('카테고리'), category);
+
+  await user.click(screen.getByLabelText('반복 일정'));
+  await user.selectOptions(screen.getByLabelText('반복 유형'), repeat.type);
+  await user.clear(screen.getByLabelText('반복 간격'));
+  await user.type(screen.getByLabelText('반복 간격'), String(repeat.interval));
+  if (repeat.endDate) await user.type(screen.getByLabelText('반복 종료일'), repeat.endDate);
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -324,19 +352,47 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 });
 
 describe('일정 반복', () => {
-  it('반복 일정 "매일"을 선택하여 특정한 일정이 매일 표시됩니다..', async () => {});
+  afterEach(() => {
+    server.resetHandlers();
+  });
 
-  it('반복 일정 "매달"을 선택하여 특정한 일정이 매달 표시됩니다.', async () => {});
+  it('반복 일정 "매일"을 선택하여 특정한 일정이 매일 표시됩니다..', async () => {
+    setupMockRepeatHandlerCreateion();
 
-  it('반복 일정 "매년"을 선택하여 특정한 일정이 매년 표시됩니다.', async () => {});
+    const { user } = setup(<App />);
 
-  it('반복 간격을 "2일"로 설정하여 특정 일정이 2일마다 표시됩니다.', async () => {});
+    await saveRepeatSchedule(user, {
+      title: '새로운 반복일정',
+      date: '2025-10-01',
+      startTime: '09:30',
+      endTime: '10:30',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        endDate: '2025-10-05',
+      },
+    });
 
-  it('반복 간격을 "3달"로 설정하여 특정 일정이 3달마다 표시됩니다.'), async () => {};
+    const calendar = within(screen.getByTestId('month-view'));
 
-  it('반복 일정의 종료날짜를 지정하여, 종료 날짜 이후에 일정이 반복되지 않도록 합니다.', async () => {});
+    expect(calendar.getAllByText('새로운 반복일정')).toHaveLength(5);
+    expect(calendar.getAllByText('⏲️')).toHaveLength(5);
+  });
 
-  it('반복일정을 수정하면 단일 일정으로 표시됩니다.', async () => {});
+  it.skip('반복 일정 "매달"을 선택하여 특정한 일정이 매달 표시됩니다.', async () => {});
 
-  it('반복일정을 삭제하면 해당 일정만 삭제합니다..', async () => {});
+  it.skip('반복 일정 "매년"을 선택하여 특정한 일정이 매년 표시됩니다.', async () => {});
+
+  it.skip('반복 간격을 "2일"로 설정하여 특정 일정이 2일마다 표시됩니다.', async () => {});
+
+  it.skip('반복 간격을 "3달"로 설정하여 특정 일정이 3달마다 표시됩니다.'), async () => {};
+
+  it.skip('반복 일정의 종료날짜를 지정하여, 종료 날짜 이후에 일정이 반복되지 않도록 합니다.', async () => {});
+
+  it.skip('반복일정을 수정하면 단일 일정으로 표시됩니다.', async () => {});
+
+  it.skip('반복일정을 삭제하면 해당 일정만 삭제합니다..', async () => {});
 });
