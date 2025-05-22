@@ -606,7 +606,11 @@ function App() {
                 <HStack justifyContent="space-between">
                   <VStack align="start">
                     <HStack>
-                      {event.repeat.type !== 'none' && event.repeat.id && <Text mr={1}>🔁</Text>}
+                      {event.repeat.type !== 'none' && event.repeat.id && (
+                        <Text data-testid={`repeat-indicator-${event.id}`} mr={1}>
+                          🔁
+                        </Text>
+                      )}
                       {notifiedEvents.includes(event.id) && <BellIcon color="red.500" />}
                       <Text
                         fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}

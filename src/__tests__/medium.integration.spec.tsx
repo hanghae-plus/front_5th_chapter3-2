@@ -303,15 +303,17 @@ describe('일정 충돌', () => {
     const { user } = setup(<App />);
 
     const editButton = (await screen.findAllByLabelText('Edit event'))[1];
-    await user.click(editButton);
+    await act(async () => {
+      await user.click(editButton);
 
-    // 시간 수정하여 다른 일정과 충돌 발생
-    await user.clear(screen.getByLabelText('시작 시간'));
-    await user.type(screen.getByLabelText('시작 시간'), '08:30');
-    await user.clear(screen.getByLabelText('종료 시간'));
-    await user.type(screen.getByLabelText('종료 시간'), '10:30');
+      // 시간 수정하여 다른 일정과 충돌 발생
+      await user.clear(screen.getByLabelText('시작 시간'));
+      await user.type(screen.getByLabelText('시작 시간'), '08:30');
+      await user.clear(screen.getByLabelText('종료 시간'));
+      await user.type(screen.getByLabelText('종료 시간'), '10:30');
 
-    await user.click(screen.getByTestId('event-submit-button'));
+      await user.click(screen.getByTestId('event-submit-button'));
+    });
 
     expect(screen.getByText('일정 겹침 경고')).toBeInTheDocument();
     expect(screen.getByText(/다음 일정과 겹칩니다/)).toBeInTheDocument();
@@ -432,10 +434,19 @@ describe('반복 일정 기능 통합 테스트', () => {
     server.use(
       http.post('/api/events-list', async ({ request }) => {
         apiCalled = true;
-        const jsonData = await request.json();
+        const jsonData = (await request.json()) as { events: EventForm[] }; // 예상되는 요청 구조라고 가정합니다.
         capturedRequestData = jsonData;
-        // 응답 생성 코드
-        return HttpResponse.json(/* ... */);
+
+        // 실제 server.js가 하는 것과 유사하게 성공적인 응답을 시뮬레이션합니다.
+        const responseEvents = jsonData.events.map((event, index) => ({
+          ...event,
+          id: `mock-id-${index}-${Date.now()}`, // ID 생성을 시뮬레이션합니다.
+          repeat: {
+            ...event.repeat,
+            id: event.repeat?.id || `mock-repeat-group-${Date.now()}`, // 반복 그룹 ID를 시뮬레이션합니다.
+          },
+        }));
+        return HttpResponse.json(responseEvents, { status: 201 }); // 생성된 이벤트를 201 상태 코드와 함께 반환합니다.
       })
     );
 
@@ -806,7 +817,11 @@ describe('반복 종료 조건 통합 테스트', () => {
 describe('반복 일정 단일 수정 통합 테스트', () => {
   const initialRepeatingEventId = 'repeat-event-to-modify-id';
   const initialRepeatGroupId = 'group-xyz';
-  const initialEvents: Event[] = [
+
+  let eventsListForTest: Event[];
+
+  const initialEventsSetup: Event[] = [
+    // 원본 데이터는 불변으로 유지
     {
       id: initialRepeatingEventId,
       title: '주간 정기 회의',
@@ -847,14 +862,25 @@ describe('반복 일정 단일 수정 통합 테스트', () => {
 
   beforeEach(() => {
     updatedEventPayload = null;
+    // 각 테스트 시작 시 eventsListForTest를 초기화합니다.
+    eventsListForTest = JSON.parse(JSON.stringify(initialEventsSetup)); // 깊은 복사로 원본 불변성 유지
+
     server.use(
       http.get('/api/events', () => {
-        return HttpResponse.json({ events: [...initialEvents] });
+        // 수정된 내용을 반영한 eventsListForTest를 반환합니다.
+        return HttpResponse.json({ events: eventsListForTest });
       }),
       http.put('/api/events/:id', async ({ request, params }) => {
-        const eventId = params.id;
+        const eventId = params.id as string;
         const newEventData = (await request.json()) as Event;
-        updatedEventPayload = { ...newEventData, id: eventId as string };
+        updatedEventPayload = { ...newEventData, id: eventId };
+        console.log('PUT 핸들러 updatedEventPayload:', updatedEventPayload);
+        // eventsListForTest를 업데이트하여 GET 요청 시 최신 상태를 반영하도록 합니다.
+        const eventIndex = eventsListForTest.findIndex((e) => e.id === eventId);
+        if (eventIndex !== -1) {
+          eventsListForTest[eventIndex] = updatedEventPayload;
+        }
+
         return HttpResponse.json(updatedEventPayload, { status: 200 });
       })
     );
@@ -884,35 +910,46 @@ describe('반복 일정 단일 수정 통합 테스트', () => {
     ) as HTMLElement;
     const editButton = within(targetEventContainer).getByLabelText('Edit event');
 
-    // 수정 전 반복 아이콘 확인
+    // 수정 전 반복 아이콘 확인 (App.tsx에 data-testid 추가 필요)
+    // 이전 답변에서 App.tsx의 오른쪽 사이드바 반복 아이콘에 data-testid 추가를 제안했습니다.
+    // 해당 수정이 적용되었다고 가정합니다.
     expect(
       within(targetEventContainer).getByTestId(`repeat-indicator-${initialRepeatingEventId}`)
     ).toBeInTheDocument();
 
-    await user.click(editButton);
+    await act(async () => {
+      await user.click(editButton);
+    });
 
-    // 일정 제목 수정
     const titleInput = screen.getByLabelText('제목');
-    await user.clear(titleInput);
-    await user.type(titleInput, '변경된 주간 회의 (단일)');
+    await act(async () => {
+      await user.clear(titleInput);
+      await user.type(titleInput, '수정된 회의');
+    });
 
-    // "일정 수정" 버튼 클릭
     const submitButton = screen.getByTestId('event-submit-button');
-    await user.click(submitButton);
+    await act(async () => {
+      await user.click(submitButton);
+    });
 
-    // API 호출 검증
+    // API 호출 검증 (이미 payload는 beforeEach에서 처리됨)
     await waitFor(() => expect(updatedEventPayload).not.toBeNull());
     expect(updatedEventPayload?.id).toBe(initialRepeatingEventId);
     expect(updatedEventPayload?.title).toBe('변경된 주간 회의 (단일)');
-    expect(updatedEventPayload?.repeat.type).toBe('none');
+    expect(updatedEventPayload?.repeat.type).toBe('none'); // 단일 일정으로 변경 확인
     expect(updatedEventPayload?.repeat.id).toBeUndefined();
 
-    // UI 검증: 수정된 일정이 단일 일정으로 표시
-    await screen.findByText('일정이 수정되었습니다.');
+    // UI 검증: 수정된 일정이 단일 일정으로 표시 (toast 메시지 후 UI 업데이트 확인)
+    await screen.findByText('일정이 수정되었습니다.'); // 이 toast가 표시되면 fetchEvents가 완료된 후
 
-    const updatedEventItemContainer = within(eventList)
-      .getByText('변경된 주간 회의 (단일)')
-      .closest('[data-testid^="event-"]') as HTMLElement;
+    // UI에서 변경된 제목으로 요소를 다시 찾습니다.
+    const updatedEventItemContainer = await within(eventList)
+      .findByText('변경된 주간 회의 (단일)') // findByText로 변경된 텍스트를 기다립니다.
+      .then((el) => el.closest('[data-testid^="event-"]') as HTMLElement);
+
+    expect(updatedEventItemContainer).toBeInTheDocument();
+
+    // 수정된 일정에서 반복 아이콘이 사라졌는지 확인
     expect(
       within(updatedEventItemContainer).queryByTestId(`repeat-indicator-${initialRepeatingEventId}`)
     ).not.toBeInTheDocument();
@@ -948,29 +985,44 @@ describe('반복 일정 단일 수정 통합 테스트', () => {
     await screen.findByText('일정 로딩 완료!');
 
     const eventList = screen.getByTestId('event-list');
-    const targetEventContainer = within(eventList)
-      .getByText('주간 정기 회의')
-      .closest('[data-testid^="event-"]') as HTMLElement;
+    const allRepeatingEventItems = within(eventList).getAllByText('주간 정기 회의');
+    const targetEventDisplay = allRepeatingEventItems.find((el) =>
+      within(el.closest('[data-testid^="event-"]')!).getByText('2025-10-06')
+    );
+    if (!targetEventDisplay) throw new Error('2025-10-06 대상 일정을 리스트에서 찾을 수 없습니다.');
+
+    const targetEventContainer = targetEventDisplay.closest(
+      '[data-testid^="event-"]'
+    ) as HTMLElement;
     const editButton = within(targetEventContainer).getByLabelText('Edit event');
 
-    await user.click(editButton);
-
-    const titleInput = screen.getByLabelText('제목');
-    await user.clear(titleInput);
-    await user.type(titleInput, '수정된 회의');
-
-    const submitButton = screen.getByTestId('event-submit-button');
-    await user.click(submitButton);
-
-    await waitFor(() => {
-      expect(screen.getByText('일정 저장 실패')).toBeInTheDocument();
+    await act(async () => {
+      await user.click(editButton);
     });
 
-    // 편집 상태가 유지되어야 함
+    // titleInput을 여기서 한 번 가져옵니다.
+    let titleInput = screen.getByLabelText('제목');
+    await act(async () => {
+      await user.clear(titleInput);
+      await user.type(titleInput, '수정된 회의');
+    });
+
+    const submitButton = screen.getByTestId('event-submit-button');
+    await act(async () => {
+      await user.click(submitButton);
+    });
+
+    await screen.findByText('일정 저장 실패'); // API 실패 토스트 메시지를 기다립니다.
+
+    // 토스트 메시지 확인 후, titleInput 요소를 다시 가져옵니다.
+    // 리렌더링으로 인해 참조가 달라졌을 수 있습니다.
+    titleInput = screen.getByLabelText('제목');
+
+    // 편집 상태(입력 값)가 유지되어야 함
     expect(titleInput).toHaveValue('수정된 회의');
   });
 
-  // === 🔄 경계값 테스트 ===
+  // === 경계값 테스트 ===
 
   it('잘못된 반복 설정을 가진 일정 편집 시 단일 일정으로 처리되어야 한다', async () => {
     const invalidEvent: Event = {
