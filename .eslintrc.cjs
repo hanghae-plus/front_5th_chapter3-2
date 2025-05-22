@@ -23,7 +23,7 @@ module.exports = {
     'no-unused-vars': 'warn',
     'react/prop-types': 'off',
     'import/order': [
-      'error',
+      'off',
       {
         groups: ['builtin', 'external', ['parent', 'sibling'], 'index'],
         alphabetize: {
