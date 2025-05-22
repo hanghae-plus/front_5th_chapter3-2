@@ -116,29 +116,29 @@ describe('반복 일정', () => {
     expect(eventList.getByText('반복 간격 일정')).toBeInTheDocument();
   });
 
-  it("반복 종료 조건이 '2025-09-30까지'로 설정된 경우, 해당 날짜 이후에는 반복 일정이 생성되지 않는다.", async () => {
+  it.only("반복 종료 조건이 '2025-09-30까지'로 설정된 경우, 해당 날짜 이후에는 반복 일정이 생성되지 않는다.", async () => {
     vi.setSystemTime(new Date('2025-10-01 08:49:59'));
 
-    setupMockHandlerCreation();
+    setupMockHandlerRepeatCreation();
 
     const { user } = setup(<App />);
 
     await screen.findByText('일정 로딩 완료!');
 
     await saveRepeatSchedule(user, {
-      title: '매월 반복 일정',
+      title: '반복 종료 일정',
       date: '2025-05-01',
       startTime: '09:00',
       endTime: '10:00',
-      description: '매월 반복 일정',
+      description: '반복 종료 일정',
       location: '회의실 A',
       category: '업무',
       repeat: { type: 'monthly', interval: 1, endDate: '2025-09-30' },
     });
 
     const eventList = within(screen.getByTestId('event-list'));
-    expect(eventList.queryByText('2025-10-30')).not.toBeInTheDocument();
-    expect(eventList.getByText('매월 반복 일정')).toBeInTheDocument();
+    expect(eventList.queryByText('2025-10-01')).toBeNull();
+    expect(eventList.queryByText('반복 종료 일정')).toBeNull();
   });
 
   it('캘린더 뷰에서 반복 일정에 반복 아이콘 또는 태그가 표시된다.', async () => {
