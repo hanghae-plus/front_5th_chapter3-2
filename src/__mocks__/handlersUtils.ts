@@ -92,3 +92,134 @@ export const setupMockHandlerDeletion = () => {
     })
   );
 };
+
+export const setupMockHandlerRepeatCreation = (responseEvents: Event[] = []) => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '기존 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '기존 팀 미팅',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.post('/api/events-list', async ({ request }) => {
+      const { events } = (await request.json()) as { events: Event[] };
+      const newEvents = events.map((event, index) => {
+        const isRepeatEvent = event.repeat.type !== 'none';
+        return {
+          ...event,
+          id: `repeat-${Date.now()}-${index}`, // 고유 ID 생성
+          repeat: {
+            ...event.repeat,
+            id: isRepeatEvent ? `repeat-group-${Date.now()}` : undefined,
+          },
+        };
+      });
+
+      // responseEvents가 제공되면 그것을 반환, 아니면 생성된 이벤트 반환
+      return HttpResponse.json(responseEvents.length > 0 ? responseEvents : newEvents, {
+        status: 201,
+      });
+    })
+  );
+};
+
+// 반복 일정 수정용 mock handler
+export const setupMockHandlerRepeatUpdating = (responseEvents: Event[] = []) => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '기존 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '기존 팀 미팅',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.put('/api/events-list', async ({ request }) => {
+      const { events } = (await request.json()) as { events: Event[] };
+
+      // 각 이벤트를 업데이트 처리
+      events.forEach((event) => {
+        const index = mockEvents.findIndex((mockEvent) => mockEvent.id === event.id);
+        if (index > -1) {
+          mockEvents[index] = { ...mockEvents[index], ...event };
+        }
+      });
+
+      // responseEvents가 제공되면 그것을 반환, 아니면 업데이트된 이벤트 반환
+      return HttpResponse.json(responseEvents.length > 0 ? responseEvents : events, {
+        status: 200,
+      });
+    })
+  );
+};
+
+// 반복 일정 삭제용 mock handler
+export const setupMockHandlerRepeatDeletion = () => {
+  const mockEvents: Event[] = [
+    {
+      id: '1',
+      title: '기존 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '기존 팀 미팅',
+      location: '회의실 B',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    },
+    {
+      id: 'repeat-1',
+      title: '삭제될 반복 회의',
+      date: '2025-10-16',
+      startTime: '11:00',
+      endTime: '12:00',
+      description: '삭제될 반복 일정',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1 },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockEvents });
+    }),
+    http.delete('/api/events-list', async ({ request }) => {
+      const { eventIds } = (await request.json()) as { eventIds: string[] };
+
+      // 지정된 ID들을 mockEvents에서 제거
+      eventIds.forEach((id) => {
+        const index = mockEvents.findIndex((event) => event.id === id);
+        if (index > -1) {
+          mockEvents.splice(index, 1);
+        }
+      });
+
+      return new HttpResponse(null, { status: 204 });
+    })
+  );
+};

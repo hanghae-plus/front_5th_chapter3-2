@@ -10,12 +10,28 @@ export const getNextOccurrence = (event: Event, startDate: Date): Date => {
   }
 
   switch (event.repeat.type) {
-    case 'daily':
-      nextDate.setDate(startDate.getDate() + event.repeat.interval);
+    case 'daily': {
+      // eventDate를 기준으로 시작
+      let candidateDate = new Date(eventDate);
+      // startDate 이후가 될 때까지 일수를 추가
+      while (candidateDate <= startDate) {
+        candidateDate.setDate(candidateDate.getDate() + event.repeat.interval);
+      }
+
+      nextDate.setTime(candidateDate.getTime());
       break;
-    case 'weekly':
-      nextDate.setDate(startDate.getDate() + 7 * event.repeat.interval);
+    }
+    case 'weekly': {
+      // eventDate를 기준으로 시작
+      let candidateDate = new Date(eventDate);
+      // startDate 이후가 될 때까지 주수를 추가
+      while (candidateDate <= startDate) {
+        candidateDate.setDate(candidateDate.getDate() + 7 * event.repeat.interval);
+      }
+
+      nextDate.setTime(candidateDate.getTime());
       break;
+    }
     case 'monthly': {
       // eventDate를 기준으로 시작
       const originalYear = eventDate.getFullYear();
