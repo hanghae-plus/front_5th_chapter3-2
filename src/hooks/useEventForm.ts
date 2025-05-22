@@ -27,7 +27,7 @@ export const useEventForm = (initialEvent?: Event) => {
   const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
 
-  // 새로 추가된 상태
+  // 종료 조건 상태
   const [repeatEndType, setRepeatEndType] = useState<RepeatEndType>(() => {
     if (initialEvent) {
       if (initialEvent.repeat.maxOccurrences) return 'count';
@@ -46,6 +46,12 @@ export const useEventForm = (initialEvent?: Event) => {
     startTimeError: null,
     endTimeError: null,
   });
+
+  // 반복일정을 편집 중인지 확인하는 함수
+  const isEditingRepeatingEvent = () => {
+    const eventToCheck = editingEvent || initialEvent;
+    return eventToCheck && eventToCheck.repeat.type !== 'none';
+  };
 
   // 안전하게 repeatMaxOccurrences를 설정하는 함수
   const setRepeatMaxOccurrences = (value: number | string | undefined) => {
@@ -98,6 +104,13 @@ export const useEventForm = (initialEvent?: Event) => {
 
   // RepeatInfo 객체 생성 함수
   const createRepeatInfo = (): RepeatInfo => {
+    if (isEditingRepeatingEvent()) {
+      return {
+        type: 'none',
+        interval: 1,
+      };
+    }
+
     const baseRepeatInfo: RepeatInfo = {
       type: repeatType,
       interval: repeatInterval,
@@ -161,6 +174,7 @@ export const useEventForm = (initialEvent?: Event) => {
     setDescription(event.description);
     setLocation(event.location);
     setCategory(event.category);
+
     setIsRepeating(event.repeat.type !== 'none');
     setRepeatType(event.repeat.type);
     setRepeatIntervalState(event.repeat?.interval !== undefined ? event.repeat.interval : 1);
@@ -223,5 +237,6 @@ export const useEventForm = (initialEvent?: Event) => {
     resetForm,
     editEvent,
     createRepeatInfo,
+    isEditingRepeatingEvent,
   };
 };
