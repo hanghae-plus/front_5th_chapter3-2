@@ -13,18 +13,19 @@ import App from '../App';
 import { server } from '../setupTests';
 import { Event } from '../types';
 
+// ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
   const user = userEvent.setup();
 
-  return { ...render(<ChakraProvider>{element}</ChakraProvider>), user };
+  return { ...render(<ChakraProvider>{element}</ChakraProvider>), user }; // ? Med: 왜 ChakraProvider로 감싸는지 물어보자
 };
 
+// ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> &
-    Partial<Pick<Event, 'repeat' | 'notificationTime'>>
+  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'>
 ) => {
-  const { title, date, startTime, endTime, location, description, category, repeat } = form;
+  const { title, date, startTime, endTime, location, description, category } = form;
 
   await user.click(screen.getAllByText('일정 추가')[0]);
 
@@ -35,10 +36,6 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
-
-  if (repeat?.type !== 'none') {
-    user.click(screen.getByLabelText('반복 설정'));
-  }
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -58,6 +55,8 @@ describe('일정 CRUD 및 기본 기능', () => {
       location: '회의실 A',
       category: '업무',
     });
+    const eventListDOM = screen.getByTestId('event-list');
+    screen.debug(eventListDOM);
 
     const eventList = within(screen.getByTestId('event-list'));
     expect(eventList.getByText('새 회의')).toBeInTheDocument();

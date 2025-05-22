@@ -138,6 +138,17 @@ function App() {
       return;
     }
 
+    const repeat = editingEvent
+      ? {
+          type: 'none' as RepeatType,
+          interval: 0,
+        }
+      : {
+          type: isRepeating ? repeatType : 'none',
+          interval: repeatInterval,
+          endDate: repeatEndDate || undefined,
+        };
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -147,11 +158,7 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat,
       notificationTime,
     };
 
@@ -160,10 +167,16 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      isRepeating ? await saveRepeatEvent(eventData) : await saveEvent(eventData);
+      if (isRepeating) {
+        await saveRepeatEvent(eventData);
+      } else {
+        await saveEvent(eventData);
+      }
+
       resetForm();
     }
   };
+
   //TODO - repeat icon 추가
   const renderWeekView = () => {
     const weekDates = getWeekDates(currentDate);
