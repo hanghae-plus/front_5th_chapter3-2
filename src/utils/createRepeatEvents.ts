@@ -1,5 +1,15 @@
-import { Event } from '../types';
+import { Event, RepeatInfo } from '../types';
 import { formatDate, getNextRepeatDate } from './dateUtils';
+
+const isDateLimitReached = (nextDate: Date | null, endDate: Date, maxDate: Date): boolean => {
+  if (!nextDate) return true;
+  return nextDate > endDate || nextDate > maxDate;
+};
+
+const isCountLimitReached = (repeat: RepeatInfo, repeatEventsLength: number): boolean => {
+  if (repeat.endType !== 'count') return false;
+  return repeatEventsLength >= (repeat.endCount || 1);
+};
 
 export const createRepeatEvents = (event: Event): Event[] => {
   const { repeat } = event;
@@ -18,7 +28,7 @@ export const createRepeatEvents = (event: Event): Event[] => {
   const repeatGroupId = `repeat-${event.id}`;
 
   while (currentDate <= endDate && currentDate <= maxDate) {
-    const newEvent: Event = {
+    repeatEvents.push({
       ...event,
       id: `${eventIdCounter}`,
       date: formatDate(currentDate),
@@ -26,15 +36,14 @@ export const createRepeatEvents = (event: Event): Event[] => {
         ...event.repeat,
         id: repeatGroupId,
       },
-    };
-    repeatEvents.push(newEvent);
+    });
 
     const nextDate = getNextRepeatDate(currentDate, repeat.type, repeat.interval || 1);
-    if (!nextDate || nextDate > endDate || nextDate > maxDate) break;
-
-    if (repeat.endType === 'count' && repeatEvents.length >= (repeat.endCount || 1)) {
+    if (
+      isDateLimitReached(nextDate, endDate, maxDate) ||
+      isCountLimitReached(repeat, repeatEvents.length)
+    )
       break;
-    }
 
     currentDate = nextDate;
     eventIdCounter++;
