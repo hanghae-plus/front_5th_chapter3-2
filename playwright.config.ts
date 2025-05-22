@@ -13,10 +13,17 @@ export default defineConfig({
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  webServer: {
-    command: 'pnpm run dev',
-    port: 5173,
-    timeout: 120 * 1000,
-    reuseExistingServer: true,
-  },
+  webServer: [
+    {
+      command: 'pnpm run start',
+      port: 5173,
+      timeout: 120 * 1000,
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: 'node server-e2e.js',
+      port: 3000,
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 });
