@@ -248,7 +248,7 @@ describe('반복 일정', () => {
 
       expect(result.current.events).toHaveLength(3);
       expect(result.current.events[0].date).toBe('2025-10-16');
-      expect(result.current.events[-1].date).toBe('2025-10-18');
+      expect(result.current.events[1].date).toBe('2025-10-18');
     });
 
     it('윤년 29일에 반복 일정 설정하면 윤년 29일에만 표시를 한다.', async () => {
