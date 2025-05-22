@@ -220,22 +220,4 @@ describe('getRepeatDates', () => {
     const repeatDates = getRepeatDates(today, repeatOptions);
     expect(repeatDates).toEqual(['2025-05-05', '2025-06-05']);
   });
-
-  it('반복 횟수가 존재할 경우 해당 횟수만큼만 반복한다.', () => {
-    const today = new Date('2025-05-05');
-    const count = 5;
-    const repeatOptions = {
-      type: 'daily',
-      interval: 1,
-      count,
-    };
-    const repeatDates = getRepeatDates(today, repeatOptions);
-    expect(repeatDates).toEqual([
-      '2025-05-05',
-      '2025-05-06',
-      '2025-05-07',
-      '2025-05-08',
-      '2025-05-09',
-    ]);
-  });
 });

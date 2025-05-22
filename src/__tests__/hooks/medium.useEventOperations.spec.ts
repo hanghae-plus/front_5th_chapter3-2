@@ -201,7 +201,7 @@ it('반복 일정 추가시 해당 조건 만큼 반복되는 일정이 생성�
     description: '새로운 팀 미팅',
     location: '회의실 A',
     category: '업무',
-    repeat: { type: 'daily', interval: 5, count: 5 },
+    repeat: { type: 'daily', interval: 5 },
     notificationTime: 5,
   };
   const repeatEvent: Event[] = [
@@ -214,7 +214,7 @@ it('반복 일정 추가시 해당 조건 만큼 반복되는 일정이 생성�
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, count: 5 },
+      repeat: { type: 'daily', interval: 5 },
       notificationTime: 5,
     },
     {
@@ -226,7 +226,7 @@ it('반복 일정 추가시 해당 조건 만큼 반복되는 일정이 생성�
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, count: 5 },
+      repeat: { type: 'daily', interval: 5 },
       notificationTime: 5,
     },
     {
@@ -238,7 +238,7 @@ it('반복 일정 추가시 해당 조건 만큼 반복되는 일정이 생성�
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, count: 5 },
+      repeat: { type: 'daily', interval: 5 },
       notificationTime: 5,
     },
     {
@@ -250,7 +250,7 @@ it('반복 일정 추가시 해당 조건 만큼 반복되는 일정이 생성�
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, count: 5 },
+      repeat: { type: 'daily', interval: 5 },
       notificationTime: 5,
     },
     {
@@ -262,7 +262,7 @@ it('반복 일정 추가시 해당 조건 만큼 반복되는 일정이 생성�
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, count: 5 },
+      repeat: { type: 'daily', interval: 5 },
       notificationTime: 5,
     },
   ];
@@ -285,7 +285,7 @@ it('반복 일정 수정 시, 일정을 해제?할 경우 단일 일정으로 �
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, count: 5 },
+      repeat: { type: 'daily', interval: 5 },
       notificationTime: 5,
     },
     {
@@ -297,7 +297,7 @@ it('반복 일정 수정 시, 일정을 해제?할 경우 단일 일정으로 �
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, count: 5 },
+      repeat: { type: 'daily', interval: 5 },
       notificationTime: 5,
     },
     {
@@ -309,7 +309,7 @@ it('반복 일정 수정 시, 일정을 해제?할 경우 단일 일정으로 �
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, count: 5 },
+      repeat: { type: 'daily', interval: 5 },
       notificationTime: 5,
     },
     {
@@ -321,7 +321,7 @@ it('반복 일정 수정 시, 일정을 해제?할 경우 단일 일정으로 �
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, count: 5 },
+      repeat: { type: 'daily', interval: 5 },
       notificationTime: 5,
     },
     {
@@ -333,7 +333,7 @@ it('반복 일정 수정 시, 일정을 해제?할 경우 단일 일정으로 �
       description: '새로운 팀 미팅',
       location: '회의실 A',
       category: '업무',
-      repeat: { type: 'daily', interval: 5, count: 5 },
+      repeat: { type: 'daily', interval: 5 },
       notificationTime: 5,
     },
   ];
@@ -351,7 +351,7 @@ it('반복 일정 수정 시, 일정을 해제?할 경우 단일 일정으로 �
     description: '새로운 팀 미팅',
     location: '회의실 A',
     category: '업무',
-    repeat: { type: 'daily', interval: 5, count: 5 },
+    repeat: { type: 'daily', interval: 5 },
     notificationTime: 5,
   };
 
@@ -359,5 +359,5 @@ it('반복 일정 수정 시, 일정을 해제?할 경우 단일 일정으로 �
     await result.current.saveEvent(updateEvent);
   });
 
-  expect(result.current.events).toEqual([updateEvent]);
+  expect(result.current.events).toEqual(updateEvent);
 });
