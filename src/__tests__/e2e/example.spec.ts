@@ -51,4 +51,34 @@ test.describe('일정관리 앱 E2e 테스트', () => {
       page.getByTestId('event-list').getByText('수정된 E2E 테스트 일정')
     ).not.toBeVisible();
   });
+
+  test('2. 반복 일정을 생성한다. 그 중 하나를 수정한다. 나머지중 하나를 삭제한다.', async ({
+    page,
+  }) => {
+    // 신규 이벤트 폼 입력
+    await page.getByLabel('제목').fill('E2E 테스트 반복 일정');
+    await page.getByLabel('날짜').fill('2025-05-01');
+    await page.getByLabel('시작 시간').click();
+    await page.getByLabel('시작 시간').fill('10:00');
+    await page.getByLabel('종료 시간').click();
+    await page.getByLabel('종료 시간').fill('11:00');
+
+    // 반복 설정
+    const checkBox = page.getByLabel('반복 일정');
+    if (!(await checkBox.isChecked())) {
+      await checkBox.click();
+    }
+
+    await page.getByLabel('반복 유형').selectOption('daily');
+    await page.getByLabel('반복 종료일').fill('2025-05-29');
+
+    await page.getByTestId('event-submit-button').click();
+
+    const eventCard = page
+      .getByTestId('event-list')
+      .locator('div')
+      .filter({ hasText: 'E2E 테스트 반복 일정' });
+
+    await expect(eventCard).toHaveCount(29);
+  });
 });
