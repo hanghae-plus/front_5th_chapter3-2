@@ -1,6 +1,6 @@
 import { ChangeEvent, useState } from 'react';
 
-import { Event, RepeatType } from '../types';
+import { Event, RepeatEndType, RepeatType } from '../types';
 import { getTimeErrorMessage } from '../utils/timeValidation';
 
 type TimeErrorRecord = Record<'startTimeError' | 'endTimeError', string | null>;
@@ -13,10 +13,14 @@ export const useEventForm = (initialEvent?: Event) => {
   const [description, setDescription] = useState(initialEvent?.description || '');
   const [location, setLocation] = useState(initialEvent?.location || '');
   const [category, setCategory] = useState(initialEvent?.category || '');
-  const [isRepeating, setIsRepeating] = useState(initialEvent?.repeat.type !== 'none');
-  const [repeatType, setRepeatType] = useState<RepeatType>(initialEvent?.repeat.type || 'none');
+  const [isRepeating, setIsRepeating] = useState(false);
+  const [repeatType, setRepeatType] = useState<RepeatType>('none');
   const [repeatInterval, setRepeatInterval] = useState(initialEvent?.repeat.interval || 1);
   const [repeatEndDate, setRepeatEndDate] = useState(initialEvent?.repeat.endDate || '');
+  const [repeatEndType, setRepeatEndType] = useState<RepeatEndType>(
+    initialEvent?.repeat.endType || 'date'
+  );
+  const [repeatCount, setRepeatCount] = useState(initialEvent?.repeat.endCount || 0);
   const [notificationTime, setNotificationTime] = useState(initialEvent?.notificationTime || 10);
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -36,6 +40,15 @@ export const useEventForm = (initialEvent?: Event) => {
     const newEndTime = e.target.value;
     setEndTime(newEndTime);
     setTimeError(getTimeErrorMessage(startTime, newEndTime));
+  };
+
+  const handleIsRepeatingChange = (checked: boolean) => {
+    setIsRepeating(checked);
+    if (checked && repeatType === 'none') {
+      setRepeatType('daily');
+    } else if (!checked) {
+      setRepeatType('none');
+    }
   };
 
   const resetForm = () => {
@@ -85,7 +98,7 @@ export const useEventForm = (initialEvent?: Event) => {
     category,
     setCategory,
     isRepeating,
-    setIsRepeating,
+    setIsRepeating: handleIsRepeatingChange,
     repeatType,
     setRepeatType,
     repeatInterval,
@@ -102,5 +115,9 @@ export const useEventForm = (initialEvent?: Event) => {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    repeatCount,
+    setRepeatCount,
+    repeatEndType,
+    setRepeatEndType,
   };
 };
