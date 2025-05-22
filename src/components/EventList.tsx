@@ -67,7 +67,7 @@ const EventList: FC<EventListProps> = ({
               <EventDetails event={event} isNotified={notifiedEvents.includes(event.id)} />
               <HStack>
                 <IconButton
-                  data-testid={`edit-event-button-${event.id}`}
+                  data-testid={`edit-event-button-${event.title}`}
                   aria-label="Edit event"
                   icon={<EditIcon />}
                   onClick={() => editEvent(event)}

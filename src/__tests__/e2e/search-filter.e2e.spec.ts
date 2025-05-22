@@ -7,7 +7,7 @@ test('검색창에 키워드를 입력하면 해당 일정만 필터링된다', 
 
   // 일정 A 생성
 
-  await page.getByLabel('제목').fill('팀 회의');
+  await page.getByLabel('제목').fill('스프린트 미팅');
   await page.getByLabel('날짜').fill('2025-05-27');
   await page.getByLabel('시작 시간').fill('14:00');
   await page.getByLabel('종료 시간').fill('15:00');
@@ -31,12 +31,12 @@ test('검색창에 키워드를 입력하면 해당 일정만 필터링된다', 
   const eventList = page.getByTestId('event-list');
   await expect(eventList.locator('text=커피챗')).toBeVisible();
 
-  await expect(eventList.locator('text=팀 회의')).not.toBeVisible();
+  await expect(eventList.locator('text=스프린트 미팅')).not.toBeVisible();
 
   // 검색어 지우기
   await page.getByPlaceholder('검색어를 입력하세요').fill('');
 
   // 다시 둘 다 보여야 함
   await expect(eventList.locator('text=커피챗')).toBeVisible();
-  await expect(eventList.locator('text=팀 회의')).toBeVisible();
+  await expect(eventList.locator('text=스프린트 미팅')).toBeVisible();
 });

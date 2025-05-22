@@ -47,7 +47,7 @@ const EventDetails: FC<EventDetailsProps> = ({ event, isNotified }) => {
     notificationOptions.find((option) => option.value === event.notificationTime)?.label || '';
 
   return (
-    <VStack align="start">
+    <VStack align="start" data-testid={`event-details${event.id}`}>
       <HStack>
         {isNotified && <BellIcon color="red.500" />}
         <Text

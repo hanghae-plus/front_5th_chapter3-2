@@ -20,10 +20,10 @@ test('사용자는 캘린더에서 일정을 추가, 수정, 삭제할 수 있�
   await expect(eventList.locator('text=2025-05-20')).toBeVisible();
 
   // 3. 수정
-  await page
-    .getByTestId(/^edit-event-button-/)
-    .first()
-    .click();
+  const card = page.getByTestId('event-list').filter({
+    hasText: '팀 회의',
+  });
+  await card.getByRole('button', { name: 'Edit event' }).first().click();
   await page.getByLabel('제목').fill('팀 회의(수정됨)');
   await page.getByTestId('event-submit-button').click();
   await expect(eventList.locator('text=팀 회의(수정됨)')).toBeVisible();
