@@ -213,7 +213,7 @@ function App() {
                               {event.title}
                             </Text>
                             {event.repeat.type !== 'none' && (
-                              <RepeatIcon data-testid="repeat-icon" />
+                              <RepeatIcon aria-label="repeat-icon" />
                             )}
                           </HStack>
                         </Box>
@@ -285,7 +285,7 @@ function App() {
                                     {event.title}
                                   </Text>
                                   {event.repeat.type !== 'none' && (
-                                    <RepeatIcon data-testid="repeat-icon" />
+                                    <RepeatIcon aria-label="repeat-icon" />
                                   )}
                                 </HStack>
                               </Box>
