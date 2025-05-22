@@ -148,3 +148,7 @@ export const getNewDateByInterval = (date: Date, type: RepeatType, interval: num
 export const isLeapYear = (year: number): boolean => {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 };
+
+export const isDate = (date: Date): boolean => {
+  return date instanceof Date && !isNaN(date.getTime());
+};

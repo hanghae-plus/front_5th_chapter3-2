@@ -114,7 +114,16 @@ function App() {
   } = useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
-  const { view, setView, currentDate, holidays, navigate } = useCalendarView();
+  const {
+    view,
+    setView,
+    currentDate,
+    holidays,
+    navigate,
+    specificDate,
+    setSpecificDate,
+    navigateToSpecificDate,
+  } = useCalendarView();
   const { searchTerm, filteredEvents, setSearchTerm } = useSearch(events, currentDate, view);
 
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
@@ -450,6 +459,21 @@ function App() {
 
         <VStack flex={1} spacing={5} align="stretch">
           <Heading>일정 보기</Heading>
+
+          <Flex>
+            <Input
+              data-testid="specific-date-input"
+              placeholder="YYYY-MM-DD"
+              value={specificDate}
+              onChange={(e) => setSpecificDate(e.target.value)}
+            />
+            <Button
+              data-testid="navigate-to-specific-date"
+              onClick={() => navigateToSpecificDate(specificDate)}
+            >
+              이동
+            </Button>
+          </Flex>
 
           <HStack mx="auto" justifyContent="space-between">
             <IconButton
