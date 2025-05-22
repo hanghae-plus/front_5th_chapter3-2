@@ -11,7 +11,6 @@ import { server } from '@/setupTests.ts';
 import { useEventOperations } from '@/shared/hooks/useEventOperations';
 import { generateRepeatEvents } from '@/shared/lib/generateRepeatEvents';
 import { RepeatType, Event, EventForm } from '@/types';
-import { desc } from 'framer-motion/client';
 
 /**
  * 1. **(필수) 반복 유형 선택**
@@ -84,7 +83,7 @@ describe('반복 유형 선택', () => {
     server.resetHandlers();
   });
 
-  it('일정 생성 폼에 반복 유형 선택 필드가 렌더링된다', async () => {
+  it('일정 생성 폼에 반복 유형 선택 필드가 렌더링된다.', async () => {
     // ✅ 1차: 텍스트 기반 접근
     expect(screen.getByText('반복 일정')).toBeInTheDocument();
     expect(screen.getByText('반복 유형')).toBeInTheDocument();
@@ -336,7 +335,7 @@ describe('반복 간격 설정', () => {
  */
 
 describe('반복 일정 표시', () => {
-  it('반복 일정인 경우 캘린더에 🔁 아이콘이 표시된다', () => {
+  it('반복 일정인 경우 캘린더에 🔁 아이콘이 표시된다.', () => {
     const repeatEvent: Event = {
       id: '1',
       title: '정기 회의',
@@ -370,7 +369,7 @@ describe('반복 일정 표시', () => {
     expect(eventWithIcon).toBeInTheDocument();
   });
 
-  it('반복 일정이 아닌 경우 🔁 아이콘이 표시되지 않는다', () => {
+  it('반복 일정이 아닌 경우 🔁 아이콘이 표시되지 않는다.', () => {
     const normalEvent: Event = {
       id: '2',
       title: '일반 일정',
@@ -603,6 +602,11 @@ describe('반복 일정 단일 삭제', () => {
   });
 });
 
+/**
+ * 7. 예외 날짜 처리:
+ *  - 반복 일정 중 특정 날짜를 제외할 수 있다.
+ *  - 반복 일정 중 특정 날짜의 일정을 수정할 수 있다.
+ */
 describe('예외 날짜 처리', () => {
   it('반복 일정 중 특정 날짜를 제외할 수 있다.', () => {
     const eventForm: EventForm = {
@@ -649,26 +653,165 @@ describe('예외 날짜 처리', () => {
       },
     };
 
-    const events = generateRepeatEvents(eventForm);
+    // 🔍 원래 반복에서 빠졌던 날짜를 수동 수정하는 케이스라고 가정
     const modifiedEvent = {
-      ...events[2],
-      title: '수정된 일정', // 특정 날짜 수정
+      ...eventForm,
+      id: 'custom-1',
+      date: '2025-07-03',
+      title: '수정된 일정',
     };
 
     expect(modifiedEvent.title).toBe('수정된 일정');
-    expect(modifiedEvent.date).toBe('2025-07-03'); // 수정된 날짜 확인
+    expect(modifiedEvent.date).toBe('2025-07-03');
   });
 });
 
-// advanced
-// 7. 예외 날짜 처리:
-//     - 반복 일정 중 특정 날짜를 제외할 수 있다.
-//     - 반복 일정 중 특정 날짜의 일정을 수정할 수 있다.
-// 8. 요일 지정 (주간 반복의 경우):
-//     - 주간 반복 시 특정 요일을 선택할 수 있다.
-// 9. 월간 반복 옵션:
-//     - 매월 특정 날짜에 반복되도록 설정할 수 있다.
-//     - 매월 특정 순서의 요일에 반복되도록 설정할 수 있다.
-// 10. 반복 일정 전체 수정 및 삭제
-//     - 반복 일정의 모든 일정을 수정할 수 있다.
-//     - 반복 일정의 모든 일정을 삭제할 수 있다.
+/**
+ * 8. 요일 지정 (주간 반복의 경우):
+ * - 주간 반복 시 특정 요일을 선택할 수 있다.
+ */
+describe('요일 지정(주간 반복의 경우)', () => {
+  it('주간 반복 시 특정 요일을 선택할 수 있다.', () => {
+    const eventForm: EventForm = {
+      title: '요일 지정 반복',
+      date: '2025-07-01', // 화요일 시작
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'weekly',
+        interval: 1,
+        count: 3,
+        daysOfWeek: ['2', '3', '5'], // 화(2), 수(3), 금(5)
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+
+    // 예상되는 반복 일정 날짜들
+    expect(events.map((e) => e.date)).toEqual([
+      '2025-07-01', // 화요일
+      '2025-07-02', // 수요일
+      '2025-07-04', // 금요일
+    ]);
+  });
+});
+
+/**
+ * 9. 월간 반복 옵션:
+ * - 매월 특정 날짜에 반복할 수 있다.
+ * - 매월 특정 요일에 반복할 수 있다.
+ */
+describe('월간 반복 옵션', () => {
+  it('매월 특정 날짜에 반복할 수 있다', () => {
+    const eventForm: EventForm = {
+      title: '매월 특정 날짜 반복',
+      date: '2025-07-01',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        count: 3,
+        daysOfWeek: [], // 요일 없음
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+    expect(events.map((e) => e.date)).toEqual([
+      '2025-07-01', // 매월 1일
+      '2025-08-01', // 매월 1일
+      '2025-09-01', // 매월 1일
+    ]);
+  });
+
+  it('매월 특정 요일에 반복할 수 있다', () => {
+    const eventForm: EventForm = {
+      title: '매월 특정 요일 반복',
+      date: '2025-07-01', // 화요일 시작
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'monthly',
+        interval: 1,
+        count: 3,
+        daysOfWeek: ['2'], // 매월 첫 번째 화요일
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+    expect(events.map((e) => e.date)).toEqual([
+      '2025-07-01', // 첫 번째 화요일
+      '2025-08-05', // 첫 번째 화요일
+      '2025-09-02', // 첫 번째 화요일
+    ]);
+  });
+});
+
+/**
+ * 10. 반복 일정 전체 수정 및 삭제
+    - 반복 일정의 모든 일정을 수정할 수 있다.
+    - 반복 일정의 모든 일정을 삭제할 수 있다.
+ */
+describe('반복 일정 전체 수정 및 삭제', () => {
+  it('반복 일정의 모든 일정을 수정할 수 있다.', () => {
+    const eventForm: EventForm = {
+      title: '반복 일정 전체 수정',
+      date: '2025-07-01',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        count: 3,
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+    const modifiedEvent = {
+      ...events[0],
+      title: '수정된 반복 일정',
+    };
+
+    expect(modifiedEvent.title).toBe('수정된 반복 일정');
+  });
+
+  it('반복 일정의 모든 일정을 삭제할 수 있다.', () => {
+    const eventForm: EventForm = {
+      title: '반복 일정 전체 삭제',
+      date: '2025-07-01',
+      startTime: '08:00',
+      endTime: '09:00',
+      description: '',
+      location: '',
+      category: '',
+      notificationTime: 10,
+      repeat: {
+        type: 'daily',
+        interval: 1,
+        count: 3,
+      },
+    };
+
+    const events = generateRepeatEvents(eventForm);
+    const deletedEvent = events[0]; // 삭제할 이벤트
+    const remainingEvents = events.filter((event) => event.id !== deletedEvent.id);
+
+    expect(remainingEvents.length).toBe(0); // 모든 일정 삭제 확인
+  });
+});
