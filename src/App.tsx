@@ -139,7 +139,7 @@ function App() {
       return;
     }
 
-    if (isRepeating && repeatEndType === 'endDate') {
+    if (isRepeating && repeatEndDate === 'endDate') {
       const endDateError = validateRepeatEndDate({ date, repeat: { endDate: repeatEndDate } });
       if (endDateError) {
         toast({
