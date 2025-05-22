@@ -214,7 +214,7 @@ describe('반복 일정', () => {
       };
 
       await act(async () => {
-        await result.current.saveEvent(newEvent);
+        await result.current.saveRepeatEvent(newEvent);
       });
       console.log(result.current.events);
       expect(result.current.events).toHaveLength(3);

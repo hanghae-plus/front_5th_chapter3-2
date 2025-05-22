@@ -25,6 +25,45 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  const saveEvent = async (eventData: Event | EventForm) => {
+    try {
+      let response: Response;
+
+      if (editing) {
+        response = await fetch(`/api/events/${(eventData as Event).id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventData),
+        });
+      } else {
+        response = await fetch('/api/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventData),
+        });
+      }
+
+      if (!response.ok) throw new Error();
+
+      await fetchEvents();
+      onSave?.();
+
+      toast({
+        title: editing ? '일정이 수정되었습니다.' : '일정이 추가되었습니다.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch {
+      toast({
+        title: '일정 저장 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   const getRepeatEvents = (eventData: Event | EventForm): EventForm[] => {
     const { type, endDate, interval } = eventData.repeat;
     const repeatType = type;
@@ -55,7 +94,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     return newEvents;
   };
 
-  const saveEvent = async (eventData: Event | EventForm) => {
+  const saveRepeatEvent = async (eventData: Event | EventForm) => {
     try {
       let response: Response;
 
@@ -66,22 +105,12 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           body: JSON.stringify(eventData),
         });
       } else {
-        const isRepeat = eventData.repeat.type !== 'none' && eventData.repeat.endDate;
-
-        if (isRepeat) {
-          const repeatedEvents = getRepeatEvents(eventData as EventForm);
-          response = await fetch('/api/events-list', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ events: repeatedEvents }),
-          });
-        } else {
-          response = await fetch('/api/events', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(eventData),
-          });
-        }
+        const repeatedEvents = getRepeatEvents(eventData as EventForm);
+        response = await fetch('/api/events-list', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ events: repeatedEvents }),
+        });
       }
 
       if (!response.ok) throw new Error();
@@ -138,5 +167,5 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent };
+  return { events, fetchEvents, saveEvent, saveRepeatEvent, deleteEvent };
 };
