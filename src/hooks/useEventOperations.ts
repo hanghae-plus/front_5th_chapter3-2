@@ -68,9 +68,30 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   };
 
   const saveRepeatEvent = async (eventData: Event | EventForm) => {
-    console.log('올바르게 실행됨');
     try {
-      // 반복 일정 리스트 생성
+      if (editing) {
+        const response = await fetch('/api/events-list', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ events: [eventData] }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update event');
+        }
+
+        await fetchEvents();
+        onSave?.();
+        toast({
+          title: '일정이 수정되었습니다.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // 새로운 반복 일정 생성
       const repeatEvents = makeRepeatEventList(eventData);
 
       if (repeatEvents.length === 0) {
@@ -83,8 +104,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
         });
         return;
       }
-      console.log('반복일정', repeatEvents);
-      // 서버에 반복 일정 리스트 저장
+
       const response = await fetch('/api/events-list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -140,6 +160,36 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
+  const deleteRepeatedEvents = async (ids: string[]) => {
+    try {
+      const response = await fetch('/api/events-list', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventIds: ids }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete event list');
+      }
+
+      await fetchEvents();
+      toast({
+        title: '일정이 삭제되었습니다.',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast({
+        title: '일정 삭제 실패',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   async function init() {
     await fetchEvents();
     toast({
@@ -154,5 +204,5 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { events, fetchEvents, saveEvent, deleteEvent, saveRepeatEvent };
+  return { events, fetchEvents, saveEvent, deleteEvent, saveRepeatEvent, deleteRepeatedEvents };
 };
