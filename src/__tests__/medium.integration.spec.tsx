@@ -113,7 +113,7 @@ describe('일정 뷰', () => {
     expect(eventList.getByText('검색 결과가 없습니다.')).toBeInTheDocument();
   });
 
-  it.only('주별 뷰 선택 후 해당 일자에 일정이 존재한다면 해당 일정이 정확히 표시된다', async () => {
+  it('주별 뷰 선택 후 해당 일자에 일정이 존재한다면 해당 일정이 정확히 표시된다', async () => {
     setupMockHandlerCreation();
 
     const { user } = setup(<App />);
