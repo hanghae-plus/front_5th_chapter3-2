@@ -1,3 +1,5 @@
+import path from 'path';
+
 import react from '@vitejs/plugin-react-swc';
 import { defineConfig } from 'vite';
 import { defineConfig as defineTestConfig, mergeConfig } from 'vitest/config';
@@ -13,6 +15,11 @@ export default mergeConfig(
         },
       },
     },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
   }),
   defineTestConfig({
     test: {
@@ -23,6 +30,8 @@ export default mergeConfig(
         reportsDirectory: './.coverage',
         reporter: ['lcov', 'json', 'json-summary'],
       },
+      include: ['src/**/*.{test,spec}.{ts,tsx}'], // vitest
+      exclude: ['tests/**', 'node_modules', 'dist'], // playwright
     },
   })
 );

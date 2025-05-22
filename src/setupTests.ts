@@ -1,7 +1,7 @@
-import { setupServer } from 'msw/node';
 import '@testing-library/jest-dom';
+import { setupServer } from 'msw/node';
 
-import { handlers } from './__mocks__/handlers';
+import { handlers } from '@/__mocks__/handlers';
 
 // ! Hard 여기 제공 안함
 /* msw */
