@@ -262,7 +262,6 @@ export class RecurRule {
    * @private
    */
   private _isLastDayOfWeekInMonth(date: Date): boolean {
-    const year = date.getFullYear();
     const month = date.getMonth();
 
     // 현재 날짜에서 7일 후
