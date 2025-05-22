@@ -114,7 +114,6 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       }
 
       await fetchEvents();
-      console.log('[test]!!', events);
       toast({
         title: '일정이 삭제되었습니다.',
         status: 'info',
