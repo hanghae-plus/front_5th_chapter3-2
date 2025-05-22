@@ -7,6 +7,7 @@ import { ReactElement } from 'react';
 import {
   setupMockHandlerCreation,
   setupMockHandlerDeletion,
+  setupMockHandlerEventsListCreation,
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
@@ -323,4 +324,109 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('반복 일정 테스트', () => {
+  it('반복 일정을 추가하면 캘린더 뷰에서 반복 일정에 반복 아이콘이 표시된다.', async () => {
+    setupMockHandlerEventsListCreation([
+      {
+        id: '1',
+        title: '새 회의',
+        date: '2025-10-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+      {
+        id: '2',
+        title: '새 회의',
+        date: '2025-12-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+    ]);
+
+    setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const monthView = within(screen.getByTestId('month-view'));
+
+    const repeatIcon = monthView.getByLabelText('repeat-icon');
+
+    expect(repeatIcon).toBeInTheDocument();
+  });
+
+  it('반복 일정을 수정하면 단일 일정으로 변경되며 반복 일정 아이콘도 사라진다.', async () => {
+    const { user } = setup(<App />);
+
+    setupMockHandlerUpdating([
+      {
+        id: '1',
+        title: '새 회의',
+        date: '2025-10-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+      {
+        id: '2',
+        title: '새 회의',
+        date: '2025-12-19',
+        startTime: '11:00',
+        endTime: '12:00',
+        description: '새로운 팀 미팅',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-12-30' },
+        notificationTime: 5,
+      },
+    ]);
+
+    await user.click(await screen.findByLabelText('Edit event'));
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 회의');
+    await user.clear(screen.getByLabelText('설명'));
+    await user.type(screen.getByLabelText('설명'), '회의 내용 변경');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const eventList = within(screen.getByTestId('event-list'));
+
+    expect(eventList.queryByText('반복')).not.toBeInTheDocument();
+
+    const monthView = within(screen.getByTestId('month-view'));
+    const repeatIcon = monthView.queryByLabelText('repeat-icon');
+
+    expect(repeatIcon).not.toBeInTheDocument();
+  });
+
+  it('반복 간격이 0보다 작을 때 반복 간격은 1 이상이어야 합니다라는 경고 메시지가 표시된다.', async () => {
+    const { user } = setup(<App />);
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 회의');
+    await user.clear(screen.getByLabelText('설명'));
+    await user.type(screen.getByLabelText('설명'), '회의 내용 변경');
+    await user.clear(screen.getByLabelText('반복 간격'));
+    await user.type(screen.getByLabelText('반복 간격'), '0');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    expect(screen.getByText('반복 간격은 1 이상이어야 합니다.')).toBeInTheDocument();
+  });
 });

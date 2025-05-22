@@ -28,6 +28,7 @@ jobs:
         run: |
           pnpm install
           pnpm run lint
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -46,3 +47,5 @@ jobs:
         run: |
           pnpm install
           pnpm run test
+          npx playwright install --with-deps
+          pnpm run test:e2e --workers=1

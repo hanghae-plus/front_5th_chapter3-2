@@ -20,8 +20,28 @@ export const setupMockHandlerCreation = (initEvents = [] as Event[]) => {
   );
 };
 
-export const setupMockHandlerUpdating = () => {
-  const mockEvents: Event[] = [
+export const setupMockHandlerEventsListCreation = (initEvents: Event[] = []) => {
+  const mockEvents: Event[] = [...initEvents];
+
+  const getEventsHandler = http.get('/api/events', () => {
+    return HttpResponse.json({ events: mockEvents });
+  });
+
+  const postEventsListHandler = http.post('/api/events-list', async ({ request }) => {
+    const { events: newEvents } = (await request.json()) as { events: Event[] };
+    const createdEvents = newEvents.map((event, index) => ({
+      ...event,
+      id: String(mockEvents.length + index + 1),
+    }));
+    mockEvents.push(...createdEvents);
+    return HttpResponse.json(createdEvents, { status: 201 });
+  });
+
+  server.use(getEventsHandler, postEventsListHandler);
+};
+
+export const setupMockHandlerUpdating = (
+  initEvents: Event[] = [
     {
       id: '1',
       title: '기존 회의',
@@ -46,7 +66,9 @@ export const setupMockHandlerUpdating = () => {
       repeat: { type: 'none', interval: 0 },
       notificationTime: 5,
     },
-  ];
+  ]
+) => {
+  const mockEvents: Event[] = [...initEvents];
 
   server.use(
     http.get('/api/events', () => {
@@ -63,8 +85,8 @@ export const setupMockHandlerUpdating = () => {
   );
 };
 
-export const setupMockHandlerDeletion = () => {
-  const mockEvents: Event[] = [
+export const setupMockHandlerDeletion = (
+  initEvents: Event[] = [
     {
       id: '1',
       title: '삭제할 이벤트',
@@ -77,7 +99,9 @@ export const setupMockHandlerDeletion = () => {
       repeat: { type: 'none', interval: 0 },
       notificationTime: 10,
     },
-  ];
+  ]
+) => {
+  const mockEvents: Event[] = [...initEvents];
 
   server.use(
     http.get('/api/events', () => {
