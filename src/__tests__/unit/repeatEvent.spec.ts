@@ -158,4 +158,52 @@ describe('반복 일정 생성', () => {
       expect(events[2].date).toBe('2027-10-01');
     });
   });
+
+  describe('반복 간격 설정', () => {
+    it('2일 간격으로 반복되는 일정을 생성할 수 있다', () => {
+      const baseEvent = {
+        title: '테스트 일정',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '테스트 설명',
+        location: '테스트 장소',
+        category: '테스트 카테고리',
+        repeat: {
+          type: 'daily' as const,
+          interval: 2,
+          endDate: '2025-10-07',
+        },
+        notificationTime: 30,
+      };
+
+      const events = createRepeatEvents(baseEvent);
+
+      expect(events).toHaveLength(4); // 10-01, 10-03, 10-05, 10-07
+      expect(events[0].date).toBe('2025-10-01');
+      expect(events[1].date).toBe('2025-10-03');
+      expect(events[2].date).toBe('2025-10-05');
+      expect(events[3].date).toBe('2025-10-07');
+    });
+
+    it('반복 간격이 0이하인 경우 에러를 발생시킨다', () => {
+      const baseEvent = {
+        title: '테스트 일정',
+        date: '2025-10-01',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '테스트 설명',
+        location: '테스트 장소',
+        category: '테스트 카테고리',
+        repeat: {
+          type: 'daily' as const,
+          interval: 0,
+          endDate: '2025-10-07',
+        },
+        notificationTime: 30,
+      };
+
+      expect(() => createRepeatEvents(baseEvent)).toThrow('반복 간격은 1 이상이어야 합니다');
+    });
+  });
 });
