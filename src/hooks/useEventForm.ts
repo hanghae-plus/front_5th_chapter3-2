@@ -24,8 +24,8 @@ export const useEventForm = (initialEvent?: Event) => {
     initialEvent?.repeat?.endDate // endDate가 있으면 'untilDate'
       ? 'untilDate'
       : initialEvent?.repeat?.count // count가 있으면 'count'
-      ? 'count'
-      : 'none' // 둘 다 없으면 'none'
+        ? 'count'
+        : 'none' // 둘 다 없으면 'none'
   );
 
   // repeatCount 상태 추가
