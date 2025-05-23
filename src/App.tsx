@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   DeleteIcon,
   EditIcon,
+  RepeatIcon,
 } from '@chakra-ui/icons';
 import {
   Alert,
@@ -103,12 +104,26 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
-  );
+  const {
+    events,
+    saveEvent,
+    deleteEvent,
+    saveRepeatedEvents,
+    deleteAllRepeatedEvents,
+    deleteAllEvents,
+  } = useEventOperations(Boolean(editingEvent), () => setEditingEvent(null));
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
-  const { view, setView, currentDate, holidays, navigate } = useCalendarView();
+  const {
+    view,
+    setView,
+    currentDate,
+    holidays,
+    navigate,
+    specificDate,
+    setSpecificDate,
+    navigateToSpecificDate,
+  } = useCalendarView();
   const { searchTerm, filteredEvents, setSearchTerm } = useSearch(events, currentDate, view);
 
   const [isOverlapDialogOpen, setIsOverlapDialogOpen] = useState(false);
@@ -138,6 +153,17 @@ function App() {
       return;
     }
 
+    const repeat = editingEvent
+      ? {
+          type: 'none' as RepeatType,
+          interval: 0,
+        }
+      : {
+          type: isRepeating ? repeatType : 'none',
+          interval: repeatInterval,
+          endDate: repeatEndDate || undefined,
+        };
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -147,13 +173,15 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat,
       notificationTime,
     };
+
+    if (isRepeating && !editingEvent) {
+      await saveRepeatedEvents(eventData);
+      resetForm();
+      return;
+    }
 
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
@@ -270,6 +298,7 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && <RepeatIcon />}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -381,6 +410,7 @@ function App() {
               <FormControl>
                 <FormLabel>반복 유형</FormLabel>
                 <Select
+                  data-testid="repeat-type-selector"
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
@@ -415,10 +445,35 @@ function App() {
           <Button data-testid="event-submit-button" onClick={addOrUpdateEvent} colorScheme="blue">
             {editingEvent ? '일정 수정' : '일정 추가'}
           </Button>
+
+          <Button
+            data-testid="delete-all-events"
+            onClick={() => {
+              deleteAllEvents();
+            }}
+            colorScheme="red"
+          >
+            모든 일정 삭제
+          </Button>
         </VStack>
 
         <VStack flex={1} spacing={5} align="stretch">
           <Heading>일정 보기</Heading>
+
+          <Flex>
+            <Input
+              data-testid="specific-date-input"
+              placeholder="YYYY-MM-DD"
+              value={specificDate}
+              onChange={(e) => setSpecificDate(e.target.value)}
+            />
+            <Button
+              data-testid="navigate-to-specific-date"
+              onClick={() => navigateToSpecificDate(specificDate)}
+            >
+              이동
+            </Button>
+          </Flex>
 
           <HStack mx="auto" justifyContent="space-between">
             <IconButton
@@ -498,18 +553,30 @@ function App() {
                       }
                     </Text>
                   </VStack>
-                  <HStack>
-                    <IconButton
-                      aria-label="Edit event"
-                      icon={<EditIcon />}
-                      onClick={() => editEvent(event)}
-                    />
-                    <IconButton
-                      aria-label="Delete event"
-                      icon={<DeleteIcon />}
-                      onClick={() => deleteEvent(event.id)}
-                    />
-                  </HStack>
+                  <VStack>
+                    <HStack>
+                      <IconButton
+                        aria-label="Edit event"
+                        icon={<EditIcon />}
+                        onClick={() => editEvent(event)}
+                      />
+                      <IconButton
+                        aria-label="Delete event"
+                        icon={<DeleteIcon />}
+                        onClick={() => deleteEvent(event.id)}
+                      />
+                    </HStack>
+                    {event.repeat.type !== 'none' && (
+                      <HStack>
+                        <Button
+                          data-testid="delete-all-repeated-events"
+                          onClick={() => deleteAllRepeatedEvents(event.repeat.id as string)}
+                        >
+                          모두 삭제
+                        </Button>
+                      </HStack>
+                    )}
+                  </VStack>
                 </HStack>
               </Box>
             ))

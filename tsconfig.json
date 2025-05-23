@@ -1,5 +1,8 @@
 {
   "files": [],
+  "compilerOptions": {
+    "types": ["@playwright/test", "@types/node"]
+  },
   "references": [
     {
       "path": "./tsconfig.app.json"

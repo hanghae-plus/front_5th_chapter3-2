@@ -1,4 +1,4 @@
-import { Event } from '../types.ts';
+import { Event, RepeatType } from '../types.ts';
 
 /**
  * 주어진 년도와 월의 일수를 반환합니다.
@@ -108,3 +108,47 @@ export function formatDate(currentDate: Date, day?: number) {
     fillZero(day ?? currentDate.getDate()),
   ].join('-');
 }
+
+export const getNewDateByInterval = (date: Date, type: RepeatType, interval: number): Date => {
+  const newDate = new Date(date);
+  const originalMonth = newDate.getMonth();
+  const originalDay = newDate.getDate();
+
+  switch (type) {
+    case 'daily':
+      newDate.setDate(newDate.getDate() + interval);
+      break;
+    case 'weekly':
+      newDate.setDate(newDate.getDate() + interval * 7);
+      break;
+    case 'monthly': {
+      newDate.setMonth(newDate.getMonth() + interval);
+      newDate.setDate(originalDay);
+      break;
+    }
+    case 'yearly': {
+      if (originalMonth === 1 && originalDay === 29) {
+        let nextYear = newDate.getFullYear() + interval;
+        while (!isLeapYear(nextYear)) {
+          nextYear++;
+        }
+        newDate.setFullYear(nextYear);
+        if (newDate.getMonth() !== originalMonth || newDate.getDate() !== originalDay) {
+          newDate.setMonth(originalMonth, originalDay);
+        }
+      } else {
+        newDate.setFullYear(newDate.getFullYear() + interval);
+      }
+      break;
+    }
+  }
+  return newDate;
+};
+
+export const isLeapYear = (year: number): boolean => {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+};
+
+export const isDate = (date: Date): boolean => {
+  return date instanceof Date && !isNaN(date.getTime());
+};
