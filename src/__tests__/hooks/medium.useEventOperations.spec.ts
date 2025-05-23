@@ -482,7 +482,7 @@ it('모든 일정이 정상적으로 삭제된다', async () => {
   let initialFetchForDeleteAllDone = false;
 
   server.use(
-    http.get('/api/events', ({ request }) => {
+    http.get('/api/events', ({ _request }) => {
       if (!initialFetchForDeleteAllDone) {
         initialFetchForDeleteAllDone = true;
         return HttpResponse.json({ events: allEvents });
