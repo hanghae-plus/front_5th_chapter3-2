@@ -743,3 +743,87 @@ describe('반복 일정 삭제', () => {
     expect(result.current.events).toHaveLength(1);
   });
 });
+
+describe('반복 일정 종료', () => {
+  it('특정 횟수를 지정하면 횟수만큼 반복된 일정을 생성한다.', async () => {
+    setupMockHandlerRepeatedEventCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '발제 과제하기,,,힘내',
+      date: '2025-05-18',
+      startTime: '13:00',
+      endTime: '18:00',
+      description: '과제는 매일 하는 거다 이녀석아',
+      location: '우리집',
+      category: '개인',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-05-22' },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent, 3);
+    });
+
+    expect(result.current.events).toHaveLength(3);
+
+    expect(result.current.events).toEqual([
+      {
+        ...newEvent,
+      },
+      {
+        ...newEvent,
+        id: '2',
+        date: '2025-05-19',
+      },
+      {
+        ...newEvent,
+        id: '3',
+        date: '2025-05-20',
+      },
+    ]);
+  });
+
+  it('종료 일자를 지정하지 않으면 기본 종료 일자(2025년 9월 30일)까지의 반복된 일정을 생성한다.', async () => {
+    setupMockHandlerRepeatedEventCreation();
+    const { result } = renderHook(() => useEventOperations(false));
+    await act(() => Promise.resolve(null));
+
+    const newEvent: Event = {
+      id: '1',
+      title: '병원 정기 검진',
+      date: '2025-05-01',
+      startTime: '13:00',
+      endTime: '18:00',
+      description: '경희대병원',
+      location: '병원',
+      category: '개인',
+      repeat: { type: 'monthly', interval: 2 },
+      notificationTime: 10,
+    };
+
+    await act(async () => {
+      await result.current.saveRepeatedEvents(newEvent);
+    });
+
+    expect(result.current.events).toHaveLength(3);
+
+    expect(result.current.events).toEqual([
+      {
+        ...newEvent,
+      },
+      {
+        ...newEvent,
+        id: '2',
+        date: '2025-07-01',
+      },
+      {
+        ...newEvent,
+        id: '3',
+        date: '2025-09-01',
+      },
+    ]);
+  });
+});
