@@ -1,5 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
-import { render, screen, within, act } from '@testing-library/react';
+import { render, screen, within, act, waitFor } from '@testing-library/react';
 import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { ReactElement } from 'react';
@@ -11,7 +11,7 @@ import {
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
-import { Event } from '../types';
+import { Event, EventForm } from '../types';
 
 // ! Hard 여기 제공 안함
 const setup = (element: ReactElement) => {
@@ -23,9 +23,11 @@ const setup = (element: ReactElement) => {
 // ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'>
+  form: Omit<EventForm, 'repeat' | 'notificationTime'> &
+    Partial<Pick<Event, 'repeat' | 'notificationTime'>>
 ) => {
-  const { title, date, startTime, endTime, location, description, category } = form;
+  const { title, date, startTime, endTime, location, description, category, repeat } = form;
+  const repeatCheckbox = screen.getByLabelText('반복 설정') as HTMLInputElement;
 
   await user.click(screen.getAllByText('일정 추가')[0]);
 
@@ -36,6 +38,11 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
   await user.selectOptions(screen.getByLabelText('카테고리'), category);
+
+  // 반복 일정이 아닌 경우 반복 일정 체크 해제
+  if (repeatCheckbox.checked && repeat?.type === 'none') {
+    await user.click(repeatCheckbox);
+  }
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -54,6 +61,7 @@ describe('일정 CRUD 및 기본 기능', () => {
       description: '프로젝트 진행 상황 논의',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0 },
     });
 
     const eventList = within(screen.getByTestId('event-list'));
@@ -125,6 +133,7 @@ describe('일정 뷰', () => {
       description: '이번주 팀 회의입니다.',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0 },
     });
 
     await user.selectOptions(screen.getByLabelText('view'), 'week');
@@ -157,6 +166,7 @@ describe('일정 뷰', () => {
       description: '이번달 팀 회의입니다.',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0 },
     });
 
     const monthView = within(screen.getByTestId('month-view'));
@@ -308,6 +318,201 @@ describe('일정 충돌', () => {
   });
 });
 
+describe('반복 일정 표시', () => {
+  it('반복 일정의 경우 반복 아이콘이 일정 제목 앞에 존재한다.', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '반복 테스트',
+        date: '2025-10-15',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '반복 테스트',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 0 },
+        notificationTime: 10,
+      },
+    ]);
+
+    setup(<App />);
+
+    const eventList = await screen.findByTestId('event-list');
+    const repeatIcon = await screen.findByTestId('repeat-icon');
+
+    expect(eventList).toHaveTextContent('반복 테스트');
+    expect(eventList).toHaveTextContent('반복일정');
+    expect(repeatIcon).toBeInTheDocument();
+  });
+});
+
+describe('반복 종료', () => {
+  it('종료일 선택하면 날짜 입력 필드가 표시된다', async () => {
+    const { user } = setup(<App />);
+
+    const select = screen.getByRole('combobox', { name: '반복 종료' });
+
+    await user.selectOptions(select, 'endDate');
+
+    const dateInput = screen.getByTestId('repeat-end-date');
+    const countInput = screen.queryByTestId('repeat-end-count');
+
+    expect(dateInput).toBeInTheDocument();
+    expect(dateInput).toHaveAttribute('type', 'date');
+
+    expect(countInput).not.toBeInTheDocument();
+  });
+
+  it('종료 횟수 선택하면 횟수 입력 필드가 표시된다', async () => {
+    const { user } = setup(<App />);
+
+    const select = screen.getByRole('combobox', { name: '반복 종료' });
+
+    await user.selectOptions(select, 'endCount');
+
+    const dateInput = screen.queryByTestId('repeat-end-date');
+    const countInput = screen.getByTestId('repeat-end-count');
+
+    expect(dateInput).not.toBeInTheDocument();
+
+    expect(countInput).toBeInTheDocument();
+    expect(countInput).toHaveAttribute('type', 'number');
+  });
+
+  it('반복을 종료 없음으로 지정할 수 있다.', async () => {
+    vi.setSystemTime(new Date('2025-10-31'));
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '무한 반복',
+        date: '2025-10-31',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '무한 반복 테스트',
+        location: '회의실 A',
+        category: '업무',
+        repeat: { type: 'daily', interval: 1 },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+    await screen.findByText('일정 로딩 완료!');
+
+    // 현재 날짜로 확인
+    await user.type(screen.getByLabelText('날짜'), '2025-10-31');
+    const currentList = within(screen.getByTestId('event-list'));
+    expect(currentList.getByText('무한 반복')).toBeInTheDocument();
+
+    // 1년 후 날짜로 확인
+    await user.type(screen.getByLabelText('날짜'), '2026-10-31');
+    const futureList = within(screen.getByTestId('event-list'));
+    expect(futureList.getByText('무한 반복')).toBeInTheDocument();
+  });
+});
+
+describe('반복 일정 단일 수정', () => {
+  it('반복일정을 수정하면 단일 일정으로 변경되고 반복 아이콘이 사라진다.', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '수정할 반복 일정',
+        date: '2025-10-20',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '2',
+        title: '수정할 반복 일정',
+        date: '2025-10-27',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const editButtons = await screen.findAllByLabelText('Edit event');
+    await user.click(editButtons[1]);
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 회의');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await screen.findByText('일정이 수정되었습니다.');
+
+    const eventList = screen.getByTestId('event-list');
+    const eventBoxes = within(eventList)
+      .getAllByRole('generic')
+      .filter(
+        (box) => box.textContent?.includes('수정된 회의') || box.textContent?.includes('기존 회의')
+      );
+
+    const modifiedEventBox = eventBoxes.find((box) => box.textContent?.includes('수정된 회의'));
+    expect(
+      within(modifiedEventBox as HTMLElement).queryByTestId('repeat-icon')
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('반복 일정 단일 삭제', () => {
+  it('반복일정을 삭제하면 해당 일정만 삭제한다.', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '삭제할 반복 일정',
+        date: '2025-10-20',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+      {
+        id: '2',
+        title: '삭제할 반복 일정',
+        date: '2025-10-27',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'weekly', interval: 1, endDate: '2025-10-30' },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+
+    await screen.findByText('일정 로딩 완료!');
+
+    const deleteButtons = await screen.findAllByLabelText('Delete event');
+
+    await act(async () => {
+      await user.click(deleteButtons[1]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByLabelText('Delete event')).toHaveLength(1);
+    });
+  });
+});
+
 it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트가 노출된다', async () => {
   vi.setSystemTime(new Date('2025-10-15 08:49:59'));
 
@@ -323,4 +528,68 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+const getDateCellByDay = (container: HTMLElement, day: string) => {
+  return Array.from(container.querySelectorAll('td')).find((td) =>
+    td.textContent?.trim().startsWith(day)
+  );
+};
+
+describe('일정 알림 기능', () => {
+  it('사용자가 알림 시간을 선택할 수 있다 (1분, 10분, 1시간, 1일 전)', async () => {
+    setup(<App />);
+
+    const notificationSelect = screen.getByLabelText('알림 설정') as HTMLSelectElement;
+
+    // 각 옵션을 선택하면 -> 선택값이 noti어쩌고에 반영돼야 함
+    const testCases = [
+      { label: '1분 전', value: '1' },
+      { label: '10분 전', value: '10' },
+      { label: '1시간 전', value: '60' },
+      { label: '1일 전', value: '1440' },
+    ];
+
+    for (const { value } of testCases) {
+      await userEvent.selectOptions(notificationSelect, value);
+      expect(notificationSelect.value).toBe(value);
+    }
+  });
+
+  it('알림 시간에 도달하면 캘린더에 아이콘이 추가되고 색상이 변경되어 표시된다.', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-05-05T13:22:00'));
+
+    const mockEvent: Event = {
+      id: 'event-1',
+      title: '어린이날 대운동회',
+      date: '2025-05-05',
+      startTime: '13:30',
+      endTime: '16:00',
+      description: '초등학교 운동회',
+      location: '운동장',
+      category: '가족',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    };
+
+    setupMockHandlerCreation([mockEvent]);
+    setup(<App />);
+
+    // 알림 체크 타이머가 돌아가게 함 (최소 1초 이상)
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    const monthView = screen.getByTestId('month-view');
+    const cell = getDateCellByDay(monthView, '5');
+    expect(cell).toBeDefined();
+
+    // 아이콘이 실제로 나타날 때까지 기다림
+    const icon = await within(cell!).findByTestId('bell-icon');
+    expect(icon).toBeInTheDocument();
+
+    // 이벤트 텍스트도 확인
+    expect(within(cell!).getByText(/어린이날 대운동회/)).toBeInTheDocument();
+  });
 });

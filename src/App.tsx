@@ -39,13 +39,16 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
+import { IoIosAlarm } from 'react-icons/io';
 
 import { useCalendarView } from './hooks/useCalendarView.ts';
 import { useEventForm } from './hooks/useEventForm.ts';
 import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm, RepeatType } from './types';
+import { Event, EventForm } from './types';
+import EventRepeatEndSelect from './ui/EventRepeatEndSelect.tsx';
+import EventRepeatSelect from './ui/EventRepeatSelect.tsx';
 import {
   formatDate,
   formatMonth,
@@ -56,6 +59,7 @@ import {
 } from './utils/dateUtils';
 import { findOverlappingEvents } from './utils/eventOverlap';
 import { getTimeErrorMessage } from './utils/timeValidation';
+import { validateRepeatEndDate } from './utils/validate';
 
 const categories = ['업무', '개인', '가족', '기타'];
 
@@ -91,6 +95,8 @@ function App() {
     setRepeatInterval,
     repeatEndDate,
     setRepeatEndDate,
+    repeatEndType,
+    setRepeatEndType,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -101,6 +107,8 @@ function App() {
     handleEndTimeChange,
     resetForm,
     editEvent,
+    repeatEndCount,
+    setRepeatEndCount,
   } = useEventForm();
 
   const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
@@ -138,6 +146,19 @@ function App() {
       return;
     }
 
+    if (isRepeating && repeatEndType === 'endDate') {
+      const endDateError = validateRepeatEndDate({ date, repeat: { endDate: repeatEndDate } });
+      if (endDateError) {
+        toast({
+          title: endDateError,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+    }
+
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
       title,
@@ -148,7 +169,7 @@ function App() {
       location,
       category,
       repeat: {
-        type: isRepeating ? repeatType : 'none',
+        type: isRepeating ? (repeatType === 'none' ? 'daily' : repeatType) : 'none',
         interval: repeatInterval,
         endDate: repeatEndDate || undefined,
       },
@@ -200,7 +221,7 @@ function App() {
                           color={isNotified ? 'red.500' : 'inherit'}
                         >
                           <HStack spacing={1}>
-                            {isNotified && <BellIcon />}
+                            {isNotified && <BellIcon data-testid="bell-icon" />}
                             <Text fontSize="sm" noOfLines={1}>
                               {event.title}
                             </Text>
@@ -269,7 +290,7 @@ function App() {
                                 color={isNotified ? 'red.500' : 'inherit'}
                               >
                                 <HStack spacing={1}>
-                                  {isNotified && <BellIcon />}
+                                  {isNotified && <BellIcon data-testid="bell-icon" />}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -378,18 +399,7 @@ function App() {
 
           {isRepeating && (
             <VStack width="100%">
-              <FormControl>
-                <FormLabel>반복 유형</FormLabel>
-                <Select
-                  value={repeatType}
-                  onChange={(e) => setRepeatType(e.target.value as RepeatType)}
-                >
-                  <option value="daily">매일</option>
-                  <option value="weekly">매주</option>
-                  <option value="monthly">매월</option>
-                  <option value="yearly">매년</option>
-                </Select>
-              </FormControl>
+              <EventRepeatSelect repeatType={repeatType} setRepeatType={setRepeatType} />
               <HStack width="100%">
                 <FormControl>
                   <FormLabel>반복 간격</FormLabel>
@@ -400,13 +410,31 @@ function App() {
                     min={1}
                   />
                 </FormControl>
+              </HStack>
+              <HStack width="100%" marginTop={4}>
+                <EventRepeatEndSelect
+                  repeatEndType={repeatEndType}
+                  setRepeatEndType={setRepeatEndType}
+                />
                 <FormControl>
-                  <FormLabel>반복 종료일</FormLabel>
-                  <Input
-                    type="date"
-                    value={repeatEndDate}
-                    onChange={(e) => setRepeatEndDate(e.target.value)}
-                  />
+                  {repeatEndType === 'endDate' && (
+                    <Input
+                      type="date"
+                      value={repeatEndDate}
+                      onChange={(e) => setRepeatEndDate(e.target.value)}
+                      marginTop={8}
+                      data-testid="repeat-end-date"
+                    />
+                  )}
+                  {repeatEndType === 'endCount' && (
+                    <Input
+                      type="number"
+                      value={repeatEndCount}
+                      onChange={(e) => setRepeatEndCount(Number(e.target.value))}
+                      marginTop={8}
+                      data-testid="repeat-end-count"
+                    />
+                  )}
                 </FormControl>
               </HStack>
             </VStack>
@@ -471,7 +499,22 @@ function App() {
                         {event.title}
                       </Text>
                     </HStack>
-                    <Text>{event.date}</Text>
+                    <Flex alignItems="center">
+                      <Text>{event.date}</Text>
+                      {event.repeat.type !== 'none' && (
+                        <HStack
+                          paddingX={2}
+                          borderRadius="5px"
+                          backgroundColor="#7E80FB"
+                          marginLeft={2}
+                        >
+                          <IoIosAlarm data-testid="repeat-icon" fontSize="14px" color="white" />
+                          <Text textColor="white" fontSize="14px" fontWeight="bold">
+                            반복일정
+                          </Text>
+                        </HStack>
+                      )}
+                    </Flex>
                     <Text>
                       {event.startTime} - {event.endTime}
                     </Text>
@@ -556,7 +599,7 @@ function App() {
                     location,
                     category,
                     repeat: {
-                      type: isRepeating ? repeatType : 'none',
+                      type: isRepeating ? (repeatType === 'none' ? 'daily' : repeatType) : 'none',
                       interval: repeatInterval,
                       endDate: repeatEndDate || undefined,
                     },
