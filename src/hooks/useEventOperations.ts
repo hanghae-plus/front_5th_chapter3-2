@@ -93,9 +93,9 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const saveRepeatedEvents = async (eventData: EventForm) => {
+  const saveRepeatedEvents = async (eventData: EventForm, maxCount?: number) => {
     try {
-      const newEvents = createRepeatedEvents(eventData as Event);
+      const newEvents = createRepeatedEvents(eventData as Event, maxCount);
       const response = await fetch('/api/events-list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
