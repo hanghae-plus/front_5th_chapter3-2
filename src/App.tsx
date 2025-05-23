@@ -103,8 +103,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, saveRepeatEvent, deleteEvent } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -116,7 +117,6 @@ function App() {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const toast = useToast();
-
   const addOrUpdateEvent = async () => {
     if (!title || !date || !startTime || !endTime) {
       toast({
@@ -137,6 +137,16 @@ function App() {
       });
       return;
     }
+    const repeat = editingEvent
+      ? {
+          type: 'none' as RepeatType,
+          interval: 0,
+        }
+      : {
+          type: isRepeating ? repeatType : 'none',
+          interval: repeatInterval,
+          endDate: repeatEndDate || undefined,
+        };
 
     const eventData: Event | EventForm = {
       id: editingEvent ? editingEvent.id : undefined,
@@ -147,11 +157,7 @@ function App() {
       description,
       location,
       category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
+      repeat,
       notificationTime,
     };
 
@@ -160,11 +166,17 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      if (isRepeating) {
+        await saveRepeatEvent(eventData);
+      } else {
+        await saveEvent(eventData);
+      }
+
       resetForm();
     }
   };
 
+  //TODO - repeat icon 추가
   const renderWeekView = () => {
     const weekDates = getWeekDates(currentDate);
     return (
@@ -216,7 +228,7 @@ function App() {
       </VStack>
     );
   };
-
+  //TODO - repeat icon 추가
   const renderMonthView = () => {
     const weeks = getWeeksAtMonth(currentDate);
 
@@ -270,6 +282,7 @@ function App() {
                               >
                                 <HStack spacing={1}>
                                   {isNotified && <BellIcon />}
+                                  {event.repeat.type !== 'none' && <span>⏲️</span>}
                                   <Text fontSize="sm" noOfLines={1}>
                                     {event.title}
                                   </Text>
@@ -293,6 +306,7 @@ function App() {
   return (
     <Box w="full" h="100vh" m="auto" p={5}>
       <Flex gap={6} h="full">
+        {/* 일정 추가/수정 */}
         <VStack w="400px" spacing={5} align="stretch">
           <Heading>{editingEvent ? '일정 수정' : '일정 추가'}</Heading>
 
@@ -384,6 +398,7 @@ function App() {
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                 >
+                  <option value="none">없음</option>
                   <option value="daily">매일</option>
                   <option value="weekly">매주</option>
                   <option value="monthly">매월</option>
@@ -417,6 +432,7 @@ function App() {
           </Button>
         </VStack>
 
+        {/* 일정 보기 */}
         <VStack flex={1} spacing={5} align="stretch">
           <Heading>일정 보기</Heading>
 
@@ -445,6 +461,7 @@ function App() {
           {view === 'month' && renderMonthView()}
         </VStack>
 
+        {/* 일정 목록 */}
         <VStack data-testid="event-list" w="500px" h="full" overflowY="auto">
           <FormControl>
             <FormLabel>일정 검색</FormLabel>

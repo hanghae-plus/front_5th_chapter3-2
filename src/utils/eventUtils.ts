@@ -1,5 +1,5 @@
-import { Event } from '../types';
-import { getWeekDates, isDateInRange } from './dateUtils';
+import { Event, EventForm } from '../types';
+import { formatDate, getWeekDates, isDateInRange } from './dateUtils';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
   return events.filter((event) => {
@@ -47,4 +47,96 @@ export function getFilteredEvents(
   }
 
   return searchedEvents;
+}
+
+export function getRepeatDayEvents(repeatEndDate: Date, event: EventForm) {
+  const { date, repeat } = event;
+  const repeatedEvents: EventForm[] = [];
+  const currentDate = new Date(date);
+
+  while (currentDate <= repeatEndDate) {
+    repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+
+    currentDate.setDate(currentDate.getDate() + repeat.interval);
+  }
+
+  return repeatedEvents;
+}
+
+export function getRepeatWeekEvents(repeatEndDate: Date, event: EventForm) {
+  const { date, repeat } = event;
+  const repeatedEvents: EventForm[] = [];
+  const currentDate = new Date(date);
+
+  while (currentDate <= repeatEndDate) {
+    repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+
+    currentDate.setDate(currentDate.getDate() + 7 * repeat.interval);
+  }
+
+  return repeatedEvents;
+}
+
+export function getRepeatMonthEvents(repeatEndDate: Date, event: EventForm) {
+  const { date, repeat } = event;
+  const repeatedEvents: EventForm[] = [];
+  const originDate = new Date(date).getDate();
+  let currentDate = new Date(date);
+
+  while (currentDate <= repeatEndDate) {
+    repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+
+    const nextDate = new Date(currentDate);
+    nextDate.setMonth(nextDate.getMonth() + repeat.interval);
+
+    if (nextDate.getDate() !== originDate) {
+      nextDate.setDate(originDate);
+    }
+    currentDate = nextDate;
+  }
+
+  return repeatedEvents;
+}
+
+export function getRepeatYearEvents(repeatEndDate: Date, event: EventForm) {
+  const { date, repeat } = event;
+  const repeatedEvents: EventForm[] = [];
+  const originMonth = new Date(date).getMonth();
+  const originDate = new Date(date).getDate();
+  let currentDate = new Date(date);
+
+  while (currentDate <= repeatEndDate) {
+    if (currentDate.getDate() === originDate) {
+      repeatedEvents.push({ ...event, date: formatDate(new Date(currentDate)) });
+    }
+
+    const nextDate = new Date(currentDate);
+    nextDate.setFullYear(nextDate.getFullYear() + repeat.interval);
+
+    if (originMonth !== currentDate.getMonth()) {
+      nextDate.setMonth(originMonth);
+      nextDate.setDate(originDate);
+    }
+    currentDate = nextDate;
+  }
+  return repeatedEvents;
+}
+export function getRepeatEvents(event: EventForm) {
+  const { repeat } = event;
+  const { type, endDate } = repeat;
+  const INFINITY_DATE = '2025-09-30';
+  const lastDate = endDate ? new Date(endDate) : new Date(INFINITY_DATE);
+
+  switch (type) {
+    case 'daily':
+      return getRepeatDayEvents(lastDate, event);
+    case 'weekly':
+      return getRepeatWeekEvents(lastDate, event);
+    case 'monthly':
+      return getRepeatMonthEvents(lastDate, event);
+    case 'yearly':
+      return getRepeatYearEvents(lastDate, event);
+    default:
+      return [];
+  }
 }
