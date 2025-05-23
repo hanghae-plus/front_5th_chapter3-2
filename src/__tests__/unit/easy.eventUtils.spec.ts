@@ -126,7 +126,6 @@ describe('getRepeatEvents', () => {
       location: '',
       category: '',
       repeat: { type: 'daily', interval: 1 },
-
       notificationTime: 0,
     };
 
@@ -361,5 +360,206 @@ describe('getRepeatEvents', () => {
     expect(result[9].date).toBe('2025-10-31');
     expect(result[10].date).toBe('2025-11-30');
     expect(result[11].date).toBe('2025-12-31');
+  });
+});
+
+describe('eventUtils의 내부 함수들', () => {
+  describe('날짜 범위 필터링', () => {
+    const events: Event[] = [
+      {
+        id: '1',
+        title: '이벤트 1',
+        date: '2025-05-01',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '',
+        location: '',
+        category: '',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 0,
+      },
+      {
+        id: '2',
+        title: '이벤트 2',
+        date: '2025-05-15',
+        startTime: '14:00',
+        endTime: '15:00',
+        description: '',
+        location: '',
+        category: '',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 0,
+      },
+      {
+        id: '3',
+        title: '이벤트 3',
+        date: '2025-05-31',
+        startTime: '09:00',
+        endTime: '10:00',
+        description: '',
+        location: '',
+        category: '',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 0,
+      },
+    ];
+
+    it('주어진 날짜 범위 내의 이벤트만 필터링한다', () => {
+      const start = new Date('2025-05-01');
+      const result = getFilteredEvents(events, '', start, 'month');
+      expect(result).toHaveLength(3);
+      expect(result.map((e) => e.title)).toEqual(['이벤트 1', '이벤트 2', '이벤트 3']);
+    });
+  });
+
+  describe('검색어 포함 여부 확인', () => {
+    it('대소문자를 구분하지 않고 검색어를 찾는다', () => {
+      const events: Event[] = [
+        {
+          id: '1',
+          title: 'Test Event',
+          date: '2025-05-01',
+          startTime: '10:00',
+          endTime: '11:00',
+          description: '',
+          location: '',
+          category: '',
+          repeat: { type: 'none', interval: 0 },
+          notificationTime: 0,
+        },
+      ];
+      const result = getFilteredEvents(events, 'test', new Date('2025-05-01'), 'month');
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('이벤트 검색', () => {
+    const events: Event[] = [
+      {
+        id: '1',
+        title: '회의',
+        date: '2025-05-01',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '팀 회의',
+        location: '회의실',
+        category: '',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 0,
+      },
+    ];
+
+    it('제목, 설명, 위치에서 검색어를 찾는다', () => {
+      const result = getFilteredEvents(events, '회의', new Date('2025-05-01'), 'month');
+      expect(result).toHaveLength(1);
+    });
+
+    it('검색어가 없을 때 모든 이벤트를 반환한다', () => {
+      const result = getFilteredEvents(events, '', new Date('2025-05-01'), 'month');
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('주간 날짜 범위 필터링', () => {
+    const events: Event[] = [
+      {
+        id: '1',
+        title: '월요일 이벤트',
+        date: '2025-05-05',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '',
+        location: '',
+        category: '',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 0,
+      },
+      {
+        id: '2',
+        title: '일요일 이벤트',
+        date: '2025-05-11',
+        startTime: '14:00',
+        endTime: '15:00',
+        description: '',
+        location: '',
+        category: '',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 0,
+      },
+    ];
+
+    it('주어진 날짜가 속한 주의 이벤트만 필터링한다', () => {
+      const result = getFilteredEvents(events, '', new Date('2025-05-05'), 'week');
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('월간 날짜 범위 필터링', () => {
+    const events: Event[] = [
+      {
+        id: '1',
+        title: '5월 이벤트',
+        date: '2025-05-01',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '',
+        location: '',
+        category: '',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 0,
+      },
+      {
+        id: '2',
+        title: '6월 이벤트',
+        date: '2025-06-01',
+        startTime: '14:00',
+        endTime: '15:00',
+        description: '',
+        location: '',
+        category: '',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 0,
+      },
+    ];
+
+    it('주어진 날짜가 속한 달의 이벤트만 필터링한다', () => {
+      const result = getFilteredEvents(events, '', new Date('2025-05-15'), 'month');
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe('5월 이벤트');
+    });
+  });
+
+  describe('유효한 날짜 계산', () => {
+    it('윤년의 2월 29일을 올바르게 처리한다', () => {
+      const event: EventForm = {
+        title: '이벤트',
+        date: '2024-02-29',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '',
+        location: '',
+        category: '',
+        repeat: { type: 'yearly', interval: 1, endDate: '2025-02-28' },
+        notificationTime: 0,
+      };
+      const result = getRepeatEvents(event);
+      expect(result[1].date).toBe('2025-02-28');
+    });
+
+    it('31일이 없는 달의 마지막 날을 올바르게 처리한다', () => {
+      const event: EventForm = {
+        title: '이벤트',
+        date: '2025-01-31',
+        startTime: '10:00',
+        endTime: '11:00',
+        description: '',
+        location: '',
+        category: '',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-02-28' },
+        notificationTime: 0,
+      };
+      const result = getRepeatEvents(event);
+      expect(result[1].date).toBe('2025-02-28');
+    });
   });
 });
