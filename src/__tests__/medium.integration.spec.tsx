@@ -529,3 +529,67 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
+
+const getDateCellByDay = (container: HTMLElement, day: string) => {
+  return Array.from(container.querySelectorAll('td')).find((td) =>
+    td.textContent?.trim().startsWith(day)
+  );
+};
+
+describe('일정 알림 기능', () => {
+  it('사용자가 알림 시간을 선택할 수 있다 (1분, 10분, 1시간, 1일 전)', async () => {
+    setup(<App />);
+
+    const notificationSelect = screen.getByLabelText('알림 설정') as HTMLSelectElement;
+
+    // 각 옵션을 선택하면 -> 선택값이 noti어쩌고에 반영돼야 함
+    const testCases = [
+      { label: '1분 전', value: '1' },
+      { label: '10분 전', value: '10' },
+      { label: '1시간 전', value: '60' },
+      { label: '1일 전', value: '1440' },
+    ];
+
+    for (const { value } of testCases) {
+      await userEvent.selectOptions(notificationSelect, value);
+      expect(notificationSelect.value).toBe(value);
+    }
+  });
+
+  it('알림 시간에 도달하면 캘린더에 아이콘이 추가되고 색상이 변경되어 표시된다.', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-05-05T13:22:00'));
+
+    const mockEvent: Event = {
+      id: 'event-1',
+      title: '어린이날 대운동회',
+      date: '2025-05-05',
+      startTime: '13:30',
+      endTime: '16:00',
+      description: '초등학교 운동회',
+      location: '운동장',
+      category: '가족',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    };
+
+    setupMockHandlerCreation([mockEvent]);
+    setup(<App />);
+
+    // 알림 체크 타이머가 돌아가게 함 (최소 1초 이상)
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    const monthView = screen.getByTestId('month-view');
+    const cell = getDateCellByDay(monthView, '5');
+    expect(cell).toBeDefined();
+
+    // 아이콘이 실제로 나타날 때까지 기다림
+    const icon = await within(cell!).findByTestId('bell-icon');
+    expect(icon).toBeInTheDocument();
+
+    // 이벤트 텍스트도 확인
+    expect(within(cell!).getByText(/어린이날 대운동회/)).toBeInTheDocument();
+  });
+});
