@@ -157,3 +157,65 @@ it("검색어를 '회의'에서 '점심'으로 변경하면 필터링된 결과�
     },
   ]);
 });
+
+it('여러 검색어가 동시에 일치하는 경우 모든 일치하는 이벤트를 반환해야 한다', () => {
+  const { result } = renderHook(() => useSearch(mockEvents, currentDate, view));
+
+  act(() => {
+    result.current.setSearchTerm('회의실');
+  });
+
+  expect(result.current.filteredEvents).toEqual([
+    {
+      id: '1',
+      title: '회의',
+      date: '2025-10-01',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '팀 회의',
+      location: '회의실',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    },
+  ]);
+});
+
+it('검색어가 부분적으로만 일치하는 경우에도 해당 이벤트를 반환해야 한다', () => {
+  const { result } = renderHook(() => useSearch(mockEvents, currentDate, view));
+
+  act(() => {
+    result.current.setSearchTerm('팀');
+  });
+
+  expect(result.current.filteredEvents).toEqual([
+    {
+      id: '1',
+      title: '회의',
+      date: '2025-10-01',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '팀 회의',
+      location: '회의실',
+      category: '업무',
+      repeat: { type: 'none', interval: 0 },
+      notificationTime: 10,
+    },
+  ]);
+});
+
+it('검색어를 지우면 모든 이벤트가 다시 표시되어야 한다', () => {
+  const { result } = renderHook(() => useSearch(mockEvents, currentDate, view));
+
+  act(() => {
+    result.current.setSearchTerm('회의');
+  });
+
+  expect(result.current.filteredEvents).toHaveLength(1);
+
+  act(() => {
+    result.current.setSearchTerm('');
+  });
+
+  expect(result.current.filteredEvents).toEqual(mockEvents);
+});

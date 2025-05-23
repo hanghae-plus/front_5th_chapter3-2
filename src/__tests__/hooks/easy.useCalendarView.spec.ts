@@ -94,3 +94,62 @@ it("currentDate가 '2025-03-01' 변경되면 3월 휴일 '삼일절'로 업데�
 
   expect(result.current.holidays).toEqual({ '2025-03-01': '삼일절' });
 });
+
+describe('날짜 변경 관련 테스트', () => {
+  it('현재 날짜를 직접 변경할 수 있다', () => {
+    const { result } = renderHook(() => useCalendarView());
+    const newDate = new Date('2025-12-25');
+
+    act(() => {
+      result.current.setCurrentDate(newDate);
+    });
+
+    assertDate(result.current.currentDate, newDate);
+  });
+
+  it('연도가 바뀌는 경우에도 올바르게 처리된다', () => {
+    const { result } = renderHook(() => useCalendarView());
+
+    act(() => {
+      result.current.setCurrentDate(new Date('2025-12-01'));
+    });
+
+    act(() => {
+      result.current.navigate('next');
+    });
+
+    assertDate(result.current.currentDate, new Date('2026-01-01'));
+  });
+});
+
+describe('주간 뷰 추가 테스트', () => {
+  it('주간 뷰에서 월말을 지나갈 때 올바르게 처리된다', () => {
+    const { result } = renderHook(() => useCalendarView());
+
+    act(() => {
+      result.current.setView('week');
+      result.current.setCurrentDate(new Date('2025-01-28'));
+    });
+
+    act(() => {
+      result.current.navigate('next');
+    });
+
+    assertDate(result.current.currentDate, new Date('2025-02-04'));
+  });
+
+  it('주간 뷰에서 연도가 바뀌는 경우 올바르게 처리된다', () => {
+    const { result } = renderHook(() => useCalendarView());
+
+    act(() => {
+      result.current.setView('week');
+      result.current.setCurrentDate(new Date('2025-12-28'));
+    });
+
+    act(() => {
+      result.current.navigate('next');
+    });
+
+    assertDate(result.current.currentDate, new Date('2026-01-04'));
+  });
+});
