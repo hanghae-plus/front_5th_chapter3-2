@@ -19,6 +19,8 @@ export default mergeConfig(
       globals: true,
       environment: 'jsdom',
       setupFiles: './src/setupTests.ts',
+      include: ['src/**/*.{test,spec}.{ts,tsx}'], // vitest
+      exclude: ['tests/**', 'node_modules', 'dist'], // playwright
       coverage: {
         reportsDirectory: './.coverage',
         reporter: ['lcov', 'json', 'json-summary'],
