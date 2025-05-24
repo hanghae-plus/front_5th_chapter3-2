@@ -140,5 +140,13 @@ app.delete('/api/events-list', async (req, res) => {
 });
 
 app.listen(port, () => {
+  if (!fs.existsSync(`${__dirname}/src/__mocks__/response/${dbName}`)) {
+    fs.writeFileSync(
+      `${__dirname}/src/__mocks__/response/${dbName}`,
+      JSON.stringify({
+        events: [],
+      })
+    );
+  }
   console.log(`Server running at http://localhost:${port}`);
 });

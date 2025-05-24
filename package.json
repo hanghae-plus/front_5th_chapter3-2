@@ -4,10 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "preinstall": "cypress install",
     "server": "node server.js",
     "server:watch": "node --watch server.js",
     "start": "vite",
     "dev": "concurrently \"pnpm run server:watch\" \"pnpm run start\"",
+    "dev:test": "concurrently \"TEST_ENV=e2e pnpm run server:watch\" \"pnpm run start\"",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
@@ -15,8 +17,11 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "e2e": "TEST_ENV=e2e start-server-and-test dev http://localhost:5173 cypress:open",
-    "e2e:ci": "TEST_ENV=e2e start-server-and-test dev http://localhost:5173 cypress:run"
+    "cypress:e2e": "TEST_ENV=e2e start-server-and-test dev http://localhost:5173 cypress:open",
+    "cypress:e2e:ci": "TEST_ENV=e2e start-server-and-test dev http://localhost:5173 cypress:run",
+    "playwright:open": "playwright test --ui --workers=1",
+    "playwright:ci": "playwright test --workers=1"
+
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
@@ -30,10 +35,12 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.52.0",
     "@testing-library/cypress": "^10.0.2",
     "@testing-library/jest-dom": "^6.4.5",
     "@testing-library/react": "^15.0.7",
     "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.15.21",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
@@ -52,11 +59,11 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-storybook": "^0.6.12",
     "eslint-plugin-vitest": "^0.2.6",
-    "vite-plugin-eslint": "^1.8.1",
     "jsdom": "^25.0.1",
+    "start-server-and-test": "^2.0.0",
     "typescript": "^5.2.2",
     "vite": "^5.3.1",
-    "vitest": "^2.0.2",
-    "start-server-and-test": "^2.0.0"
+    "vite-plugin-eslint": "^1.8.1",
+    "vitest": "^2.0.2"
   }
 }
